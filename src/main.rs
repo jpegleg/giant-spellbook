@@ -1,0 +1,721 @@
+use std::process;
+use std::env;
+use std::error::Error as StdError;
+use std::os::unix::fs::{PermissionsExt, MetadataExt};
+use std::fs::{File, OpenOptions};
+use std::path::Path;
+use std::io::{self, Write, Read};
+use sha3::{Shake256, digest::{Update, ExtendableOutput}};
+use chrono::{TimeZone, NaiveDateTime, DateTime, Utc};
+use users::{get_user_by_uid, get_group_by_gid};
+use rpassword::read_password;
+use base64::prelude::*;
+use zeroize::Zeroize;
+
+use enchantress::*;
+use enchanter::*;
+use wormsign::*;
+
+mod encoding;
+mod bithack;
+mod analysis;
+mod hashfunctions;
+
+/// Forces errors to JSON. This function is a wrapper for STDERR to JSON.
+fn print_error_json(msg: &str) {
+    eprintln!(r#"{{ "Error": "{}" }}"#, msg);
+}
+
+/// This macro rule is used to catch errors and force them to JSON.
+/// The json_started variable is manually set when the printing of
+/// a JSON body has already begun, so we can complete the printing
+/// of a valid JSON body, catching mid-processing issues and ensuring
+/// the output is always valid JSON.
+macro_rules! try_print_json {
+    ($expr:expr, $json_started:expr) => {
+        match $expr {
+            Ok(val) => val,
+            Err(e) => {
+                if $json_started {
+                    println!("  \"Error\": \"{}\"", e);
+                    println!(" }}");
+                    println!("}}");
+                    return Ok(());
+                } else {
+                    return Err(Box::new(e) as Box<dyn StdError>);
+                }
+            }
+        }
+    };
+}
+
+
+/// This function is wrapped by the main function for error catching.
+/// It handles the input arguments and applies the corresponding functionality.
+#[allow(deprecated)]
+fn run() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      process::exit(1);
+    }
+
+    let first_layer = &args[1];
+
+    match first_layer.as_str() {
+        "-v" => {
+          println!("{{\"Version\": \"0.1.0\"}}");
+          process::exit(0)
+        },
+        "sign" => {
+          if args.len() != 6 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} sign <file_to_sign> <signature_file> <public_key_path> <private_key_path>\"\n}}", args[0]);
+            process::exit(1);
+          }
+
+          let file_path = &args[2];
+          let sig_path = &args[3];
+          let pub_path = &args[4];
+          let key_path = &args[5];
+
+          let mut json_started = false;
+          // STDERR on prompt so that output stays valid JSON, useful for redirects etc
+          eprintln!("Enter key password then press enter (will not be displayed):");
+          std::io::stdout().flush().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to flush stdout: {}", e)))?;
+          let password = read_password().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read password: {}", e)))?;
+          let keymaterial = derive_key(password.as_bytes(), 32);
+          let kbytes = decrypt_key(key_path, &keymaterial)
+              .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to decrypt key: {}", e)))?;
+          let file_path = Path::new(file_path);
+          let metadata = try_print_json!(
+              file_path.metadata().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file metadata: {}", e))),
+              json_started
+          );
+          let mut file = try_print_json!(
+              File::open(&file_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open file {}: {}", file_path.display(), e))),
+              json_started
+          );
+          let mut bytes = Vec::new();
+          try_print_json!(
+              file.read_to_end(&mut bytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file {}: {}", file_path.display(), e))),
+              json_started
+          );
+          let num_bytes = bytes.len();
+          let num_bits = num_bytes * 8;
+          let byte_distribution = bytes.iter().collect::<std::collections::HashSet<_>>().len() as f64 / num_bytes as f64;
+          let file_is_open = match OpenOptions::new().read(true).write(true).open(file_path) {
+              Ok(_) => false,
+              Err(_) => true,
+          };
+          let chronox: String = Utc::now().to_string();
+          let mut hasher = Shake256::default();
+          hasher.update(&bytes);
+          let mut resulto = hasher.finalize_xof();
+          let mut shake256 = [0u8; 10];
+          let _ = resulto.read(&mut shake256);
+          json_started = true;
+          println!("{{");
+          println!("{:?}: {{", file_path);
+          println!("  \"Checksum SHA3 SHAKE256 10\": \"{:?}\",", shake256);
+          println!("  \"Report time\": \"{}\",", chronox);
+          let num_io_blocks = metadata.blocks();
+          println!("  \"Number of IO blocks\": \"{}\",", num_io_blocks);
+          let blocksize = metadata.blksize();
+          println!("  \"Block size\": \"{}\",", blocksize);
+          let inode = metadata.ino();
+          println!("  \"Inode\": \"{}\",", &inode);
+          println!("  \"Total as bytes\": \"{}\",", &num_bytes);
+          println!("  \"Total as kilobytes\": \"{}\",", &num_bytes / 1024);
+          println!("  \"Total as megabytes\": \"{}\",", &num_bytes / (1024 * 1024));
+          println!("  \"Total as bits\": \"{}\",", num_bits);
+          println!("  \"Byte distribution\": \"{}\",", byte_distribution);
+          let created: DateTime<Utc> = try_print_json!(
+              metadata.created().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get created timestamp.")).map(DateTime::from),
+              json_started
+          );
+          let modified: DateTime<Utc> = try_print_json!(
+              metadata.modified().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get modified timestamp.")).map(DateTime::from),
+              json_started
+          );
+          let access: DateTime<Utc> = try_print_json!(
+              metadata.accessed().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get accessed timestamp.")).map(DateTime::from),
+              json_started
+          );
+          let changed: DateTime<Utc> = {
+              let ctime = metadata.ctime();
+              let ctimesec = metadata.ctime_nsec() as u32;
+              let naive_datetime = try_print_json!(
+                  NaiveDateTime::from_timestamp_opt(ctime, ctimesec).ok_or(io::Error::new(io::ErrorKind::Other, "Invalid changed timestamp")),
+                  json_started
+              );
+              TimeZone::from_utc_datetime(&Utc, &naive_datetime)
+          };
+          println!("  \"Created timestamp (UTC)\": \"{}\",", created);
+          println!("  \"Modified timestamp (UTC)\": \"{}\",", modified);
+          println!("  \"Accessed timestamp (UTC)\": \"{}\",", access);
+          println!("  \"Changed timestamp (UTC)\": \"{}\",", changed);
+          let permission = metadata.permissions();
+          let mode = permission.mode();
+          println!("  \"Permissions\": \"{:o}\",", mode);
+          let uid = metadata.uid();
+          let gid = metadata.gid();
+          let owner = match get_user_by_uid(uid) {
+              Some(user) => user.name().to_string_lossy().into_owned(),
+              None => "-".to_string(),
+          };
+          let group = match get_group_by_gid(gid) {
+              Some(group) => group.name().to_string_lossy().into_owned(),
+              None => "-".to_string(),
+          };
+          println!("  \"Owner\": \"{} (uid: {})\",", owner, uid);
+          println!("  \"Group\": \"{} (gid: {})\",", group, gid);
+          if file_is_open {
+              println!("  \"Open\": \"File is currently open by another program... signing anyway!\",");
+          } else {
+              println!("  \"Open\": \"File is not open by another program. Signing...\",");
+          }
+          let keypath = Path::new(&key_path);
+          let pubpath = Path::new(&pub_path);
+          let kmetadata = try_print_json!(
+              keypath.metadata().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file metadata for key: {}", e))),
+              json_started
+          );
+          let mut kpubf = try_print_json!(
+              File::open(&pubpath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the public key: {}", e))),
+              json_started
+          );
+          let mut pubbytes = Vec::new();
+          try_print_json!(
+              kpubf.read_to_end(&mut pubbytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read the public key: {}", e))),
+              json_started
+          );
+          let keys: Keypair = Keypair::loadit(pubbytes, kbytes);
+          let msg = &bytes;
+          let sig = keys.sign(&msg);
+          let spath = Path::new(sig_path);
+          let mut sigoutput = try_print_json!(
+              File::create(spath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to create signature file {}: {}", sig_path, e))),
+              json_started
+          );
+          try_print_json!(
+              sigoutput.write_all(&sig).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to write signature: {}", e))),
+              json_started
+          );
+          println!("  \"Dilithium signature file\": \"{}\",", sig_path);
+          println!("  \"Dilithium signing key\": \"{}\",", key_path);
+          let kinode = kmetadata.ino();
+          println!("  \"Key Inode\": \"{}\",", &kinode);
+          let kcreated: DateTime<Utc> = try_print_json!(
+              kmetadata.created().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get key created timestamp.")).map(DateTime::from),
+              json_started
+          );
+          let kmodified: DateTime<Utc> = try_print_json!(
+              kmetadata.modified().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get key modified timestamp.")).map(DateTime::from),
+              json_started
+          );
+          let kaccess: DateTime<Utc> = try_print_json!(
+              kmetadata.accessed().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get key accessed timestamp.")).map(DateTime::from),
+              json_started
+          );
+          let kchanged: DateTime<Utc> = {
+              let ctime = kmetadata.ctime();
+              let ctimesec = kmetadata.ctime_nsec() as u32;
+              let naive_datetime = try_print_json!(
+                  chrono::NaiveDateTime::from_timestamp_opt(ctime, ctimesec).ok_or(io::Error::new(io::ErrorKind::Other, "Invalid key changed timestamp")),
+                  json_started
+              );
+              TimeZone::from_utc_datetime(&Utc, &naive_datetime)
+          };
+          println!("  \"Key Created timestamp (UTC)\": \"{}\",", kcreated);
+          println!("  \"Key Modified timestamp (UTC)\": \"{}\",", kmodified);
+          println!("  \"Key Accessed timestamp (UTC)\": \"{}\",", kaccess);
+          println!("  \"Key Changed timestamp (UTC)\": \"{}\",", kchanged);
+          let kpermission = kmetadata.permissions();
+          let kmode = kpermission.mode();
+          println!("  \"Key Permissions\": \"{:o}\",", kmode);
+          let kuid = kmetadata.uid();
+          let kgid = kmetadata.gid();
+          let kowner = match get_user_by_uid(kuid) {
+              Some(user) => user.name().to_string_lossy().into_owned(),
+              None => "-".to_string(),
+          };
+          let kgroup = match get_group_by_gid(kgid) {
+              Some(group) => group.name().to_string_lossy().into_owned(),
+              None => "-".to_string(),
+          };
+          println!("  \"Key Owner\": \"{} (uid: {})\",", kowner, uid);
+          println!("  \"Key Group\": \"{} (gid: {})\"", kgroup, gid);
+          println!(" }}");
+          println!("}}");
+          Ok(())
+        },
+        "verify" => {
+          if args.len() != 5 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} verify <file_to_verify> <signature_file> <public_key_path>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
+          let sig_path = &args[3];
+          let pub_path = &args[4];
+          let mut bytes = Vec::new();
+          let mut kbytes = Vec::new();
+          let mut sbytes = Vec::new();
+          let file = File::open(&file_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open file {}: {}", file_path, e)));
+          let pub_key = File::open(&pub_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the key: {}", e)));
+          let sig = File::open(&sig_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the signature file: {}", e)));
+
+          let _ = pub_key?.read_to_end(&mut kbytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read the key: {}", e)));
+          let _ = sig?.read_to_end(&mut sbytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read the signature file: {}", e)));
+          let _ = file?.read_to_end(&mut bytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read the file: {}", e)));
+
+          let msg = &bytes;
+          let sig_verify = verify(&sbytes, &msg, &kbytes);
+          let statusig = sig_verify.is_ok();
+          println!("{{\"Verification Result\": \"{}\"}}", statusig);
+          Ok(())
+        },
+        "generate" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} generate <private_key_path> <public_key_path>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let key_path = &args[2];
+          let pub_path = &args[3];
+          keygen(key_path, pub_path)?;
+          Ok(())
+        },
+        "encrypt" => {
+          if args.len() != 5 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} encrypt <aes-ctr aes-gcm chacha> <file_to_encrypt> <output_ciphertext>\"\n}}", args[0]);
+            process::exit(1);
+          }
+
+          let entype = &args[2];
+          let input_file = &args[3];
+          let output_file = &args[4];
+          match entype.as_str() {
+            "aes-ctr" => {
+              // Hide from STDOUT for output management, use STDERR for password prompt.
+              eprint!("Enter password: ");
+              std::io::stdout().flush()?;
+              let password = read_password()?;
+              let bpassword = password.as_bytes();
+              let mut key = enchantress::a2(bpassword, MAGIC);
+              enchantress::encrypt_file(input_file, output_file, &key)?;
+              let mut out_file = File::open(output_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the output file {output_file}: {e}")))?;
+              let mut output_file_data = Vec::new();
+              out_file.read_to_end(&mut output_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {output_file}: {e}")))?;
+              let validate = enchantress::ciphertext_hash(&key, &output_file_data, 64);
+              let validate_str = BASE64_STANDARD.encode(&validate);
+              println!("{{\"Validation string\": \"{validate_str}\"}}");
+              key.zeroize();
+            },
+            "aes-gcm" => {
+              // Hide from STDOUT for output management, use STDERR for password prompt.
+              eprint!("Enter password: ");
+              std::io::stdout().flush()?;
+              let password = read_password()?;
+              let bpassword = password.as_bytes();
+              let mut key = enchantress::a2(bpassword, MAGIC);
+              enchantress::aead_encrypt_file(input_file, output_file, &key)?;
+              let mut out_file = File::open(output_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the output file {output_file}: {e}")))?;
+              let mut output_file_data = Vec::new();
+              out_file.read_to_end(&mut output_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {output_file}: {e}")))?;
+              let validate = enchantress::ciphertext_hash(&key, &output_file_data, 64);
+              let validate_str = BASE64_STANDARD.encode(&validate);
+              println!("{{\"Validation string\": \"{validate_str}\"}}");
+              key.zeroize();
+            },
+            "chacha" => {
+              // Hide from STDOUT for output management, use STDERR for password prompt.
+              eprint!("Enter password: ");
+              std::io::stdout().flush()?;
+              let password = read_password()?;
+              let bpassword = password.as_bytes();
+              let mut key = a3(bpassword, TUR);
+              enchanter::encrypt_file(input_file, output_file, &key)?;
+              let mut out_file = File::open(output_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the output file {output_file}: {e}")))?;
+              let mut output_file_data = Vec::new();
+              out_file.read_to_end(&mut output_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {output_file}: {e}")))?;
+              let validate = enchanter::ciphertext_hash(&key, &output_file_data, 64);
+              let validate_str = BASE64_STANDARD.encode(&validate);
+              println!("{{\"Validation string\": \"{validate_str}\"}}");
+              key.zeroize();
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} encrypt <aes-ctr aes-gcm chacha> <file_to_encrypt> <output_ciphertext>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+          Ok(())
+        },
+        "decrypt" => {
+          if args.len() != 5 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} decrypt <aes-ctr aes-gcm chacha> <file_to_decrypt> <output_plaintext>\"\n}}", args[0]);
+            process::exit(1);
+          }
+
+          let entype = &args[2];
+          let input_file = &args[3];
+          let output_file = &args[4];
+          match entype.as_str() {
+            "aes-ctr" => {
+              let mut file = File::open(input_file)?;
+              let mut nonce = [0u8; 16];
+              file.read_exact(&mut nonce)?;
+              eprint!("Enter validation string (ciphertext_hash): ");
+              std::io::stdout().flush()?;
+              let ciphertext_bytes = read_password()?;
+              let known_hash = ciphertext_bytes.to_string();
+              // Hide from STDOUT for output management, use STDERR for password prompt.
+              eprint!("Enter password: ");
+              std::io::stdout().flush()?;
+              let password = read_password()?;
+              let bpassword = password.as_bytes();
+              let mut key = enchantress::a2(bpassword, MAGIC);
+              let mut in_file = File::open(input_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input_file}: {e}")))?;
+              let mut input_file_data = Vec::new();
+              in_file.read_to_end(&mut input_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input_file}: {e}")))?;
+              let validate = enchantress::ciphertext_hash(&key, &input_file_data, 64);
+              let validate_str = BASE64_STANDARD.encode(&validate);
+              let checkme = &validate_str;
+              if enchantress::checks(checkme, &known_hash) == true {
+                enchantress::decrypt_file(input_file, output_file, &key).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Decryption failed: {e}")))?;
+                println!("{{\"Result\": \"file decrypted\"}}");
+              } else {
+                println!("  \"Result\": \"Refusing to decrypt.\"\n}}");
+              };
+              key.zeroize();
+            },
+            "aes-gcm" => {
+              let mut file = File::open(input_file)?;
+              let mut nonce = [0u8; 12];
+              file.read_exact(&mut nonce)?;
+              eprint!("Enter validation string (ciphertext_hash): ");
+              std::io::stdout().flush()?;
+              let ciphertext_bytes = read_password()?;
+              let known_hash = ciphertext_bytes.to_string();
+              // Hide from STDOUT for output management, use STDERR for password prompt.
+              eprint!("Enter password: ");
+              std::io::stdout().flush()?;
+              let password = read_password()?;
+              let bpassword = password.as_bytes();
+              let mut key = enchantress::a2(bpassword, MAGIC);
+              let mut in_file = File::open(input_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input_file}: {e}")))?;
+              let mut input_file_data = Vec::new();
+              in_file.read_to_end(&mut input_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input_file}: {e}")))?;
+              let validate = enchantress::ciphertext_hash(&key, &input_file_data, 64);
+              let validate_str = BASE64_STANDARD.encode(&validate);
+              let checkme = &validate_str;
+              if enchantress::checks(checkme, &known_hash) == true {
+                enchantress::aead_decrypt_file(input_file, output_file, &key).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Decryption failed: {e}")))?;
+                println!("{{\"Result\": \"file decrypted\"}}");
+              } else {
+                println!("  \"Result\": \"Refusing to decrypt.\"\n}}");
+              };
+              key.zeroize();
+            },
+            "chacha" => {
+              let mut file = File::open(input_file)?;
+              let mut nonce = [0u8; 16];
+              file.read_exact(&mut nonce)?;
+              eprint!("Enter validation string (ciphertext_hash): ");
+              std::io::stdout().flush()?;
+              let ciphertext_bytes = read_password()?;
+              let known_hash = ciphertext_bytes.to_string();
+              // Hide from STDOUT for output management, use STDERR for password prompt.
+              eprint!("Enter password: ");
+              std::io::stdout().flush()?;
+              let password = read_password()?;
+              let bpassword = password.as_bytes();
+              let mut key = a3(bpassword, TUR);
+              let mut in_file = File::open(input_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input_file}: {e}")))?;
+              let mut input_file_data = Vec::new();
+              in_file.read_to_end(&mut input_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input_file}: {e}")))?;
+              let validate = enchanter::ciphertext_hash(&key, &input_file_data, 64);
+              let validate_str = BASE64_STANDARD.encode(&validate);
+              let checkme = &validate_str;
+              if enchanter::checks(checkme, &known_hash) == true {
+                enchanter::decrypt_file(input_file, output_file, &key).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Decryption failed: {e}")))?;
+                println!("{{\"Result\": \"file decrypted\"}}");
+              } else {
+                println!("  \"Result\": \"Refusing to decrypt.\"\n}}");
+              };
+              key.zeroize();
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} decrypt <aes-ctr aes-gcm chacha> <file_to_decrypt> <output_plaintext>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+          Ok(())
+        },
+        "encode" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex> <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+
+          let entype = &args[2];
+          let input_file = &args[3];
+          match entype.as_str() {
+            "base64" => {
+              let _ = encoding::base64_encode_file(input_file);
+            },
+            "base58" => {
+              let _ = encoding::base58_encode_file(input_file);
+            },
+            "hex" => {
+              let _ = encoding::hex_encode_file(input_file);
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex> <file_to_encode>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+
+          Ok(())
+        },
+        "decode" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex> <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+
+          let entype = &args[2];
+          let input_file = &args[3];
+          match entype.as_str() {
+            "base64" => {
+              let _ = encoding::base64_decode_file(input_file);
+            },
+            "base58" => {
+              let _ = encoding::base58_decode_file(input_file);
+            },
+            "hex" => {
+              let _ = encoding::hex_decode_file(input_file);
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex> <file_to_decode>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+          Ok(())
+        },
+        "analyze" => {
+          if args.len() != 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} analyze <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
+
+          let report = analysis::cryptanalyze_file(file_path)?;
+          println!("{report}");
+          Ok(())
+        },
+        "bitflip" => {
+          if args.len() != 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} bitflip <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
+
+          let _ = bithack::bitflip(file_path);
+          Ok(())
+        },
+        "single_bitflip" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} single_bitflip <position> <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let position = &args[2];
+          let file_path = &args[3];
+
+          let _ = bithack::precise_bitflip(file_path, position);
+          Ok(())
+        },
+        "split_file" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} split_file  <position> <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let position = &args[2];
+          let file_path = &args[3];
+
+          let _ = bithack::splitter(file_path, position);
+          Ok(())
+        },
+        "derive_key" => {
+          if args.len() != 5 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} derive_key <argon2id> <data_string> <salt_string>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let hash = &args[2];
+          let input = &args[3];
+          match hash.as_str() {
+            "argon2id" => {
+              let salt = &args[4];
+              let bsalt = salt.clone().into_bytes();
+              let binput = input.clone().into_bytes();
+              let _ = hashfunctions::argon2id(&binput, &bsalt);
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} derive_key <argon2id> <data_string> <salt_string> \"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+          Ok(())
+        },
+
+        "hash" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> \"\n}}", args[0]);
+            process::exit(1);
+          }
+          let hash = &args[2];
+          let input = &args[3];
+          match hash.as_str() {
+            "all" => hashfunctions::file_all(input)?,
+            "sha256" => {
+              let _ = hashfunctions::sha256(input);
+            },
+            "sha3_256" => {
+              let _ = hashfunctions::sha3_256(input);
+            },
+            "shake256_10" => {
+              let _ = hashfunctions::shake256_10(input);
+            },
+            "shake256_32" => {
+              let _ = hashfunctions::shake256_32(input);
+            },
+            "blake3" => {
+              let _ = hashfunctions::blake3(input);
+            },
+            "blake2b512" => {
+              let _ = hashfunctions::blake2b512(input);
+            },
+            "sha3_384" => {
+              let _ = hashfunctions::sha3_384(input);
+            },
+
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> \"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+          Ok(())
+        },
+        "metadata" => {
+          if args.len() != 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+            process::exit(1);
+          }
+          let mut json_started = false;
+          let file_path = Path::new(&args[2]);
+          let metadata = try_print_json!(
+            file_path.metadata().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file metadata: {}", e))),
+            json_started
+          );
+          let mut file = try_print_json!(
+            File::open(&file_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open file {}: {}", file_path.display(), e))),
+            json_started
+          );
+          let mut bytes = Vec::new();
+          try_print_json!(
+            file.read_to_end(&mut bytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file {}: {}", file_path.display(), e))),
+            json_started
+          );
+          let num_bytes = bytes.len();
+          let num_bits = num_bytes * 8;
+          let byte_distribution = bytes.iter().collect::<std::collections::HashSet<_>>().len() as f64 / num_bytes as f64;
+          let file_is_open = match OpenOptions::new().read(true).write(true).open(file_path) {
+            Ok(_) => false,
+            Err(_) => true,
+          };
+          let chronox: String = Utc::now().to_string();
+          let mut hasher = Shake256::default();
+          hasher.update(&bytes);
+          let mut resulto = hasher.finalize_xof();
+          let mut shake256 = [0u8; 10];
+          let _ = resulto.read(&mut shake256);
+          json_started = true;
+          println!("{{");
+          println!("{:?}: {{", file_path);
+          println!("  \"Checksum SHA3 SHAKE256 10\": \"{:?}\",", shake256);
+          println!("  \"Report time\": \"{}\",", chronox);
+          let num_io_blocks = metadata.blocks();
+          println!("  \"Number of IO blocks\": \"{}\",", num_io_blocks);
+          let blocksize = metadata.blksize();
+          println!("  \"Block size\": \"{}\",", blocksize);
+          let inode = metadata.ino();
+          println!("  \"Inode\": \"{}\",", &inode);
+          println!("  \"Total as bytes\": \"{}\",", &num_bytes);
+          println!("  \"Total as kilobytes\": \"{}\",", &num_bytes / 1024);
+          println!("  \"Total as megabytes\": \"{}\",", &num_bytes / (1024 * 1024));
+          println!("  \"Total as bits\": \"{}\",", num_bits);
+          println!("  \"Byte distribution\": \"{}\",", byte_distribution);
+          let created: DateTime<Utc> = try_print_json!(
+            metadata.created().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get created timestamp.")).map(DateTime::from),
+            json_started
+          );
+          let modified: DateTime<Utc> = try_print_json!(
+            metadata.modified().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get modified timestamp.")).map(DateTime::from),
+            json_started
+          );
+          let access: DateTime<Utc> = try_print_json!(
+            metadata.accessed().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get accessed timestamp.")).map(DateTime::from),
+            json_started
+          );
+          let changed: DateTime<Utc> = {
+            let ctime = metadata.ctime();
+            let ctimesec = metadata.ctime_nsec() as u32;
+            let naive_datetime = try_print_json!(
+              NaiveDateTime::from_timestamp_opt(ctime, ctimesec).ok_or(io::Error::new(io::ErrorKind::Other, "Invalid changed timestamp")),
+              json_started
+            );
+            TimeZone::from_utc_datetime(&Utc, &naive_datetime)
+          };
+          println!("  \"Created timestamp (UTC)\": \"{}\",", created);
+          println!("  \"Modified timestamp (UTC)\": \"{}\",", modified);
+          println!("  \"Accessed timestamp (UTC)\": \"{}\",", access);
+          println!("  \"Changed timestamp (UTC)\": \"{}\",", changed);
+          let permission = metadata.permissions();
+          let mode = permission.mode();
+          println!("  \"Permissions\": \"{:o}\",", mode);
+          let uid = metadata.uid();
+          let gid = metadata.gid();
+          let owner = match get_user_by_uid(uid) {
+            Some(user) => user.name().to_string_lossy().into_owned(),
+            None => "-".to_string(),
+          };
+          let group = match get_group_by_gid(gid) {
+            Some(group) => group.name().to_string_lossy().into_owned(),
+            None => "-".to_string(),
+          };
+          println!("  \"Owner\": \"{} (uid: {})\",", owner, uid);
+          println!("  \"Group\": \"{} (gid: {})\",", group, gid);
+          if file_is_open {
+            println!("  \"Open\": \"File is currently open by another program.\"");
+          } else {
+            println!("  \"Open\": \"File is not open by another program.\"");
+          }
+          println!(" }}");
+          println!("}}");
+          Ok(())
+        },
+
+        _ => {
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          process::exit(1)
+       }
+    }
+
+}
+
+/// The main function is a wrapper for the run function, for error catching.
+fn main() {
+    if let Err(e) = run() {
+        print_error_json(&e.to_string());
+        std::process::exit(1);
+    }
+}
