@@ -51,7 +51,7 @@ https://github.com/jpegleg/wormsign
 These three tools use TOML config files to store information and support modes such as environment variables and password files for use in automation systems.
 
 
-## Usage Example
+## Usage Examples
 
 The tool can be used to do many different types of cryptographic operations. We can also analyze files and gather UNIX file data about files.
 
