@@ -50,6 +50,23 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | analyze    | multiple various including XOR and ECB               |
 | file_split | NA                                                   |
 
+## Installing
+
+Giant-spellbook can be installed from crates.io:
+
+```
+cargo install giant-spellbook
+```
+
+Or compiled from source:
+
+```
+cargo build --release
+sudo cp target/release/giant-spellbook /usr/local/bin/
+```
+
+Or installed from a release binary.
+
 
 ## Enchantress, Enchanter, and Wormsign
 
