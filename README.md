@@ -2,9 +2,11 @@
 
 # giant-spellbook
 
-This tool is a "multi-tool" of cryptographic operations and binary/file analysis capabilities. It is useful for regular cryptographic operations like hashing files for checksums, encrypting files, creating and verifying [wormsign](https://github.com/jpegleg/wormsign) signatures. Further, it can gather numerous statistics on files and binaries as well as perform low level operations on them such as bitflipping and slicing.
+This tool is a "multi-tool" of cryptographic operations and binary/file analysis capabilities. It is useful for regular cryptographic operations like hashing files for checksums, encrypting files, creating and verifying Dilithium5-AES signatures. It uses the highest standards for cryptographic operations with the strongest encryption methods, signing, and hashing only.
 
-The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that is required for decryption, the same mechanism used by enchantress and enchanter tools.
+Giant-spellbook can gather numerous statistics on files and binaries as well as perform low level operations on them such as bitflipping and slicing.
+
+The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that is required for decryption, the same mechanism used by enchantress and enchanter tools. The validation string that is generated is required for decryption with the tools, in addition to the password used.
 
 The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret key is written as ciphertext, encrypted with AES-256. The decrypted key is only stored in RAM during the original generation of the key and when the key is used for signing.
 
@@ -20,23 +22,33 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | decryption | XChaCha20Poly1305, SHA3 SHAKE256, BASE64, Argon2id   | enchanter    |
 | signing    | Dilithium5-AES, AES-256 CTR, Argon2id                | wormsign     |
 | key gen    | Dilithium5-AES, AES-256 CTR, Argon2id                | wormsign     |
-| verifying  | Dilithium5-AES                                       | wormsign     |  
-| file hash  | BLAKE3                                               |              |
-| file hash  | BLAKE2B512                                           |              | 
-| km hash    | Argon2id                                             |              | 
-| file hash  | SHA256                                               |              | 
-| file hash  | SHA3-256                                             |              | 
-| file hash  | SHA3-384                                             |              | 
-| file hash  | SHA3 SHAKE256                                        |              |
-| bitflip    | bitwise NOT                                          | self         |
-| analyze    | multiple various including XOR and ECB               | self         |
-| encode     | base64                                               |              |
-| encode     | base58                                               |              |
-| encode     | hex                                                  |              |
-| decode     | base64                                               |              |
-| decode     | base58                                               |              |
-| decode     | hex                                                  |              |
-| metadata   | multiple various including SHA3 SHAKE256             |              |
+| verifying  | Dilithium5-AES                                       | wormsign     |
+
+| operation  | hash algo                                            |
+|------------|------------------------------------------------------|                                       
+| file hash  | BLAKE3                                               |
+| file hash  | BLAKE2B512                                           |
+| km hash    | Argon2id                                             |
+| file hash  | SHA256                                               |
+| file hash  | SHA3-256                                             | 
+| file hash  | SHA3-384                                             |
+| file hash  | SHA3 SHAKE256                                        |
+
+| operation  | encoding type                                        |
+|------------|------------------------------------------------------| 
+| encode     | base64                                               |
+| encode     | base58                                               |
+| encode     | hex                                                  |
+| decode     | base64                                               |
+| decode     | base58                                               |
+| decode     | hex                                                  |
+
+| operation  | action/algos                                         |
+|------------|------------------------------------------------------| 
+| metadata   | multiple various including SHA3 SHAKE256             | 
+| bitflip    | bitwise NOT                                          | 
+| analyze    | multiple various including XOR and ECB               |
+| file_split | NA                                                   |
 
 
 ## Enchantress, Enchanter, and Wormsign
