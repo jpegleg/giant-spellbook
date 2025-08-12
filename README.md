@@ -5,33 +5,33 @@
 This tool is a "multi-tool" of cryptographic operations and binary/file analysis and review. It is useful for regular cryptographic operations like hashing files for checksums, encrypting files, creating and verifying [wormsign]() signatures. Further, it can gather numerous statistics on files and binaries as well as perform low level operations on them.
 
 
-| operation  | cipher/algo       | upstream     |
-|------------|-------------------|--------------|
-| encryption | AES-256 CTR       | enchantress  |
-| encryption | AES-256 GCM       | enchantress  |
-| encryption | XChaCha20Poly1305 | enchanter    |
-| decryption | AES-256 CTR       | enchantress  |
-| decryption | AES-256 GCM       | enchantress  |
-| decryption | XChaCha20Poly1305 | enchanter    |
-| signing    | Dilithium5-AES    | wormsign     |
-| key gen    | Dilithium5-AES    | wormsign     |
-| verifying  | Dilithium5-AES    | wormsign     |  
-| file hash  | BLAKE3            |              |
-| file hash  | BLAKE2B512        |              | 
-| km hash    | Argon2id          |              | 
-| file hash  | SHA256            |              | 
-| file hash  | SHA3-256          |              | 
-| file hash  | SHA3-384          |              | 
-| file hash  | SHAKE256          |              |
-| bitflip    | bitwise NOT       | self         |
-| analyze    | multiple,XOR,ECB  | self         |
-| encode     | base64            |              |
-| encode     | base58            |              |
-| encode     | hex               |              |
-| decode     | base64            |              |
-| decode     | base58            |              |
-| decode     | hex               |              |
-| metadata   | -                 | self         |
+| operation  | cipher/algos                                         | upstream     |
+|------------|------------------------------------------------------|--------------|
+| encryption | AES-256 CTR, SHA3 SHAKE256, BASE64, Argon2id         | enchantress  |
+| encryption | AES-256 GCM, SHA3 SHAKE256, BASE64, Argon2id         | enchantress  |
+| encryption | XChaCha20Poly1305, SHA3 SHAKE256, BASE64, Argon2id   | enchanter    |
+| decryption | AES-256 CTR, SHA3 SHAKE256, BASE64, Argon2id         | enchantress  |
+| decryption | AES-256 GCM, SHA3 SHAKE256, BASE64, Argon2id         | enchantress  |
+| decryption | XChaCha20Poly1305, SHA3 SHAKE256, BASE64, Argon2id   | enchanter    |
+| signing    | Dilithium5-AES, AES-256 CTR, Argon2id                | wormsign     |
+| key gen    | Dilithium5-AES, AES-256 CTR, Argon2id                | wormsign     |
+| verifying  | Dilithium5-AES                                       | wormsign     |  
+| file hash  | BLAKE3                                               |              |
+| file hash  | BLAKE2B512                                           |              | 
+| km hash    | Argon2id                                             |              | 
+| file hash  | SHA256                                               |              | 
+| file hash  | SHA3-256                                             |              | 
+| file hash  | SHA3-384                                             |              | 
+| file hash  | SHA3 SHAKE256                                        |              |
+| bitflip    | bitwise NOT                                          | self         |
+| analyze    | multiple,XOR,ECB                                     | self         |
+| encode     | base64                                               |              |
+| encode     | base58                                               |              |
+| encode     | hex                                                  |              |
+| decode     | base64                                               |              |
+| decode     | base58                                               |              |
+| decode     | hex                                                  |              |
+| metadata   | multiple, SHA3 SHAKE256                              |              |
 
 
 ## Enchantress, Enchanter, and Wormsign
