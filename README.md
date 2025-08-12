@@ -2,7 +2,7 @@
 
 # giant-spellbook
 
-This tool is a "multi-tool" of cryptographic operations and binary/file analysis and review. It is useful for regular cryptographic operations like hashing files for checksums, encrypting files, creating and verifying [wormsign]() signatures. Further, it can gather numerous statistics on files and binaries as well as perform low level operations on them.
+This tool is a "multi-tool" of cryptographic operations and binary/file analysis capabilities. It is useful for regular cryptographic operations like hashing files for checksums, encrypting files, creating and verifying [wormsign](https://github.com/jpegleg/wormsign) signatures. Further, it can gather numerous statistics on files and binaries as well as perform low level operations on them such as bitflipping and slicing.
 
 
 | operation  | cipher/algos                                         | upstream     |
@@ -31,7 +31,7 @@ This tool is a "multi-tool" of cryptographic operations and binary/file analysis
 | decode     | base64                                               |              |
 | decode     | base58                                               |              |
 | decode     | hex                                                  |              |
-| metadata   | multiple, SHA3 SHAKE256                              |              |
+| metadata   | multiple various including SHA3 SHAKE256             |              |
 
 
 ## Enchantress, Enchanter, and Wormsign
