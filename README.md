@@ -113,8 +113,8 @@ Enter key password then press enter (will not be displayed):
   "Accessed timestamp (UTC)": "2025-08-11 14:53:46.045206505 UTC",
   "Changed timestamp (UTC)": "2025-08-11 14:53:43.643190041 UTC",
   "Permissions": "100644",
-  "Owner": "unseenwork (uid: 1000)",
-  "Group": "unseenwork (gid: 1000)",
+  "Owner": "webserveradmin (uid: 1000)",
+  "Group": "webserveradmin (gid: 1000)",
   "Open": "File is not open by another program. Signing...",
   "Dilithium signature file": "sample.sig",
   "Dilithium signing key": "y.key",
@@ -165,8 +165,8 @@ giant-spellbook metadata sample.file
   "Accessed timestamp (UTC)": "2025-08-11 14:53:46.045206505 UTC",
   "Changed timestamp (UTC)": "2025-08-11 14:53:43.643190041 UTC",
   "Permissions": "100644",
-  "Owner": "unseenwork (uid: 1000)",
-  "Group": "unseenwork (gid: 1000)",
+  "Owner": "webserveradmin (uid: 1000)",
+  "Group": "webserveradmin (gid: 1000)",
   "Open": "File is not open by another program."
  }
 }
