@@ -13,9 +13,9 @@ This tool is a "multi-tool" of cryptographic operations and binary/file analysis
 | decryption | AES-256 CTR       | enchantress  |
 | decryption | AES-256 GCM       | enchantress  |
 | decryption | XChaCha20Poly1305 | enchanter    |
-| signing    | Dilithium5        | wormsign     |
-| key gen    | Dilithium5        | wormsign     |
-| verifying  | Dilithium5        | wormsign     |  
+| signing    | Dilithium5-AES    | wormsign     |
+| key gen    | Dilithium5-AES    | wormsign     |
+| verifying  | Dilithium5-AES    | wormsign     |  
 | file hash  | BLAKE3            |              |
 | file hash  | BLAKE2B512        |              | 
 | km hash    | Argon2id          |              | 
