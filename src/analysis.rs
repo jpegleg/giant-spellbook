@@ -324,7 +324,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
                 if j > i + needle.len() {
                     let s = String::from_utf8_lossy(&d[i..j]).to_string();
                     out.push(s);
-                    i = j; // skip ahead
+                    i = j;
                     continue;
                 }
             }
