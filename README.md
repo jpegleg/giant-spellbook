@@ -24,7 +24,7 @@ This tool is a "multi-tool" of cryptographic operations and binary/file analysis
 | file hash  | SHA3-384                                             |              | 
 | file hash  | SHA3 SHAKE256                                        |              |
 | bitflip    | bitwise NOT                                          | self         |
-| analyze    | multiple,XOR,ECB                                     | self         |
+| analyze    | multiple various including XOR and ECB               | self         |
 | encode     | base64                                               |              |
 | encode     | base58                                               |              |
 | encode     | hex                                                  |              |
