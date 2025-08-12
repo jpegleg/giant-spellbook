@@ -4,6 +4,11 @@
 
 This tool is a "multi-tool" of cryptographic operations and binary/file analysis capabilities. It is useful for regular cryptographic operations like hashing files for checksums, encrypting files, creating and verifying [wormsign](https://github.com/jpegleg/wormsign) signatures. Further, it can gather numerous statistics on files and binaries as well as perform low level operations on them such as bitflipping and slicing.
 
+The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that is required for decryption, the same mechanism used by enchantress and enchanter tools.
+
+The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret key is written as ciphertext, encrypted with AES-256. The decrypted key is only stored in RAM during the original generation of the key and when the key is used for signing.
+
+
 
 | operation  | cipher/algos                                         | upstream     |
 |------------|------------------------------------------------------|--------------|
