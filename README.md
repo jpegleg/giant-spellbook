@@ -30,6 +30,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | file hash  | BLAKE2B512                                           |
 | km hash    | Argon2id                                             |
 | file hash  | SHA256                                               |
+| file hash  | SHA512                                               |
 | file hash  | SHA3-256                                             | 
 | file hash  | SHA3-384                                             |
 | file hash  | SHA3 SHAKE256                                        |
@@ -132,19 +133,65 @@ Enter key password then press enter (will not be displayed):
 giant-spellbook analyze sample.file
 {
   "File": "sample.file",
-  "Time": "2025-08-12 00:02:16.598143471 UTC",
+  "Report time": "2025-08-13 16:11:56.340817881 UTC",
   "Size": 5,
-  "Type": "ASN1_DER_seq_like",
-  "ELF": {"is_elf": false, "class": 0, "data_endian": "Unknown", "os_abi": 0, "glibc_versions": []},
-  "PE": {"is_pe": false, "machine": null},
+  "Type": "Unknown",
+  "Platform_guess": "Unknown",
+  "Elf": {
+    "is_elf": false,
+    "class": 0,
+    "endian": "Unknown",
+    "os_abi": 0,
+    "os_abi_name": "SYSV/Default '0'"
+  },
+  "PE": {
+    "is_pe": false,
+    "machine": null,
+    "is_dll": false,
+    "subsystem": null,
+    "kind": ""
+  },
+  "Mach-O": {
+    "is_macho": false,
+    "is_fat": false,
+    "fat_arch_count": 0,
+    "kind": "Unknown"
+  },
+  "WASM": {
+    "is_wasm": false
+  },
+  "Clibrary": {
+    "glibc": [],
+    "musl": [],
+    "uclibc": [],
+    "libc_sonames": [],
+    "darwin_libsystem_present": false,
+    "darwin_versions": []
+  },
   "Printable_ratio": 1.000000,
   "Entropy": 1.370951,
   "Chi_square": 558.200000,
-  "Rolling_entropy": {"window": 5, "count": 0, "min": null, "avg": null, "max": null},
-  "ECB": [],
-  "Periodicity": {"best_lag": 3, "correlation": 0.500000},
-  "Repeating_xor_keysizes": [{"keysize": 2, "norm_hamming": 0.500000}],
-  "Single_byte_xor_probe": {"best_key": "0x40", "score": 0.000000, "printable": 1.000000}
+  "Rolling_entropy": {
+    "window": 5,
+    "count": 0,
+    "min": null,
+    "avg": null,
+    "max": null
+  },
+  "ECB": [
+  ],
+  "Periodicity": {
+    "best_lag": 3,
+    "correlation": 0.500000
+  },
+  "Repeating_xor_keysizes": [
+    {"keysize": 2, "norm_hamming": 0.500000}
+  ],
+  "Single_byte_xor_probe": {
+    "best_key": "0x40",
+    "score": 0.000000,
+    "printable": 1.000000
+  }
 }
 
 giant-spellbook metadata sample.file
@@ -175,6 +222,31 @@ giant-spellbook encrypt aes-gcm sample.file sample.file.e
 Enter password:
 {"Validation string": "/VK3HxOSte9rpdAm61rSQ7tSkSD9DHIFJP2kpwwgkm3Qj5C83cmijikYEj3ZvQCHYrlciFDGRRMPQ8JNRLCGrQ=="}
 ```
+
+Because there is some variety in PE file usage and little to distinguish between some uses, some UEFI files will be guessed as Windows, such as linux kernel images.
+
+File type detections include:
+
+- "ELF"
+- "WASM"
+- "Mach-O"
+- "PE"
+  - "EXE"
+  - "DLL"
+  - "UEFI"
+- "PNG"
+- "JPEG"
+- "GIF"
+- "GZIP"
+- "XLSX (ZIP+xl/)"
+- "ZIP"
+- "DOC (OLE/CFB)"
+- "OLE/CFB"
+- "PDF"
+- "PEM"
+
+File type detections are not perfect and should be taken as a data point or best guess rather than a conclusion.
+
 
 ## Bitflipping and slicing
 
