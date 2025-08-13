@@ -65,7 +65,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" => {
-          println!("{{\"Version\": \"0.1.0\"}}");
+          println!("{{\"Version\": \"0.1.1\"}}");
           process::exit(0)
         },
         "sign" => {
@@ -569,7 +569,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "hash" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> \"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> \"\n}}", args[0]);
             process::exit(1);
           }
           let hash = &args[2];
@@ -578,6 +578,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             "all" => hashfunctions::file_all(input)?,
             "sha256" => {
               let _ = hashfunctions::sha256(input);
+            },
+            "sha512" => {
+              let _ = hashfunctions::sha512(input);
             },
             "sha3_256" => {
               let _ = hashfunctions::sha3_256(input);
@@ -599,7 +602,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             },
 
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> \"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> \"\n}}", args[0]);
               process::exit(1);
             }
           }
