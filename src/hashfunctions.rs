@@ -1,6 +1,6 @@
 use argon2::Argon2;
 use blake2::{Blake2b512, Digest};
-use sha2::Sha256;
+use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_384, Shake256, digest::{Update, ExtendableOutput}};
 use chrono::Utc;
 use zeroize::Zeroize;
@@ -44,6 +44,10 @@ pub fn file_all(input: &String) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut hasher, &data);
   let sha2 = hasher.finalize();
   println!("  \"SHA256\": \"{:x}\"", sha2);
+  let mut hasher = Sha512::new();
+  Update::update(&mut hasher, &data);
+  let sha512 = hasher.finalize();
+  println!("  \"SHA512\": \"{:x}\"", sha512);
   println!("}}");
   Ok(())
 }
@@ -66,6 +70,21 @@ pub fn sha256(input: &String) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut hasher, &data);
   let sha2 = hasher.finalize();
   println!("  \"SHA256\": \"{:x}\"", sha2);
+  println!("}}");
+  Ok(())
+}
+
+pub fn sha512(input: &String) -> Result<(), Box<dyn std::error::Error>> {
+  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut data = Vec::new();
+  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  println!("{{\n  \"File\": \"{input}\",");
+  let chronox: String = Utc::now().to_string();
+  println!("  \"Time\": \"{chronox}\",");
+  let mut hasher = Sha512::new();
+  Update::update(&mut hasher, &data);
+  let sha2 = hasher.finalize();
+  println!("  \"SHA512\": \"{:x}\"", sha2);
   println!("}}");
   Ok(())
 }
