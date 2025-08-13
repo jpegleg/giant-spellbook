@@ -6,6 +6,7 @@ const KEY_CURRENT: &[u8] = b"current version ";
 const KEY_COMPAT:  &[u8] = b"compatibility version ";
 const MUSL_KEY_CURRENT: &[u8] = b"ld-musl-";
 const MUSL_KEY_COMPAT: &[u8] =  b"musl libc";
+const IMAGE_FILE_DLL: u16 = 0x2000;
 
 pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error>> {
     let p = Path::new(path);
@@ -87,7 +88,9 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
                 3  => "GNU/Linux",
                 _  => "ELF-Unknown/Linux",
             }
-        } else { "Unknown" };
+        } else { 
+            "Unknown"
+        };
 
     let win = 1024usize.min(data.len());
     let step = (win / 2).max(1);
@@ -352,26 +355,34 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
             let data = match d[5] { 1 => "LSB", 2 => "MSB", _ => "Unknown" };
             let os_abi = d[7] as u64;
             (true, class, data, os_abi)
-        } else { (false, 0, "Unknown", 0) }
+        } else { 
+            (false, 0, "Unknown", 0)
+        }
     }
 
     fn detect_pe(d: &[u8]) -> (bool, Option<u16>, bool, Option<u16>, &'static str) {
         if d.len() < 64 || &d[0..2] != b"MZ" { return (false, None, false, None, ""); }
         if d.len() < 0x40 { return (false, None, false, None, ""); }
+
         let e_lfanew = u32::from_le_bytes([d[0x3C], d[0x3D], d[0x3E], d[0x3F]]) as usize;
         if e_lfanew + 0x18 >= d.len() { return (false, None, false, None, ""); }
         if &d[e_lfanew..e_lfanew+4] != b"PE\0\0" { return (false, None, false, None, ""); }
 
-        let machine = u16::from_le_bytes([d[e_lfanew+4], d[e_lfanew+5]]);
-        let characteristics = u16::from_le_bytes([d[e_lfanew+0x12], d[e_lfanew+0x13]]);
-        let is_dll = (characteristics & 0x2000) != 0; // IMAGE_FILE_DLL
+        let coff = e_lfanew + 4;
+        let machine = u16::from_le_bytes([d[coff + 0], d[coff + 1]]);
+        let size_of_optional_header = u16::from_le_bytes([d[e_lfanew + 0x14], d[e_lfanew + 0x15]]) as usize;
+        let characteristics = u16::from_le_bytes([d[e_lfanew + 0x16], d[e_lfanew + 0x17]]);
+        let is_dll = (characteristics & IMAGE_FILE_DLL) != 0;
 
-        let size_of_optional_header = u16::from_le_bytes([d[e_lfanew+0x14], d[e_lfanew+0x15]]) as usize;
         let opt_off = e_lfanew + 0x18;
-        if opt_off + size_of_optional_header > d.len() { return (true, Some(machine), is_dll, None, if is_dll { "PE/DLL" } else { "PE/EXE" }); }
-        if opt_off + 2 > d.len() { return (true, Some(machine), is_dll, None, if is_dll { "PE/DLL" } else { "PE/EXE" }); }
+        if opt_off + size_of_optional_header > d.len() {
+            return (true, Some(machine), is_dll, None, if is_dll { "PE/DLL" } else { "PE/EXE" });
+        }
+        if opt_off + 2 > d.len() {
+            return (true, Some(machine), is_dll, None, if is_dll { "PE/DLL" } else { "PE/EXE" });
+        }
 
-        let magic = u16::from_le_bytes([d[opt_off], d[opt_off+1]]);
+        let magic = u16::from_le_bytes([d[opt_off], d[opt_off + 1]]);
         let subsystem_off = if magic == 0x10B {
             opt_off + 0x44
         } else if magic == 0x20B {
@@ -379,9 +390,12 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         } else {
             opt_off + 0x44
         };
+
         let subsystem = if subsystem_off + 2 <= d.len() {
-            Some(u16::from_le_bytes([d[subsystem_off], d[subsystem_off+1]]))
-        } else { None };
+            Some(u16::from_le_bytes([d[subsystem_off], d[subsystem_off + 1]]))
+        } else {
+            None
+        };
 
         let kind = if subsystem.map(|s| is_uefi_subsystem(s)).unwrap_or(false) {
             "PE/UEFI"
@@ -397,6 +411,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     fn is_uefi_subsystem(sub: u16) -> bool {
         matches!(sub, 10 | 11 | 12 | 13)
     }
+
 
     fn detect_macho(d: &[u8]) -> (bool, bool, u64, &'static str) {
         if d.len() < 4 { return (false, false, 0, "Unknown"); }
