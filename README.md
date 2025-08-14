@@ -91,6 +91,14 @@ These three tools use TOML config files to store information and support modes s
 
 The tool can be used to do many different types of cryptographic operations. We can also analyze files and gather UNIX file data about files.
 
+Run with no arguments to print all of the options:
+
+```
+giant-spellbook
+{
+  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
+}
+```
 
 Use the first argument (option) by itself to print the help information for the subcommands (additional arguments):
 
