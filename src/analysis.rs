@@ -1,13 +1,31 @@
-use std::{collections::HashMap, fs, path::Path};
-use chrono::Utc;
+use std::fs::{self, File};
+use std::io::{BufReader, Read};
+use std::path::Path;
+use std::time::Instant;
+use std::collections::HashMap;
 use std::fmt::Write;
+use chrono::Utc;
 
 const KEY_CURRENT: &[u8] = b"current version ";
 const KEY_COMPAT:  &[u8] = b"compatibility version ";
 const MUSL_KEY_CURRENT: &[u8] = b"ld-musl-";
 const MUSL_KEY_COMPAT: &[u8] =  b"musl libc";
 const IMAGE_FILE_DLL: u16 = 0x2000;
+const OID_RSA_ENC: &[u8] = b"\x06\x09*\x86H\x86\xf7\r\x01\x01\x01";
+const OID_X509_EXT_ARC: &[u8] = b"\x06\x03\x55\x1D";
+const OID_X509_ATTR_ARC: &[u8] = b"\x06\x03\x55\x04";
+const OID_PKCS7_SIGNEDDATA: &[u8] = b"\x06\x09*\x86H\x86\xf7\r\x01\x07\x02";
+const OID_PKCS12_ARC: &[u8] = b"\x06\x0A*\x86H\x86\xf7\r\x01\x0C";
+const OFFSETS: [usize; 3] = [0x8001, 0x8801, 0x9001];
+const FAT_MAGIC: u32 = 0xCAFEBABE;
+const FAT_CIGAM: u32 = 0xBEBAFECA;
+const FAT_MAGIC_64: u32 = 0xCAFED00D;
+const FAT_CIGAM_64: u32 = 0xD00DCAFE;
 
+/// This function is a wrapper function for a quick cryptanalysis report.
+/// The report tries a number of quick tests, including file detection,
+/// and a few algorithms like Chi, Hamming, as well as a few different XOR tests,
+/// Shannon entropy calculation, and some ECB and repetition tests.
 pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error>> {
     let p = Path::new(path);
     let data = fs::read(p)?;
@@ -49,16 +67,26 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     let pe_info = detect_pe(&data);
     let (is_macho, is_fat, fat_arch_count, macho_kind) = detect_macho(&data);
     let is_wasm = detect_wasm(&data);
+
     let is_png  = data.starts_with(b"\x89PNG\r\n\x1a\n");
     let is_gzip = data.starts_with(b"\x1F\x8B");
     let is_zip  = data.starts_with(b"PK\x03\x04");
     let is_pdf  = data.starts_with(b"%PDF-");
     let is_pem  = data.starts_with(b"-----BEGIN ");
+
     let is_jpeg = data.len() >= 4 && data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF;
     let is_gif  = data.starts_with(b"GIF87a") || data.starts_with(b"GIF89a");
     let is_ole  = data.starts_with(b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1");
     let looks_xlsx = is_zip && (memmem(&data, b"[Content_Types].xml").is_some() && memmem(&data, b"xl/").is_some());
     let looks_doc  = is_ole && (memmem(&data, b"WordDocument").is_some() || memmem(&data, b"\x00W\x00o\x00r\x00d\x00D\x00o\x00c\x00u\x00m\x00e\x00n\x00t\x00").is_some());
+
+    let is_7z = detect_7z(&data);
+    let (is_rar4, is_rar5) = detect_rar(&data);
+    let is_iso9660 = detect_iso9660(&data);
+    let (is_vhd, is_vhdx) = detect_vhd(&data);
+    let asn1 = detect_der_asn1(&data);
+    let (is_pickle, _) = detect_python_pickle(&data);
+
 
     let magic = if is_wasm { "WASM" }
         else if is_macho { "Mach-O" }
@@ -73,6 +101,16 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         else if looks_doc { "DOC (OLE/CFB)" }
         else if is_ole { "OLE/CFB" }
         else if is_pdf { "PDF" }
+        else if is_7z { "7z" }
+        else if is_rar5 { "RAR5" }
+        else if is_rar4 { "RAR4" }
+        else if is_iso9660 { "ISO-9660" }
+        else if is_vhdx { "VHDX" }
+        else if is_vhd { "VHD" }
+        else if asn1.0 && asn1.1 { "DER (X.509 likely)" }
+        else if asn1.0 && asn1.2 { "DER (PKCS#7/CMS likely)" }
+        else if asn1.0 && asn1.3 { "DER (PKCS#12 likely)" }
+        else if is_pickle { "Python pickle" }
         else if is_pem { "PEM" }
         else { "Unknown" };
 
@@ -88,7 +126,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
                 3  => "GNU/Linux",
                 _  => "ELF-Unknown/Linux",
             }
-        } else { 
+        } else {
             "Unknown"
         };
 
@@ -211,7 +249,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     let glibc_versions   = if is_elf { find_glibc_versions(&data) } else { Vec::new() };
     let musl_versions    = if is_elf { find_musl_versions_strict_and_loose(&data) } else { Vec::new() };
     let uclibc_versions  = if is_elf { find_uclibc_versions(&data) } else { Vec::new() };
-    let bsd_libc_sonames = if is_elf { find_bsd_libc_sonames(&data) } else { Vec::new() };
+    let bsd_libc_so_names = if is_elf { find_bsd_libc_so_names(&data) } else { Vec::new() };
     let (darwin_libsystem_present, darwin_versions) = if is_macho { find_darwin_libsystem(&data) } else { (false, Vec::new()) };
 
     let printable_ratio = (printable as f64) / n;
@@ -247,15 +285,11 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     writeln!(&mut out, "    \"kind\": \"{}\"", macho_kind)?;
     writeln!(&mut out, "  }},")?;
 
-    writeln!(&mut out, "  \"WASM\": {{")?;
-    writeln!(&mut out, "    \"is_wasm\": {}", bool_to_json(is_wasm))?;
-    writeln!(&mut out, "  }},")?;
-
     writeln!(&mut out, "  \"Clibrary\": {{")?;
     writeln!(&mut out, "    \"glibc\": {},", json_str_array(&glibc_versions))?;
     writeln!(&mut out, "    \"musl\": {},", json_str_array(&musl_versions))?;
     writeln!(&mut out, "    \"uclibc\": {},", json_str_array(&uclibc_versions))?;
-    writeln!(&mut out, "    \"libc_sonames\": {},", json_str_array(&bsd_libc_sonames))?;
+    writeln!(&mut out, "    \"libc_so_names\": {},", json_str_array(&bsd_libc_so_names))?;
     writeln!(&mut out, "    \"darwin_libsystem_present\": {},", bool_to_json(darwin_libsystem_present))?;
     writeln!(&mut out, "    \"darwin_versions\": {}", json_str_array(&darwin_versions))?;
     writeln!(&mut out, "  }},")?;
@@ -355,7 +389,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
             let data = match d[5] { 1 => "LSB", 2 => "MSB", _ => "Unknown" };
             let os_abi = d[7] as u64;
             (true, class, data, os_abi)
-        } else { 
+        } else {
             (false, 0, "Unknown", 0)
         }
     }
@@ -417,11 +451,6 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         if d.len() < 4 { return (false, false, 0, "Unknown"); }
         let m_be = u32::from_be_bytes([d[0], d[1], d[2], d[3]]);
         let m_le = u32::from_le_bytes([d[0], d[1], d[2], d[3]]);
-        const FAT_MAGIC: u32 = 0xCAFEBABE;
-        const FAT_CIGAM: u32 = 0xBEBAFECA;
-        const FAT_MAGIC_64: u32 = 0xCAFED00D;
-        const FAT_CIGAM_64: u32 = 0xD00DCAFE;
-
         if m_be == FAT_MAGIC || m_be == FAT_MAGIC_64 {
             if d.len() >= 8 {
                 let nfat = u32::from_be_bytes([d[4], d[5], d[6], d[7]]) as u64;
@@ -449,6 +478,77 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         d.len() >= 8 && &d[0..4] == b"\0asm" && (d[4] == 0x01 || d[4] == 0x00)
     }
 
+    fn detect_7z(d: &[u8]) -> bool {
+        d.len() >= 6 && d[0] == 0x37 && d[1] == 0x7A && d[2] == 0xBC && d[3] == 0xAF && d[4] == 0x27 && d[5] == 0x1C
+    }
+
+    fn detect_rar(d: &[u8]) -> (bool, bool) {
+        let rar4 = d.len() >= 7 && &d[0..7] == b"Rar!\x1A\x07\x00";
+        let rar5 = d.len() >= 8 && &d[0..8] == b"Rar!\x1A\x07\x01\x00";
+        (rar4, rar5)
+    }
+
+    fn detect_iso9660(d: &[u8]) -> bool {
+        for &off in &OFFSETS {
+            if off + 5 <= d.len() && &d[off..off+5] == b"CD001" { return true; }
+        }
+        false
+    }
+
+    fn detect_vhd(d: &[u8]) -> (bool, bool) {
+        let is_vhdx = d.len() >= 8 && &d[0..8] == b"vhdxfile";
+        let mut is_vhd = false;
+        if d.len() >= 512 {
+            let start_cookie = &d[0..8.min(d.len())];
+            if start_cookie == b"conectix" { is_vhd = true; }
+            let end = d.len();
+            let foot_start = end.saturating_sub(512);
+            if &d[foot_start..foot_start+8.min(d.len()-foot_start)] == b"conectix" { is_vhd = true; }
+        }
+        (is_vhd, is_vhdx)
+    }
+
+       fn detect_der_asn1(d: &[u8]) -> (bool, bool, bool, bool) {
+        if d.len() < 2 || d[0] != 0x30 { return (false, false, false, false); }
+        let mut idx = 1usize;
+        let total = d.len();
+        let (len_ok, content_len, len_bytes) = parse_der_len(&d[idx..]);
+        if !len_ok { return (false, false, false, false); }
+        idx += len_bytes;
+        if idx + content_len != total { return (false, false, false, false); } // require full-file SEQUENCE
+
+        let likely_x509 = memmem(d, OID_X509_EXT_ARC).is_some() || memmem(d, OID_X509_ATTR_ARC).is_some() || memmem(d, OID_RSA_ENC).is_some();
+        let likely_pkcs7 = memmem(d, OID_PKCS7_SIGNEDDATA).is_some();
+        let likely_pkcs12 = memmem(d, OID_PKCS12_ARC).is_some();
+
+        (true, likely_x509, likely_pkcs7, likely_pkcs12)
+    }
+
+        fn parse_der_len(d: &[u8]) -> (bool, usize, usize) {
+        if d.is_empty() { return (false, 0, 0); }
+        let b0 = d[0];
+        if b0 & 0x80 == 0 {
+            (true, b0 as usize, 1)
+        } else {
+            let n = (b0 & 0x7F) as usize;
+            if n == 0 || n > 4 || d.len() < 1 + n { return (false, 0, 0); }
+            let mut len = 0usize;
+            for i in 0..n { len = (len << 8) | d[1 + i] as usize; }
+            (true, len, 1 + n)
+        }
+    }
+
+    fn detect_python_pickle(d: &[u8]) -> (bool, Option<u8>) {
+        // Binary protocols start with 0x80 <proto>, typically 2..5; ends with '.' (0x2E) STOP (often).
+        if d.len() >= 2 && d[0] == 0x80 && (2..=5).contains(&d[1]) {
+            return (true, Some(d[1]));
+        }
+        // Fallback heuristic: starts with ASCII opcodes indicative of protocol 0/1  (e.g., '(', 'd', 'l', 'p', 'I')
+        if !d.is_empty() && (d[0] == b'(' || d[0] == b'd' || d[0] == b'l' || d[0] == b'p' || d[0] == b'I') {
+            return (true, None);
+        }
+        (false, None)
+    }
     fn find_glibc_versions(d: &[u8]) -> Vec<String> {
         let needle = b"GLIBC_";
         let mut out = Vec::new();
@@ -539,7 +639,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         out.sort(); out.dedup(); out
     }
 
-    fn find_bsd_libc_sonames(d: &[u8]) -> Vec<String> {
+    fn find_bsd_libc_so_names(d: &[u8]) -> Vec<String> {
         let pat = b"libc.so.";
         let mut out = Vec::new();
         let mut i = 0usize;
@@ -605,4 +705,147 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
 
     Ok(out)
 
+}
+
+pub fn caesar_analysis(file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let start_time = Instant::now();
+    let input_path = Path::new(file_path);
+    let mut buffer = Vec::new();
+    BufReader::new(File::open(input_path)?).read_to_end(&mut buffer)?;
+
+    let (output_bytes, successful) = if is_probably_english(&buffer) {
+        (buffer.clone(), false)
+    } else {
+        let mut best_score = f64::MIN;
+        let mut best_output = Vec::new();
+
+        for shift in 1..26 {
+            let decrypted: Vec<u8> = buffer
+                .iter()
+                .map(|&b| {
+                    if b.is_ascii_lowercase() {
+                        ((b - b'a' + 26 - shift) % 26 + b'a') as u8
+                    } else if b.is_ascii_uppercase() {
+                        ((b - b'A' + 26 - shift) % 26 + b'A') as u8
+                    } else {
+                        b
+                    }
+                })
+                .collect();
+
+            let score = english_score(&decrypted);
+            if score > best_score {
+                best_score = score;
+                best_output = decrypted;
+            }
+        }
+
+        let successful = is_probably_english(&best_output);
+        (best_output, successful)
+    };
+
+    let mut output_path = input_path.to_path_buf();
+    if let Some(file_stem) = input_path.file_name().and_then(|s| s.to_str()) {
+        output_path.set_file_name(format!("{file_stem}__decrypted"));
+    }
+
+    fs::write(&output_path, &output_bytes)?;
+
+    let duration = start_time.elapsed().as_secs_f64();
+    let now = Utc::now();
+
+    println!("{{");
+    println!("  \"Decryption_successful\": {},", successful);
+    println!("  \"Analysis_duration_seconds\": {:.6},", duration);
+    println!("  \"Report_time_UTC\": \"{}\",", now.to_rfc3339());
+    println!("  \"Input_file\": \"{}\",", file_path);
+    println!("  \"Output_file\": \"{}\"", output_path.display());
+    println!("}}");
+
+    Ok(())
+}
+
+fn is_probably_english(data: &[u8]) -> bool {
+    let score = english_score(data);
+    if data.len() < 200 {
+        score > 0.1
+    } else {
+        score > 0.4
+    }
+}
+
+fn english_score(text: &[u8]) -> f64 {
+    let expected = [
+        8.167, 1.492, 2.782, 4.253, 12.702, 2.228, 2.015, 6.094, 6.966, 0.153,
+        0.772, 4.025, 2.406, 6.749, 7.507, 1.929, 0.095, 5.987, 6.327, 9.056,
+        2.758, 0.978, 2.360, 0.150, 1.974, 0.074,
+    ];
+
+    let mut counts = [0usize; 26];
+    let mut total = 0usize;
+
+    for &b in text {
+        let c = b.to_ascii_lowercase();
+        if c.is_ascii_lowercase() {
+            counts[(c - b'a') as usize] += 1;
+            total += 1;
+        }
+    }
+
+    if total == 0 {
+        return 0.0;
+    }
+
+    let mut score = 0.0;
+    for i in 0..26 {
+        let freq = counts[i] as f64 * 100.0 / total as f64;
+        score += (freq - expected[i]).abs();
+    }
+
+    1.0 - (score / 100.0)
+}
+
+pub fn xor_analysis(file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let start_time = Instant::now();
+
+    let input_path = Path::new(file_path);
+    let mut buffer = Vec::new();
+    BufReader::new(File::open(input_path)?).read_to_end(&mut buffer)?;
+
+    let mut best_score = f64::MIN;
+    let mut best_output = Vec::new();
+    let mut best_key = 0u8;
+
+    for key in 0u8..=255 {
+        let decrypted: Vec<u8> = buffer.iter().map(|b| b ^ key).collect();
+        let score = english_score(&decrypted);
+        if score > best_score {
+            best_score = score;
+            best_output = decrypted;
+            best_key = key;
+        }
+    }
+
+    let decryption_successful = is_probably_english(&best_output);
+
+    let mut output_path = input_path.to_path_buf();
+    if let Some(file_stem) = input_path.file_name().and_then(|s| s.to_str()) {
+        output_path.set_file_name(format!("{file_stem}__decrypted"));
+    }
+
+    fs::write(&output_path, &best_output)?;
+
+    let duration = start_time.elapsed().as_secs_f64();
+    let now = Utc::now();
+
+    println!("{{");
+    println!("  \"Decryption_successful\": {},", decryption_successful);
+    println!("  \"Xor_key_used\": {},", best_key);
+    println!("  \"Analysis_duration_seconds\": {:.6},", duration);
+    println!("  \"Report_time_UTC\": \"{}\",", now.to_rfc3339());
+    println!("  \"Input_file\": \"{}\",", file_path);
+    println!("  \"Output_file\": \"{}\"", output_path.display());
+    println!("}}");
+
+    Ok(())
 }
