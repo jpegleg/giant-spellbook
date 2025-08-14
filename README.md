@@ -4,7 +4,7 @@
 
 This tool is a "multi-tool" of cryptographic operations and binary/file analysis capabilities. It is useful for regular cryptographic operations like hashing files for checksums, encrypting files, creating and verifying Dilithium5-AES signatures. It uses the highest standards for cryptographic operations with the strongest encryption methods, signing, and hashing.
 
-Giant-spellbook can gather numerous statistics on files and binaries as well as perform low level operations on them such as bitflipping and slicing.
+Giant-spellbook can perform different types of crypanalysis and gather numerous statistics on files and binaries as well as perform low level operations on them such as bitflipping and slicing.
 
 The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that is required for decryption, the same mechanism used by enchantress and enchanter tools. The validation string that is generated is required for decryption with the tools, in addition to the password used.
 
@@ -25,18 +25,18 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | verifying  | Dilithium5-AES                                       | wormsign     |
 
 | operation  | hash algo                                            |
-|------------|------------------------------------------------------|                                       
+|------------|------------------------------------------------------|           
 | file hash  | BLAKE3                                               |
 | file hash  | BLAKE2B512                                           |
 | km hash    | Argon2id                                             |
 | file hash  | SHA256                                               |
 | file hash  | SHA512                                               |
-| file hash  | SHA3-256                                             | 
+| file hash  | SHA3-256                                             |
 | file hash  | SHA3-384                                             |
 | file hash  | SHA3 SHAKE256                                        |
 
 | operation  | encoding type                                        |
-|------------|------------------------------------------------------| 
+|------------|------------------------------------------------------|
 | encode     | base64                                               |
 | encode     | base58                                               |
 | encode     | hex                                                  |
@@ -45,11 +45,12 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | decode     | hex                                                  |
 
 | operation  | action/algos                                         |
-|------------|------------------------------------------------------| 
-| metadata   | multiple various including SHA3 SHAKE256             | 
-| bitflip    | bitwise NOT                                          | 
+|------------|------------------------------------------------------|
+| metadata   | multiple various including SHA3 SHAKE256             |
+| bitflip    | bitwise NOT                                          |
 | analyze    | multiple various including XOR and ECB               |
 | file_split | NA                                                   |
+| bruteforce | XOR and Caesar English bruteforce decryption         |
 
 ## Installing
 
@@ -90,51 +91,73 @@ These three tools use TOML config files to store information and support modes s
 
 The tool can be used to do many different types of cryptographic operations. We can also analyze files and gather UNIX file data about files.
 
+
+Use the first argument (option) by itself to print the help information for the subcommands (additional arguments):
+
 ```
-giant-spellbook generate y.key y.pub
+giant-spellbook generate
+{
+  "ERROR": "Usage: target/release/giant-spellbook generate <private_key_path> <public_key_path>"
+}
+```
+
+Generating a Dilithium5-AES encrypted secret key and public key:
+
+```
+giant-spellbook generate example.key example.pub
 Enter key password then press enter (will not be displayed):
 
-giant-spellbook sign sample.file sample.sig y.pub y.key
+```
+
+Signing with an encrypted Dilithium5-AES secret key:
+
+```
+giant-spellbook sign sample.file sample.sig example.pub example.key
 Enter key password then press enter (will not be displayed):
 
 {
 "sample.file": {
-  "Checksum SHA3 SHAKE256 10": "[94, 85, 171, 118, 174, 29, 88, 78, 109, 75]",
-  "Report time": "2025-08-12 00:01:02.290576508 UTC",
+  "Checksum SHA3 SHAKE256 10": "[158, 108, 141, 164, 236, 55, 153, 9, 114, 102]",
+  "Report time": "2025-08-14 00:22:01.746655122 UTC",
   "Number of IO blocks": "8",
   "Block size": "4096",
-  "Inode": "5382881",
-  "Total as bytes": "5",
+  "Inode": "165678331",
+  "Total as bytes": "17",
   "Total as kilobytes": "0",
   "Total as megabytes": "0",
-  "Total as bits": "40",
-  "Byte distribution": "0.6",
-  "Created timestamp (UTC)": "2025-08-11 14:53:43.643190041 UTC",
-  "Modified timestamp (UTC)": "2025-08-11 14:53:43.643190041 UTC",
-  "Accessed timestamp (UTC)": "2025-08-11 14:53:46.045206505 UTC",
-  "Changed timestamp (UTC)": "2025-08-11 14:53:43.643190041 UTC",
+  "Total as bits": "136",
+  "Byte distribution": "0.23529411764705882",
+  "Created timestamp (UTC)": "2025-08-14 00:21:06.523593117 UTC",
+  "Modified timestamp (UTC)": "2025-08-14 00:21:06.523593117 UTC",
+  "Accessed timestamp (UTC)": "2025-08-14 00:21:06.523593117 UTC",
+  "Changed timestamp (UTC)": "2025-08-14 00:21:06.523593117 UTC",
   "Permissions": "100644",
   "Owner": "webserveradmin (uid: 1000)",
   "Group": "webserveradmin (gid: 1000)",
   "Open": "File is not open by another program. Signing...",
   "Dilithium signature file": "sample.sig",
-  "Dilithium signing key": "y.key",
-  "Key Inode": "5389736",
-  "Key Created timestamp (UTC)": "2025-08-11 00:35:07.912473575 UTC",
-  "Key Modified timestamp (UTC)": "2025-08-11 00:35:08.629502399 UTC",
-  "Key Accessed timestamp (UTC)": "2025-08-11 00:35:16.050798747 UTC",
-  "Key Changed timestamp (UTC)": "2025-08-11 00:35:08.629502399 UTC",
+  "Dilithium signing key": "example.key",
+  "Key Inode": "165678332",
+  "Key Created timestamp (UTC)": "2025-08-14 00:21:27.733197521 UTC",
+  "Key Modified timestamp (UTC)": "2025-08-14 00:21:29.330167731 UTC",
+  "Key Accessed timestamp (UTC)": "2025-08-14 00:22:01.745563032 UTC",
+  "Key Changed timestamp (UTC)": "2025-08-14 00:21:29.330167731 UTC",
   "Key Permissions": "100600",
   "Key Owner": "webserveradmin (uid: 1000)",
   "Key Group": "webserveradmin (gid: 1000)"
  }
 }
 
+```
+
+Using the quick cryptanalysis and binary analysis against a file:
+
+```
 giant-spellbook analyze sample.file
 {
   "File": "sample.file",
-  "Report time": "2025-08-13 16:11:56.340817881 UTC",
-  "Size": 5,
+  "Report time": "2025-08-14 00:22:33.139471580 UTC",
+  "Size": 17,
   "Type": "Unknown",
   "Platform_guess": "Unknown",
   "Elf": {
@@ -157,9 +180,6 @@ giant-spellbook analyze sample.file
     "fat_arch_count": 0,
     "kind": "Unknown"
   },
-  "WASM": {
-    "is_wasm": false
-  },
   "Clibrary": {
     "glibc": [],
     "musl": [],
@@ -169,48 +189,56 @@ giant-spellbook analyze sample.file
     "darwin_versions": []
   },
   "Printable_ratio": 1.000000,
-  "Entropy": 1.370951,
-  "Chi_square": 558.200000,
+  "Entropy": 1.734522,
+  "Chi_square": 1443.705882,
   "Rolling_entropy": {
-    "window": 5,
+    "window": 17,
     "count": 0,
     "min": null,
     "avg": null,
     "max": null
   },
   "ECB": [
+    {"block_size": 8, "blocks": 2, "duplicate_blocks": 0, "max_repeat": 1, "score": 0.000000},
+    {"block_size": 16, "blocks": 1, "duplicate_blocks": 0, "max_repeat": 1, "score": 0.000000}
   ],
   "Periodicity": {
-    "best_lag": 3,
-    "correlation": 0.500000
+    "best_lag": 1,
+    "correlation": 0.750000
   },
   "Repeating_xor_keysizes": [
-    {"keysize": 2, "norm_hamming": 0.500000}
+    {"keysize": 2, "norm_hamming": 0.000000},
+    {"keysize": 3, "norm_hamming": 0.666667},
+    {"keysize": 4, "norm_hamming": 3.000000}
   ],
   "Single_byte_xor_probe": {
-    "best_key": "0x40",
-    "score": 0.000000,
+    "best_key": "0x47",
+    "score": 0.564706,
     "printable": 1.000000
   }
 }
+```
 
+Gathering (UNIX) file data on a target file, including if the file is open and a checksum:
+
+```
 giant-spellbook metadata sample.file
 {
 "sample.file": {
-  "Checksum SHA3 SHAKE256 10": "[94, 85, 171, 118, 174, 29, 88, 78, 109, 75]",
-  "Report time": "2025-08-12 00:02:22.893932822 UTC",
+  "Checksum SHA3 SHAKE256 10": "[158, 108, 141, 164, 236, 55, 153, 9, 114, 102]",
+  "Report time": "2025-08-14 00:22:38.223722812 UTC",
   "Number of IO blocks": "8",
   "Block size": "4096",
-  "Inode": "5382881",
-  "Total as bytes": "5",
+  "Inode": "165678331",
+  "Total as bytes": "17",
   "Total as kilobytes": "0",
   "Total as megabytes": "0",
-  "Total as bits": "40",
-  "Byte distribution": "0.6",
-  "Created timestamp (UTC)": "2025-08-11 14:53:43.643190041 UTC",
-  "Modified timestamp (UTC)": "2025-08-11 14:53:43.643190041 UTC",
-  "Accessed timestamp (UTC)": "2025-08-11 14:53:46.045206505 UTC",
-  "Changed timestamp (UTC)": "2025-08-11 14:53:43.643190041 UTC",
+  "Total as bits": "136",
+  "Byte distribution": "0.23529411764705882",
+  "Created timestamp (UTC)": "2025-08-14 00:21:06.523593117 UTC",
+  "Modified timestamp (UTC)": "2025-08-14 00:21:06.523593117 UTC",
+  "Accessed timestamp (UTC)": "2025-08-14 00:22:01.745563032 UTC",
+  "Changed timestamp (UTC)": "2025-08-14 00:21:06.523593117 UTC",
   "Permissions": "100644",
   "Owner": "webserveradmin (uid: 1000)",
   "Group": "webserveradmin (gid: 1000)",
@@ -218,10 +246,80 @@ giant-spellbook metadata sample.file
  }
 }
 
+```
+
+Encrypting a file with AES-256 in GCM mode:
+
+```
 giant-spellbook encrypt aes-gcm sample.file sample.file.e
 Enter password:
-{"Validation string": "/VK3HxOSte9rpdAm61rSQ7tSkSD9DHIFJP2kpwwgkm3Qj5C83cmijikYEj3ZvQCHYrlciFDGRRMPQ8JNRLCGrQ=="}
+{"Validation string": "6ucVEJJkPN2wsjW5b+3RVcq0vkjMBjMpLxhh0ddCU6am9gWv12E0lQjnezTKWFAZBqiLVWvIQAjs5vyM5Unnug=="}
 ```
+
+Decrypting a file with AES-256 in GCM mode:
+
+```
+giant-spellbook decrypt aes-gcm sample.file.e sample.file.out
+Enter validation string (ciphertext_hash):
+Enter password:
+{"Result": "file decrypted"}
+```
+
+Bruteforce recovery of an English language plaintext with single byte XOR:
+
+```
+hexdump -C sample.cipher # show the weak ciphertext
+00000000  50 6c 6d 77 24 6d 77 24  65 24 70 61 77 70 24 69  |Plmw$mw$e$pawp$i|
+00000010  61 77 77 65 63 61 24 70  6c 65 70 24 6c 65 77 24  |awweca$plep$lew$|
+00000020  66 61 61 6a 24 61 6a 67  76 7d 74 70 61 60 25 24  |faaj$ajgv}tpa`%$|
+00000030  4b 6c 24 77 6a 65 74 25                           |Kl$wjet%|
+00000038
+
+giant-spellbook brute xor sample.cipher
+{
+  "Decryption_successful": true,
+  "Xor_key_used": 4,
+  "Analysis_duration_seconds": 0.000122,
+  "Report_time_UTC": "2025-08-14T14:45:36.934876088+00:00",
+  "Input_file": "sample.cipher",
+  "Output_file": "sample.cipher__decrypted"
+}
+cat sample.cipher__decrypted
+This is a test message that has been encrypted! Oh snap!
+```
+
+Get all hashes for a file:
+
+```
+giant-spellbook hash all sample.cipher
+{
+  "File": "sample.cipher",
+  "Time": "2025-08-14 14:47:33.172006443 UTC",
+  "SHAKE256 10": "[237, 36, 102, 121, 7, 223, 214, 149, 160, 229]",
+  "BLAKE3": "89f4fa67f8b6dd9a6393c368d88895e4c369d4a43604fc1f317c23c326bbd61d",
+  "BLAKE2B-512": "e3ad1cf4bef35150e313dd898e3e38fd546a65b6d412908fe881b87af78898cd8615077cb6b5ebb9994661a0b9caddbbb054f9b01dd41670d75026ac3fd6fbe1",
+  "SHA3-256": "fc68e832573e55d3d1082d5394b309651903aaf17586c52b1c3ddfd55453bf05",
+  "SHA3-384": "a9af170c6c0827b02d4ec0ed05a93107da0a64e84108bea0a4c7a9a43ce1d1e4559ab4de18db8303799a67b7a0ea8965",
+  "SHA256": "34188b5eb7402e8161ae08aefbb7f9938ff0bb8b166d3f16aa04a0ade44d0883"
+  "SHA512": "3f83fe11ff6b53dd452bea5a6de2e94131252ceb2823b241fb774841ca768c5e62e1704151e5fa0d20fea57093257b4998b5dc46ad49db154e03e2350e1a65cb"
+}
+
+```
+
+Get an individual (BLAKE3) hash of a file:
+
+
+```
+giant-spellbook hash blake3 sample.file
+{
+  "File": "sample.file",
+  "Time": "2025-08-14 15:13:03.859480735 UTC",
+  "BLAKE3": "0365f8701d5ef9864a0520579d81fe0d1e66b25895b47663723b38cce5d2ea8b"
+}
+
+```
+
+### File type detections
 
 Because there is some variety in PE file usage and little to distinguish between some uses, some UEFI files will be guessed as Windows, such as linux kernel images.
 
@@ -236,14 +334,25 @@ File type detections include:
   - "UEFI"
 - "PNG"
 - "JPEG"
+- "PDF"
 - "GIF"
-- "GZIP"
 - "XLSX (ZIP+xl/)"
-- "ZIP"
 - "DOC (OLE/CFB)"
 - "OLE/CFB"
-- "PDF"
 - "PEM"
+- "RAR5"
+- "RAR4"
+- "7z"
+- "ZIP"
+- "GZIP"
+- "Python Pickle"
+- "ISO-9660 (.iso)"
+- "VHDX"
+- "VHD"
+- "DER"
+  - x509
+  - PKCS#7
+  - PKCS#12
 
 File type detections are not perfect and should be taken as a data point or best guess rather than a conclusion.
 
@@ -261,4 +370,3 @@ There are two features for bitflipping in giant-spellbook. The first one bitflip
 ## Encoding and decoding
 
 The tool can encode and decode files in place. Hex, base64, and base58 encoding options are available.
-
