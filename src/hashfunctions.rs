@@ -43,7 +43,7 @@ pub fn file_all(input: &String) -> Result<(), Box<dyn std::error::Error>> {
   let mut hasher = Sha256::new();
   Update::update(&mut hasher, &data);
   let sha2 = hasher.finalize();
-  println!("  \"SHA256\": \"{:x}\"", sha2);
+  println!("  \"SHA256\": \"{:x}\",", sha2);
   let mut hasher = Sha512::new();
   Update::update(&mut hasher, &data);
   let sha512 = hasher.finalize();
