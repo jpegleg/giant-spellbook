@@ -97,7 +97,7 @@ Use the first argument (option) by itself to print the help information for the 
 ```
 giant-spellbook generate
 {
-  "ERROR": "Usage: target/release/giant-spellbook generate <private_key_path> <public_key_path>"
+  "ERROR": "Usage: giant-spellbook generate <private_key_path> <public_key_path>"
 }
 ```
 
