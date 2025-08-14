@@ -57,7 +57,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -65,9 +65,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" => {
-          println!("{{\"Version\": \"0.1.1\"}}");
+          println!("{{\"Version\": \"0.1.2\"}}");
           process::exit(0)
         },
+
         "sign" => {
           if args.len() != 6 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} sign <file_to_sign> <signature_file> <public_key_path> <private_key_path>\"\n}}", args[0]);
@@ -250,6 +251,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           println!("}}");
           Ok(())
         },
+
         "verify" => {
           if args.len() != 5 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} verify <file_to_verify> <signature_file> <public_key_path>\"\n}}", args[0]);
@@ -275,6 +277,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           println!("{{\"Verification Result\": \"{}\"}}", statusig);
           Ok(())
         },
+
         "generate" => {
           if args.len() != 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} generate <private_key_path> <public_key_path>\"\n}}", args[0]);
@@ -285,6 +288,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           keygen(key_path, pub_path)?;
           Ok(())
         },
+
         "encrypt" => {
           if args.len() != 5 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} encrypt <aes-ctr aes-gcm chacha> <file_to_encrypt> <output_ciphertext>\"\n}}", args[0]);
@@ -350,6 +354,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           Ok(())
         },
+
         "decrypt" => {
           if args.len() != 5 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} decrypt <aes-ctr aes-gcm chacha> <file_to_decrypt> <output_plaintext>\"\n}}", args[0]);
@@ -451,6 +456,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           Ok(())
         },
+
         "encode" => {
           if args.len() != 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex> <target_file>\"\n}}", args[0]);
@@ -477,6 +483,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
           Ok(())
         },
+
         "decode" => {
           if args.len() != 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex> <target_file>\"\n}}", args[0]);
@@ -502,6 +509,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           Ok(())
         },
+
         "analyze" => {
           if args.len() != 3 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} analyze <target_file>\"\n}}", args[0]);
@@ -513,6 +521,30 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           println!("{report}");
           Ok(())
         },
+
+        "brute" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} cryptanalysis <caesar, xor> <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let cipher_type = &args[2];
+          let file_path = &args[3];
+
+          match cipher_type.as_str() {
+            "caesar" => {
+              let _ = analysis::caesar_analysis(file_path);
+            },
+            "xor" => {
+              let _ = analysis::xor_analysis(file_path);
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} brute <caesar, xor> <target_file>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+          Ok(())
+        },
+
         "bitflip" => {
           if args.len() != 3 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} bitflip <target_file>\"\n}}", args[0]);
@@ -523,6 +555,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let _ = bithack::bitflip(file_path);
           Ok(())
         },
+
         "single_bitflip" => {
           if args.len() != 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} single_bitflip <position> <target_file>\"\n}}", args[0]);
@@ -534,6 +567,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let _ = bithack::precise_bitflip(file_path, position);
           Ok(())
         },
+
         "split_file" => {
           if args.len() != 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} split_file  <position> <target_file>\"\n}}", args[0]);
@@ -545,6 +579,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let _ = bithack::splitter(file_path, position);
           Ok(())
         },
+
         "derive_key" => {
           if args.len() != 5 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} derive_key <argon2id> <data_string> <salt_string>\"\n}}", args[0]);
@@ -708,7 +743,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
