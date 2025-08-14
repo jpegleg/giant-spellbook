@@ -524,7 +524,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "brute" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} cryptanalysis <caesar, xor> <target_file>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} brute <caesar, xor> <target_file>\"\n}}", args[0]);
             process::exit(1);
           }
           let cipher_type = &args[2];
@@ -645,7 +645,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
         "metadata" => {
           if args.len() != 3 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+            eprintln!("{{\n  \"ERROR\": \"Usage: metadata <target_file>\"}}");
             process::exit(1);
           }
           let mut json_started = false;
