@@ -279,7 +279,7 @@ impl Malicious {
             ("perl_reverse", Pattern::Str("perl -e 'use Socket;")),
             ("nc_reverse", Pattern::Str("nc -e /bin/sh")),
             ("nc_use", Pattern::Str(" nc -")),
-            ("socat_reverse", Pattern::Str("socat ")),
+            ("socat_use", Pattern::Str("socat ")),
             ("pwsh_IEX", Pattern::Str("powershell -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command IEX")),
             ("pwsh_encoded", Pattern::Str("powershell -enc ")),
             ("certutil_download", Pattern::Str("certutil -urlcache -split -f")),
@@ -340,7 +340,7 @@ impl Malicious {
             ("chattr_immutable", Pattern::Str("chattr +i")),
 
             // ---- Ransom notes (filenames / markers seen across families) ----
-            ("ransom_readme", Pattern::Str("README.txt")),
+            ("README.txt_reference", Pattern::Str("README.txt")),
             ("ransom_how_to_decrypt", Pattern::Str("HOW_TO_DECRYPT.txt")),
             ("ransom_decrypt_instructions", Pattern::Str("DECRYPT_INSTRUCTIONS.txt")),
             ("ransom_ryuk_note", Pattern::Str("RyukReadMe.txt")),
