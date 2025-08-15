@@ -426,10 +426,6 @@ giant-spellbook hunter /usr/local/bin/kubectl
       "Byte offset": [867683, 20532282]
     },
     {
-      "Pattern name": "mpress_marker",
-      "Byte offset": [28236234]
-    },
-    {
       "Pattern name": "bin_bash_use",
       "Byte offset": [28183822, 29307524, 29696469]
     },
