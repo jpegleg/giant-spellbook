@@ -55,7 +55,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | bruteforce  | XOR and Caesar English bruteforce decryption                                       |
 | parse       | parse PEM and DER x509 certificates inside files                                   |
 | disassemble | disassemble machine code to assembly text file                                     |
-| hunter      | search file for IoCs and potentially malicious bytes and strings                   |
+| hunter      | search a file for IoCs and potentially interesting bytes and strings               |
 
 
 ## Installing
