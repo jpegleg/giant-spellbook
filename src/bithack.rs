@@ -1,11 +1,11 @@
 use std::error::Error;
-use std::fs::{self, File};
-use std::io::{self, Read, Write};
-use std::path::Path;
+use std::fs::{self, File, OpenOptions};
+use std::io::{self, Read, Seek, SeekFrom, Write, BufWriter};
+use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
-/// CHUNK_SIZE for file operations.
 const CHUNK_SIZE: usize = 4096;
-
+const BUF_SIZE: usize = 8 * 1024 * 1024;
 
 pub fn precise_bitflip(path: &str, bit_pos_str: &str) -> Result<(), Box<dyn Error>> {
     let bit_pos: u64 = bit_pos_str.parse()?;
@@ -16,7 +16,6 @@ pub fn splitter(path: &str, bit_pos_str: &str) -> Result<(), Box<dyn Error>> {
     let bit_pos: u64 = bit_pos_str.parse()?;
     split_file(path, bit_pos)
 }
-
 
 pub fn bitflip(file_path: &str) -> Result<(), Box<dyn Error>> {
     let mut file_content = Vec::new();
@@ -57,7 +56,7 @@ pub fn flip_bit_in_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> 
     let mut target_byte = [0u8; 1];
     let read = input.read(&mut target_byte)?;
     if read == 0 {
-        return Err(format!("bit position {} is past end of file", bit_pos).into());
+        return Err(format!("Bit position {} is past end of file", bit_pos).into());
     }
     target_byte[0] ^= mask;
     output.write_all(&target_byte)?;
@@ -74,7 +73,7 @@ pub fn flip_bit_in_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> 
                 fs::remove_file(&original_path)?;
             }
             fs::rename(&temp_path, &original_path).map_err(|e2| {
-                format!("failed to replace original file: {e}; fallback error: {e2}")
+                format!("Failed to replace original file: {e}; fallback error: {e2}")
             })?;
         }
     }
@@ -82,8 +81,6 @@ pub fn flip_bit_in_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> 
     Ok(())
 }
 
-/// Split `path` at `bit_pos` and write `<name>__first` and `<name>__second` in the same directory.
-/// Bit indexing is LSB-first within each byte (bit 0 is the least-significant bit of byte 0).
 pub fn split_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> {
     let input_path = Path::new(path);
 
@@ -94,7 +91,7 @@ pub fn split_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> {
     let total_bits = (data.len() as u64) * 8;
     if bit_pos > total_bits {
         return Err(format!(
-            "bit position {} is past end of file ({} bits total)",
+            "Bit position {} is past end of file ({} bits total)",
             bit_pos, total_bits
         ).into());
     }
@@ -102,7 +99,7 @@ pub fn split_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> {
     let file_name = input_path
         .file_name()
         .and_then(|s| s.to_str())
-        .ok_or("invalid UTF-8 in filename")?;
+        .ok_or("Invalid UTF-8 in filename")?;
     let dir = input_path.parent().unwrap_or_else(|| Path::new(""));
 
     let first_path = dir.join(format!("{file_name}__first"));
@@ -139,4 +136,64 @@ pub fn split_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> {
     first.sync_all()?;
     second.sync_all()?;
     Ok(())
+}
+
+pub fn reverse_file_bytes(path_str: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let path = Path::new(path_str);
+    if !path.is_file() {
+        return Err(format!("Not a regular file: {}", path.display()).into());
+    }
+
+    let meta = fs::metadata(path)?;
+    let len = meta.len();
+    let dir = path.parent().unwrap_or_else(|| Path::new("."));
+    let pid = std::process::id();
+    let stamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos();
+    let base = path.file_name().and_then(|s| s.to_str()).unwrap_or("tmpfile");
+    let mut tmp_path = PathBuf::from(dir);
+    tmp_path.push(format!("{base}.revtmp.{pid}.{stamp}"));
+
+    let mut infile = File::open(path)?;
+    let outfile = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&tmp_path)?;
+    outfile.set_permissions(meta.permissions())?;
+    let mut writer = BufWriter::new(outfile);
+    let mut buf = vec![0u8; BUF_SIZE];
+    let mut remaining = len;
+
+    while remaining > 0 {
+        let to_read = usize::min(BUF_SIZE, remaining as usize);
+        let start = remaining - to_read as u64;
+
+        infile.seek(SeekFrom::Start(start))?;
+        infile.read_exact(&mut buf[..to_read])?;
+        buf[..to_read].reverse();
+        writer.write_all(&buf[..to_read])?;
+
+        remaining = start;
+    }
+
+    writer.flush()?;
+    writer.get_ref().sync_all()?;
+
+    drop(writer);
+    drop(infile);
+
+    match fs::rename(&tmp_path, path) {
+        Ok(_) => {
+            println!("{{\"Result\": \"File bytes reversed.\"}}");
+            Ok(())
+        }
+        Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {
+            fs::remove_file(path)?;
+            fs::rename(&tmp_path, path)?;
+            Ok(())
+        }
+        Err(e) => {
+            let _ = fs::remove_file(&tmp_path);
+            Err(e.into())
+        }
+    }
 }
