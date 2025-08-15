@@ -25,7 +25,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | verifying  | Dilithium5-AES                                       | wormsign     |
 
 | operation  | hash algo                                            |
-|------------|------------------------------------------------------|           
+|------------|------------------------------------------------------|
 | file hash  | BLAKE3                                               |
 | file hash  | BLAKE2B512                                           |
 | km hash    | Argon2id                                             |
@@ -51,6 +51,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | analyze    | multiple various including XOR and ECB               |
 | file_split | NA                                                   |
 | bruteforce | XOR and Caesar English bruteforce decryption         |
+| parse      | parse PEM and DER x509 certificates inside files     |
 
 ## Installing
 
@@ -295,6 +296,9 @@ giant-spellbook brute xor sample.cipher
 cat sample.cipher__decrypted
 This is a test message that has been encrypted! Oh snap!
 ```
+_Note that short messages that are only a few words may fail to decrypt with the "brute" functions.
+Also the functions may report decryption success when something vaguely like English is found._
+
 
 Get all hashes for a file:
 
@@ -327,6 +331,38 @@ giant-spellbook hash blake3 sample.file
 
 ```
 
+Parse all DER and PEM format certificates from a file:
+
+```
+giant-spellbook parse certs mystery.file
+[
+  {
+      "version": 3,
+      "serial_hex": "00:E2:2F:0E:25:5B:D7:C7:95",
+      "signature_algorithm": "1.2.840.113549.1.1.11",
+      "issuer": "C=AU, ST=Some-State, O=Internet Widgits Pty Ltd",
+      "subject": "C=AU, ST=Some-State, O=Internet Widgits Pty Ltd",
+      "validity": {
+        "not_before": "Aug 14 16:56:11 2016 +00:00",
+        "not_after": "Aug 12 16:56:11 2026 +00:00"
+      },
+      "spki": {
+        "algorithm": "1.2.840.113549.1.1.1",
+        "public_key_bits_approx": 2160
+      },
+      "extensions": {
+      "basic_constraints": {
+        "ca": true
+      },
+      "subject_key_identifier": "6C:D3:A5:03:AB:0D:5F:2C:C9:8D:8A:9C:88:A7:88:77:B8:37:FD:9A",
+      "authority_key_identifier": "6C:D3:A5:03:AB:0D:5F:2C:C9:8D:8A:9C:88:A7:88:77:B8:37:FD:9A"
+      },
+      "signature_len": 256
+    }
+]
+
+```
+
 ### File type detections
 
 Because there is some variety in PE file usage and little to distinguish between some uses, some UEFI files will be guessed as Windows, such as linux kernel images.
@@ -350,9 +386,11 @@ File type detections include:
 - "PEM"
 - "RAR5"
 - "RAR4"
+- "TAR"
 - "7z"
 - "ZIP"
 - "GZIP"
+- "XZ"
 - "Python Pickle"
 - "ISO-9660 (.iso)"
 - "VHDX"
