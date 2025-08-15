@@ -13,11 +13,11 @@ const UPX_MAGIC: &[u8] = b"UPX!";
 const UPX0: &[u8] = b"UPX0";
 const UPX1: &[u8] = b"UPX1";
 const ASPACK: &[u8] = b"ASPack";
-const MPRESS: &[u8] = b"MPRESS";
+const MPRESS: &[u8] = b".MPRESS";
 const THEMIDA: &[u8] = b"Themida";
 const VMPROTECT: &[u8] = b"VMProtect";
-const PETITE: &[u8] = b"Petite";
-const ENIGMA: &[u8] = b"enigma";
+const PETITE: &[u8] = b".petite";
+const ENIGMA: &[u8] = b".enigma";
 const KKRUNCHY: &[u8] = b"kkrunchy";
 const BIN_SH: &[u8] = b"/bin/sh";
 const BIN_BASH: &[u8] = b"/bin/bash";
@@ -279,7 +279,7 @@ impl Malicious {
             ("perl_reverse", Pattern::Str("perl -e 'use Socket;")),
             ("nc_reverse", Pattern::Str("nc -e /bin/sh")),
             ("nc_use", Pattern::Str(" nc -")),
-            ("socat_reverse", Pattern::Str("socat TCP")),
+            ("socat_reverse", Pattern::Str("socat ")),
             ("pwsh_IEX", Pattern::Str("powershell -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command IEX")),
             ("pwsh_encoded", Pattern::Str("powershell -enc ")),
             ("certutil_download", Pattern::Str("certutil -urlcache -split -f")),
