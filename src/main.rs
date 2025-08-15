@@ -24,7 +24,7 @@ mod analysis;
 mod disassemble;
 mod hashfunctions;
 
-use crate::hunter::Malicious;
+use crate::hunter::Interesting;
 
 /// Forces errors to JSON. This function is a wrapper for STDERR to JSON.
 fn print_error_json(msg: &str) {
