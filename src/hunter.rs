@@ -3,6 +3,14 @@ use std::fs;
 use chrono::Utc;
 use std::fmt::Write as _;
 
+const PE_MAGIC: &[u8] = b"PE\0\0";
+const ELF_MAGIC: &[u8] = b"\x7FELF";
+const MACHO_MAGIC_32: &[u8] = &[0xFE, 0xED, 0xFA, 0xCE];
+const MACHO_MAGIC_64: &[u8] = &[0xFE, 0xED, 0xFA, 0xCF];
+const MACHO_CIGAM_32: &[u8] = &[0xCE, 0xFA, 0xED, 0xFE];
+const MACHO_CIGAM_64: &[u8] = &[0xCF, 0xFA, 0xED, 0xFE];
+const OLE_CFB: &[u8] = &[0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
+const GZIP_MAGIC: &[u8] = &[0x1F, 0x8B, 0x08];
 const SEVENZ_MAGIC: &[u8] = b"7z\xBC\xAF\x27\x1C";
 const RAR_MAGIC_V4: &[u8] = b"Rar!\x1A\x07\x00";
 const RAR_MAGIC_V5: &[u8] = b"Rar!\x1A\x07\x01\x00";
@@ -89,7 +97,7 @@ pub enum Pattern {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
-pub enum Malicious {
+pub enum Interesting {
     // --- Reverse shells / remote exec ---
     BashReverse,
     PythonReverse,
@@ -175,6 +183,11 @@ pub enum Malicious {
     MoneroMention,
     BitcoinMention,
     // --- Binary / wide-string markers & packers ---
+        PeMagic,
+    ElfMagic,
+    MachOMagic,
+    OleCfbMagic,
+    GzipMagic,
     SevenZMagic,
     RarMagic,
     ZipMagic,
@@ -217,12 +230,20 @@ pub enum Malicious {
     WideRunKeyHKLM,
 }
 
-impl Malicious {
+impl Interesting {
     pub fn all() -> Vec<(&'static str, Pattern)> {
         let mut v: Vec<(&'static str, Pattern)> = Vec::new();
 
         // --- Binary: file format / packers (often used to pack malware) ---
         v.extend([
+            ("pe_magic", Pattern::Bytes(PE_MAGIC)),
+            ("elf_magic", Pattern::Bytes(ELF_MAGIC)),
+            ("macho_magic_32", Pattern::Bytes(MACHO_MAGIC_32)),
+            ("macho_magic_64", Pattern::Bytes(MACHO_MAGIC_64)),
+            ("macho_cigam_32", Pattern::Bytes(MACHO_CIGAM_32)),
+            ("macho_cigam_64", Pattern::Bytes(MACHO_CIGAM_64)),
+            ("ole_cfb_magic", Pattern::Bytes(OLE_CFB)),
+            ("gzip_magic", Pattern::Bytes(GZIP_MAGIC)),
             ("7z_magic", Pattern::Bytes(SEVENZ_MAGIC)),
             ("rar_magic_v4", Pattern::Bytes(RAR_MAGIC_V4)),
             ("rar_magic_v5", Pattern::Bytes(RAR_MAGIC_V5)),
@@ -240,7 +261,7 @@ impl Malicious {
             ("enigma_marker", Pattern::Bytes(ENIGMA)),
             ("kkrunchy_marker", Pattern::Bytes(KKRUNCHY)),
         ]);
-      
+
         // --- Binary: embedded shell/stager hints ---
         v.extend([
             ("bin_sh_use", Pattern::Bytes(BIN_SH)),
@@ -253,7 +274,7 @@ impl Malicious {
             ("bin_fish_use", Pattern::Bytes(BIN_FISH)),
             ("base64_pe_prefix", Pattern::Str(BASE64_PE_PREFIX)), // ASCII search
         ]);
-      
+
         // --- UTF-16LE (wide) suspicious command markers ---
         v.extend([
             ("wide_powershell_exe", Pattern::Bytes(W_POWERSHELL_EXE)),
@@ -271,7 +292,7 @@ impl Malicious {
             ("wide_wbadmin_delete_catalog", Pattern::Bytes(W_WBADMIN_DEL_CAT)),
             ("wide_run_key_hkcu", Pattern::Bytes(W_RUN_HKCU)),
             ("wide_run_key_hklm", Pattern::Bytes(W_RUN_HKLM)),
-          
+
             // ---- Reverse shells / remote exec ----
             ("bash_reverse", Pattern::Str("bash -i >& /dev/tcp/")),
             ("python_reverse", Pattern::Str("import socket,subprocess,os;")),
@@ -437,7 +458,7 @@ pub fn search_patterns(
     json.push_str("  \"Report time\": \"");
     json.push_str(&escape_json(&chronox));
     json.push_str("\",\n");
-    json.push_str("  \"Potentially malicious patterns\": ");
+    json.push_str("  \"Matched patterns\": ");
     if matches.is_empty() {
         json.push_str("[]\n");
         json.push('}');
