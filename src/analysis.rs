@@ -73,6 +73,8 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     let is_zip  = data.starts_with(b"PK\x03\x04");
     let is_pdf  = data.starts_with(b"%PDF-");
     let is_pem  = data.starts_with(b"-----BEGIN ");
+    let is_xz   = detect_xz(&data);
+    let is_tar  = detect_tar(&data);
 
     let is_jpeg = data.len() >= 4 && data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF;
     let is_gif  = data.starts_with(b"GIF87a") || data.starts_with(b"GIF89a");
@@ -87,7 +89,6 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     let asn1 = detect_der_asn1(&data);
     let (is_pickle, _) = detect_python_pickle(&data);
 
-
     let magic = if is_wasm { "WASM" }
         else if is_macho { "Mach-O" }
         else if is_elf { "ELF" }
@@ -95,6 +96,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         else if is_png { "PNG" }
         else if is_jpeg { "JPEG" }
         else if is_gif { "GIF" }
+        else if is_xz { "XZ" }
         else if is_gzip { "GZIP" }
         else if looks_xlsx { "XLSX (ZIP+xl/)" }
         else if is_zip { "ZIP" }
@@ -107,6 +109,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         else if is_iso9660 { "ISO-9660" }
         else if is_vhdx { "VHDX" }
         else if is_vhd { "VHD" }
+        else if is_tar { "TAR" }
         else if asn1.0 && asn1.1 { "DER (X.509 likely)" }
         else if asn1.0 && asn1.2 { "DER (PKCS#7/CMS likely)" }
         else if asn1.0 && asn1.3 { "DER (PKCS#12 likely)" }
@@ -515,7 +518,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         let (len_ok, content_len, len_bytes) = parse_der_len(&d[idx..]);
         if !len_ok { return (false, false, false, false); }
         idx += len_bytes;
-        if idx + content_len != total { return (false, false, false, false); } // require full-file SEQUENCE
+        if idx + content_len != total { return (false, false, false, false); }
 
         let likely_x509 = memmem(d, OID_X509_EXT_ARC).is_some() || memmem(d, OID_X509_ATTR_ARC).is_some() || memmem(d, OID_RSA_ENC).is_some();
         let likely_pkcs7 = memmem(d, OID_PKCS7_SIGNEDDATA).is_some();
@@ -539,16 +542,16 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     }
 
     fn detect_python_pickle(d: &[u8]) -> (bool, Option<u8>) {
-        // Binary protocols start with 0x80 <proto>, typically 2..5; ends with '.' (0x2E) STOP (often).
         if d.len() >= 2 && d[0] == 0x80 && (2..=5).contains(&d[1]) {
             return (true, Some(d[1]));
         }
-        // Fallback heuristic: starts with ASCII opcodes indicative of protocol 0/1  (e.g., '(', 'd', 'l', 'p', 'I')
+
         if !d.is_empty() && (d[0] == b'(' || d[0] == b'd' || d[0] == b'l' || d[0] == b'p' || d[0] == b'I') {
             return (true, None);
         }
         (false, None)
     }
+
     fn find_glibc_versions(d: &[u8]) -> Vec<String> {
         let needle = b"GLIBC_";
         let mut out = Vec::new();
@@ -612,6 +615,19 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         }
 
         out.sort(); out.dedup(); out
+    }
+
+    fn detect_xz(d: &[u8]) -> bool {
+        d.len() >= 6 && d[0] == 0xFD && d[1] == 0x37 && d[2] == 0x7A && d[3] == 0x58 && d[4] == 0x5A && d[5] == 0x00
+    }
+
+    fn detect_tar(d: &[u8]) -> bool {
+        if d.len() >= 265 {
+            let tag = &d[257..263];
+            if tag == b"ustar\0" { return true; }
+            if &d[257..263] == b"ustar " && &d[263..265] == b" \0" { return true; }
+        }
+        false
     }
 
     fn find_uclibc_versions(d: &[u8]) -> Vec<String> {
@@ -765,6 +781,7 @@ pub fn caesar_analysis(file_path: &str) -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+/// This detection is rough, short phrases may be missed.
 fn is_probably_english(data: &[u8]) -> bool {
     let score = english_score(data);
     if data.len() < 200 {
