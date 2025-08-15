@@ -18,9 +18,13 @@ use wormsign::*;
 
 mod encoding;
 mod parsers;
+mod hunter;
 mod bithack;
 mod analysis;
+mod disassemble;
 mod hashfunctions;
+
+use crate::hunter::Malicious;
 
 /// Forces errors to JSON. This function is a wrapper for STDERR to JSON.
 fn print_error_json(msg: &str) {
@@ -38,7 +42,7 @@ macro_rules! try_print_json {
             Ok(val) => val,
             Err(e) => {
                 if $json_started {
-                    println!("  \"Error\": \"{}\"", e);
+                    println!("  \"ERROR\": \"{}\"", e);
                     println!(" }}");
                     println!("}}");
                     return Ok(());
@@ -58,7 +62,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, reverse_bytes, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -66,7 +70,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" => {
-          println!("{{\"Version\": \"0.1.3\"}}");
+          println!("{{\"Version\": \"0.1.4\"}}");
           process::exit(0)
         },
 
@@ -567,6 +571,39 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           Ok(())
         },
 
+        "disassemble" => {
+          if args.len() != 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} disassemble <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
+          let _ = disassemble::le_dis_to_string(file_path)?;
+          println!("{{\"Disassembly output\": \"./disassembly.asmod\"}}");
+          Ok(())
+        },
+
+        "hunter" => {
+          if args.len() != 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} hunter <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
+          let report = hunter::search_patterns(file_path, &Malicious::all())?;
+          println!("{report}");
+          Ok(())
+        },
+
+        "reverse_bytes" => {
+          if args.len() != 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} reverse_bytes <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
+
+          let _ = bithack::reverse_file_bytes(file_path);
+          Ok(())
+        },
+
         "bitflip" => {
           if args.len() != 3 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} bitflip <target_file>\"\n}}", args[0]);
@@ -765,7 +802,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, reverse_bytes, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
