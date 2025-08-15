@@ -445,6 +445,10 @@ indicators for malware research, but also are used normally._
 The hunter includes checks for many known indicators of compromise (IoCs), as well as bytes and strings that are used in malware such as reverse shells, binary packing, covering tracks, and more.
 There are many more patterns to check for, but this function has a good start and will continue to be expanded and refined going forward in future releases of giant-spellbook.
 
+Go binaries commonly match a number of patterns like in the example with `kubectl`. While this isn't malicious exactly, Go just commonly has large binaries that include some of these patterns.
+While many cases are normal, don't let that get your guard down. The byte offset is provided so that the occurrence of the pattern can be more closely researched if desired.
+
+
 ### File type detections
 
 The file detections are separate from the "hunter" checks. The file detections are in "analyze", see the output "Type" as well as other supporting details in that JSON.
