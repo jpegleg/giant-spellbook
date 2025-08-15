@@ -6,6 +6,8 @@ This tool is a "multi-tool" of cryptographic operations and binary/file analysis
 
 Giant-spellbook can perform different types of crypanalysis and gather numerous statistics on files and binaries as well as perform low level operations on them such as bitflipping and slicing.
 
+There are additional forensics and reverse engineering capabilities, including disassembly and searching for potentially malicious bytes and strings.
+
 The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that is required for decryption, the same mechanism used by enchantress and enchanter tools. The validation string that is generated is required for decryption with the tools, in addition to the password used.
 
 The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret key is written as ciphertext, encrypted with AES-256. The decrypted key is only stored in RAM during the original generation of the key and when the key is used for signing.
@@ -44,14 +46,17 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | decode     | base58                                               |
 | decode     | hex                                                  |
 
-| operation  | action/algos                                         |
-|------------|------------------------------------------------------|
-| metadata   | multiple various including SHA3 SHAKE256             |
-| bitflip    | bitwise NOT                                          |
-| analyze    | multiple various including XOR and ECB               |
-| file_split | NA                                                   |
-| bruteforce | XOR and Caesar English bruteforce decryption         |
-| parse      | parse PEM and DER x509 certificates inside files     |
+| operation   | action/algos                                                                       |
+|-------------|------------------------------------------------------------------------------------|
+| metadata    | file data, byte distribution, SHA3 SHAKE256                                        |
+| bitflip     | bitwise NOT                                                                        |
+| analyze     | file data, Chi, Hamming, Shannon entropy, rolling entropy, XOR, periodicity, ECB   |
+| file_split  | split a file at a bit position to two new files                                    |
+| bruteforce  | XOR and Caesar English bruteforce decryption                                       |
+| parse       | parse PEM and DER x509 certificates inside files                                   |
+| disassemble | disassemble machine code to assembly text file                                     |
+| hunter      | search file for IoCs and potentially malicious bytes and strings                   |
+
 
 ## Installing
 
@@ -97,8 +102,9 @@ Run with no arguments to print all of the options:
 ```
 giant-spellbook
 {
-  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
+  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, reverse_bytes, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
 }
+
 ```
 
 Use the first argument (option) by itself to print the help information for the subcommands (additional arguments):
@@ -273,6 +279,14 @@ Enter validation string (ciphertext_hash):
 Enter password:
 {"Result": "file decrypted"}
 ```
+_Note that the 'validation string' does not need to be treated as a secret. 
+Also it can also be recovered with a decryption attempt if you know the password 
+and the ciphertext hasn't been tampered with. The purpose of the validation
+string is an additional ciphertext integrity mechanism - if the ciphertext
+is tampered with, the validation string generated at the time of encryption
+will no longer match. Further, if the password is not correct, the validation
+string won't match._
+
 
 Bruteforce recovery of an English language plaintext with single byte XOR:
 
@@ -363,7 +377,81 @@ giant-spellbook parse certs mystery.file
 
 ```
 
+Disassemble a file:
+
+```
+giant-spellbook disassemble /usr/local/bin/kubectl
+{"Disassembly output": "./disassembly.asmod"}
+head -n10 disassembly.asmod # show first 10 lines
+L_0000:
+    ; 0000: 457F
+    RST 17791
+L_0001:
+    ; 0001: 464C
+    RST 17996
+L_0002:
+    ; 0002: 0102
+    RST 258
+L_0003:
+```
+_Note that the disassembly.asmod output file can be rather large. Also the function writes to that file in pwd, so
+previously existing disassembly.asmod files in pwd would be overwritten._
+
+Hunt for IoCs and potentially malicious bytes within a file:
+
+```
+giant-spellbook hunter /usr/local/bin/kubectl
+{
+  "File": "/usr/local/bin/kubectl",
+  "Report time": "2025-08-15 20:40:22.693576073 UTC",
+  "Potentially malicious patterns": [
+    {
+      "Pattern name": "rar_magic_v4",
+      "Byte offset": [48840288]
+    },
+    {
+      "Pattern name": "rar_magic_v5",
+      "Byte offset": [48840464]
+    },
+    {
+      "Pattern name": "zip_magic_local",
+      "Byte offset": [869315, 20505776, 20536885, 48839272]
+    },
+    {
+      "Pattern name": "zip_magic_central",
+      "Byte offset": [868399, 20506127, 20527445]
+    },
+    {
+      "Pattern name": "zip_magic_end",
+      "Byte offset": [867683, 20532282]
+    },
+    {
+      "Pattern name": "mpress_marker",
+      "Byte offset": [28236234]
+    },
+    {
+      "Pattern name": "bin_bash_use",
+      "Byte offset": [28183822, 29307524, 29696469]
+    },
+    {
+      "Pattern name": "passwd_access",
+      "Byte offset": [28196715]
+    }
+  ]
+}
+```
+_Note that the 'hunter' is just checking for patterns to aide in research,
+it cannot determine if the binary is actually malicious. Essentially all
+shell scripts will be flagged for shell use, and files with compressed
+data inside might get flagged for having compressed data. These are important
+indicators for malware research, but also are used normally._
+
+The hunter includes checks for many known indicators of compromise (IoCs), as well as bytes and strings that are used in malware such as reverse shells, binary packing, covering tracks, and more.
+There are many more patterns to check for, but this function has a good start and will continue to be expanded and refined going forward in future releases of giant-spellbook.
+
 ### File type detections
+
+The file detections are separate from the "hunter" checks. The file detections are in "analyze", see the output "Type" as well as other supporting details in that JSON.
 
 Because there is some variety in PE file usage and little to distinguish between some uses, some UEFI files will be guessed as Windows, such as linux kernel images.
 
@@ -412,6 +500,8 @@ There are two features for bitflipping in giant-spellbook. The first one bitflip
 "single_bitflip" flips the bit at the given position in a file, overwriting the file
 
 "split_file" splits the file into two files at the given position, creating new files with __first and __second extensions
+
+"reverse_bytes" reverses all of the bytes of the file, overwriting the file
 
 ## Encoding and decoding
 
