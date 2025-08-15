@@ -395,7 +395,7 @@ L_0002:
 L_0003:
 ```
 _Note that the disassembly.asmod output file can be rather large. Also the function writes to that file in pwd, so
-previously existing disassembly.asmod files in pwd would be overwritten._
+a previously existing disassembly.asmod file in pwd would be overwritten._
 
 Hunt for IoCs and potentially interesting bytes within a file:
 
