@@ -17,6 +17,7 @@ use enchanter::*;
 use wormsign::*;
 
 mod encoding;
+mod parsers;
 mod bithack;
 mod analysis;
 mod hashfunctions;
@@ -57,7 +58,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -545,6 +546,27 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           Ok(())
         },
 
+        "parse" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} parse <certs> <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let parse_type = &args[2];
+          let file_path = &args[3];
+
+          match parse_type.as_str() {
+            "certs" => {
+              let report = parsers::describe_certs(file_path)?;
+              println!("{report}");
+            },
+          _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} parse <certs> <target_file>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+          Ok(())
+        },
+
         "bitflip" => {
           if args.len() != 3 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} bitflip <target_file>\"\n}}", args[0]);
@@ -743,7 +765,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
