@@ -397,14 +397,25 @@ L_0003:
 _Note that the disassembly.asmod output file can be rather large. Also the function writes to that file in pwd, so
 previously existing disassembly.asmod files in pwd would be overwritten._
 
-Hunt for IoCs and potentially malicious bytes within a file:
+Hunt for IoCs and potentially interesting bytes within a file:
 
 ```
-giant-spellbook hunter /usr/local/bin/kubectl
 {
   "File": "/usr/local/bin/kubectl",
-  "Report time": "2025-08-15 20:40:22.693576073 UTC",
+  "Report time": "2025-08-15 23:42:29.578969484 UTC",
   "Matched patterns": [
+    {
+      "Pattern name": "pe_magic",
+      "Byte offset": [26532333]
+    },
+    {
+      "Pattern name": "elf_magic",
+      "Byte offset": [0]
+    },
+    {
+      "Pattern name": "gzip_magic",
+      "Byte offset": [3640018, 3855956, 48839120, 48871360, 48873664, 48879424, 48879744, 48882528, 48882912, 48883712, 48885120, 48886624, 48887136, 48887648, 48890752, 48891296, 48895456, 48899360, 48901376, 48902048, 48902720, 48903392, 48906848, 48908288, 48909760, 48911328, 48912128, 48912928, 48913728, 48915360, 48916192, 48917856, 48919584, 48920448, 48922176, 48923072, 48923968, 48924896, 48925824, 48926752, 48927680, 48929632, 48948256, 48950560, 48951712, 48952896, 48954144, 48961152, 48962688, 48964256, 48965856, 48967488, 48969120, 48970752, 48972384, 48974080, 48975776, 48979168, 48980928, 48982688, 48984512, 48988544, 48996864, 49001376, 49011872, 49014752, 49152288, 49254944]
+    },
     {
       "Pattern name": "rar_magic_v4",
       "Byte offset": [48840288]
@@ -439,13 +450,14 @@ giant-spellbook hunter /usr/local/bin/kubectl
 _Note that the 'hunter' is just checking for patterns to aide in research,
 it cannot determine if the binary is actually malicious. Essentially all
 shell scripts will be flagged for shell use, and files with compressed
-data inside might get flagged for having compressed data. These are important
+data inside might get flagged for having compressed data, Linux binaries have
+elf magic, windows binaries have pe magic. These are important
 indicators for malware research, but also are used normally._
 
 The hunter includes checks for many known indicators of compromise (IoCs), as well as bytes and strings that are used in malware such as reverse shells, binary packing, covering tracks, and more.
 There are many more patterns to check for, but this function has a good start and will continue to be expanded and refined going forward in future releases of giant-spellbook.
 
-Go binaries commonly match a number of patterns like in the example with `kubectl`. While this isn't malicious exactly, Go just commonly has large binaries that include some of these patterns.
+Go binaries commonly match a number of patterns like in the example with `kubectl`. While this isn't malicious exactly, Go just commonly has large binaries that include some of these patterns within.
 While many cases are normal, don't let that get your guard down. The byte offset is provided so that the occurrence of the pattern can be more closely researched if desired.
 
 
