@@ -404,7 +404,7 @@ giant-spellbook hunter /usr/local/bin/kubectl
 {
   "File": "/usr/local/bin/kubectl",
   "Report time": "2025-08-15 20:40:22.693576073 UTC",
-  "Potentially malicious patterns": [
+  "Matched patterns": [
     {
       "Pattern name": "rar_magic_v4",
       "Byte offset": [48840288]
