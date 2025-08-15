@@ -588,7 +588,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             process::exit(1);
           }
           let file_path = &args[2];
-          let report = hunter::search_patterns(file_path, &Malicious::all())?;
+          let report = hunter::search_patterns(file_path, &Interesting::all())?;
           println!("{report}");
           Ok(())
         },
