@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::cmp::min;
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, Read, Seek, SeekFrom, Write, BufWriter};
 use std::path::{Path, PathBuf};
@@ -196,4 +197,70 @@ pub fn reverse_file_bytes(path_str: &str) -> Result<(), Box<dyn std::error::Erro
             Err(e.into())
         }
     }
+}
+
+pub fn hexdump_range(path: &str, start: u64, end: u64) -> Result<(), Box<dyn std::error::Error>> {
+    if start >= end {
+        return Err("start must be less than end".into());
+    }
+
+    let p = Path::new(path);
+    let mut file = File::open(p)?;
+    let file_len = file.metadata()?.len();
+
+    if start >= file_len {
+        return Err("start position is beyond end of file".into());
+    }
+
+    let to_end = min(end, file_len);
+    if to_end <= start {
+        return Ok(());
+    }
+
+    file.seek(SeekFrom::Start(start))?;
+
+    let mut buf = vec![0u8; 8192];
+    let mut remaining = to_end - start;
+    let mut current_off = start;
+
+    while remaining > 0 {
+        let want = min(buf.len() as u64, remaining) as usize;
+        let n = file.read(&mut buf[..want])?;
+        if n == 0 {
+            break;
+        }
+
+        let mut idx = 0usize;
+        while idx < n {
+            let line_len = min(16, n - idx);
+            let line = &buf[idx..idx + line_len];
+
+            let mut hex_cols = String::with_capacity(16 * 3 + 2);
+            for i in 0..16 {
+                if i == 8 {
+                    hex_cols.push(' ');
+                }
+                if i < line_len {
+                    hex_cols.push_str(&format!("{:02x} ", line[i]));
+                } else {
+                    hex_cols.push_str("   ");
+                }
+            }
+
+            let mut ascii = String::with_capacity(16);
+            for &b in line {
+                let ch = if (0x20..=0x7e).contains(&b) { b as char } else { '.' };
+                ascii.push(ch);
+            }
+
+            println!("{:016x}  {} |{}|", current_off, hex_cols, ascii);
+
+            current_off += line_len as u64;
+            idx += line_len;
+        }
+
+        remaining -= n as u64;
+    }
+
+    Ok(())
 }
