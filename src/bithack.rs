@@ -287,7 +287,6 @@ pub fn hex_range(path: &str, start: u64, end: u64) -> Result<(), Box<dyn std::er
 
     let mut buf = vec![0u8; 8192];
     let mut remaining = to_end - start;
-    let mut current_off = start;
 
     while remaining > 0 {
         let want = min(buf.len() as u64, remaining) as usize;
@@ -314,8 +313,6 @@ pub fn hex_range(path: &str, start: u64, end: u64) -> Result<(), Box<dyn std::er
             }
 
             println!("{}", hex_cols);
-
-            current_off += line_len as u64;
             idx += line_len;
         }
 
