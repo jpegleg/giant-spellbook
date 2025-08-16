@@ -402,6 +402,7 @@ a previously existing disassembly.asmod file in pwd would be overwritten._
 Hunt for IoCs and potentially interesting bytes within a file:
 
 ```
+giant-spellbook hunter /usr/local/bin/kubectl
 {
   "File": "/usr/local/bin/kubectl",
   "Report time": "2025-08-16 02:37:54.280406353 UTC",
