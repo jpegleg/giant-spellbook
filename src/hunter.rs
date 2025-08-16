@@ -28,8 +28,14 @@ const PETITE: &[u8] = b".petite";
 const ENIGMA: &[u8] = b".enigma";
 const KKRUNCHY: &[u8] = b"kkrunchy";
 const BIN_SH: &[u8] = b"/bin/sh";
+const POWERSHELL: &[u8] = b"pwsh.exe";
+const POWERSHELL2: &[u8] = b"pwsh";
+const CMD: &[u8] = b"cmd.exe";
+const SH: &[u8] = b"/sh ";
+const BASH: &[u8] = b"/bash ";
 const PYTHON: &[u8] = b"python ";
 const PYTHON3: &[u8] = b"python3";
+const PERL: &[u8] = b"/bin/perl ";
 const BIN_BASH: &[u8] = b"/bin/bash";
 const BIN_KSH: &[u8] = b"/bin/ksh";
 const BIN_CSH: &[u8] = b"/bin/csh";
@@ -102,8 +108,13 @@ pub enum Pattern {
 pub enum Interesting {
     // --- Reverse shells / remote exec ---
     PythonUse,
+    PowershellUse,
+    CmdUse,
+    BashUse,
+    ShUse,
     BashReverse,
     PythonReverse,
+    PerlUse,
     PHPReverse,
     PerlReverse,
     NcReverse,
@@ -268,7 +279,13 @@ impl Interesting {
         // --- Binary: embedded shell/stager hints ---
         v.extend([
             ("python_use", Pattern::Bytes(PYTHON)),
+            ("perl_use", Pattern::Bytes(PERL)),
             ("python3_use", Pattern::Bytes(PYTHON3)),
+            ("powershell_use", Pattern::Bytes(POWERSHELL)),
+            ("powershell_use_(wide)", Pattern::Bytes(POWERSHELL2)),
+            ("cmd_use", Pattern::Bytes(CMD)),
+            ("bash_use", Pattern::Bytes(BASH)),
+            ("sh_use", Pattern::Bytes(SH)),
             ("bin_sh_use", Pattern::Bytes(BIN_SH)),
             ("bin_bash_use", Pattern::Bytes(BIN_BASH)),
             ("bin_ksh_use", Pattern::Bytes(BIN_KSH)),
