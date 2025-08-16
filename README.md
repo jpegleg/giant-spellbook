@@ -57,7 +57,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | parse         | parse PEM and DER x509 certificates inside files                                   |
 | disassemble   | disassemble machine code to assembly text file                                     |
 | hunter        | search a file for IoCs and potentially interesting bytes and strings               |
-| byte_range    | print hex and ascii of a file from a byte position range                           |
+| byte_range    | print hex or hex and ascii of a file from a byte position range                    |
 
 
 ## Installing
@@ -470,7 +470,7 @@ While many cases are normal, don't let that get your guard down. The byte offset
 To review a byte position in a file as hex and ascii:
 
 ```
-giant-spellbook byte_range /usr/local/bin/kubectl 29339887 29340000
+giant-spellbook byte_range hexdump /usr/local/bin/kubectl 29339887 29340000
 0000000001bfb0ef  70 79 74 68 6f 6e 33 0a  0a 23 20 43 6f 70 79 72  |python3..# Copyr|
 0000000001bfb0ff  69 67 68 74 20 32 30 31  37 20 54 68 65 20 4b 75  |ight 2017 The Ku|
 0000000001bfb10f  62 65 72 6e 65 74 65 73  20 41 75 74 68 6f 72 73  |bernetes Authors|
@@ -482,6 +482,20 @@ giant-spellbook byte_range /usr/local/bin/kubectl 29339887 29340000
 ()
 ```
 
+To review a byte position and only output the hex (with the trailing '()' at the end):
+
+```
+giant-spellbook byte_range hex /usr/local/bin/kubectl 29339887 29340000
+70 79 74 68 6f 6e 33 0a  0a 23 20 43 6f 70 79 72
+69 67 68 74 20 32 30 31  37 20 54 68 65 20 4b 75
+62 65 72 6e 65 74 65 73  20 41 75 74 68 6f 72 73
+2e 0a 23 0a 23 20 4c 69  63 65 6e 73 65 64 20 75
+6e 64 65 72 20 74 68 65  20 41 70 61 63 68 65 20
+4c 69 63 65 6e 73 65 2c  20 56 65 72 73 69 6f 6e
+20 32 2e 30 20 28 74 68  65 20 22 4c 69 63 65 6e
+73
+()
+```
 
 
 ### File type detections
