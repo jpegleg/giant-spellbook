@@ -46,16 +46,17 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | decode     | base58                                               |
 | decode     | hex                                                  |
 
-| operation   | action/algos                                                                       |
-|-------------|------------------------------------------------------------------------------------|
-| metadata    | file data, byte distribution, SHA3 SHAKE256                                        |
-| bitflip     | bitwise NOT                                                                        |
-| analyze     | file data, Chi, Hamming, Shannon entropy, rolling entropy, XOR, periodicity, ECB   |
-| file_split  | split a file at a bit position to two new files                                    |
-| bruteforce  | XOR and Caesar English bruteforce decryption                                       |
-| parse       | parse PEM and DER x509 certificates inside files                                   |
-| disassemble | disassemble machine code to assembly text file                                     |
-| hunter      | search a file for IoCs and potentially interesting bytes and strings               |
+| operation     | action/algos                                                                       |
+|---------------|------------------------------------------------------------------------------------|
+| metadata      | file data, byte distribution, SHA3 SHAKE256                                        |
+| bitflip       | bitwise NOT                                                                        |
+| analyze       | file data, Chi, Hamming, Shannon entropy, rolling entropy, XOR, periodicity, ECB   |
+| file_split    | split a file at a bit position to two new files                                    |
+| reverse_bytes | reverse the byte order of a file                                                   |
+| bruteforce    | XOR and Caesar English bruteforce decryption                                       |
+| parse         | parse PEM and DER x509 certificates inside files                                   |
+| disassemble   | disassemble machine code to assembly text file                                     |
+| hunter        | search a file for IoCs and potentially interesting bytes and strings               |
 
 
 ## Installing
