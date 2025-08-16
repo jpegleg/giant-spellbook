@@ -62,7 +62,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, reverse_bytes, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -604,6 +604,23 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           Ok(())
         },
 
+        "byte_range" => {
+          if args.len() != 5 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
+          let starting_bytein = &args[3];
+          let ending_bytein = &args[4];
+          let starting_byte: u64 = starting_bytein.parse()?;
+          let ending_byte: u64 = ending_bytein.parse()?;
+
+
+          let report = bithack::hexdump_range(file_path, starting_byte, ending_byte)?;
+          println!("{report:?}");
+          Ok(())
+        },
+
         "bitflip" => {
           if args.len() != 3 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} bitflip <target_file>\"\n}}", args[0]);
@@ -802,7 +819,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, reverse_bytes, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
