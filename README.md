@@ -6,7 +6,7 @@ This tool is a "multi-tool" of cryptographic operations and binary/file analysis
 
 Giant-spellbook can perform different types of crypanalysis and gather numerous statistics on files and binaries as well as perform low level operations on them such as bitflipping and slicing.
 
-There are additional forensics and reverse engineering capabilities, including disassembly and searching for potentially malicious bytes and strings.
+There are additional forensics and reverse engineering capabilities, including disassembly and searching for potentially interesting bytes and strings.
 
 The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that is required for decryption, the same mechanism used by enchantress and enchanter tools. The validation string that is generated is required for decryption with the tools, in addition to the password used.
 
