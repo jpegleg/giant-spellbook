@@ -28,6 +28,8 @@ const PETITE: &[u8] = b".petite";
 const ENIGMA: &[u8] = b".enigma";
 const KKRUNCHY: &[u8] = b"kkrunchy";
 const BIN_SH: &[u8] = b"/bin/sh";
+const PYTHON: &[u8] = b"python ";
+const PYTHON3: &[u8] = b"python3";
 const BIN_BASH: &[u8] = b"/bin/bash";
 const BIN_KSH: &[u8] = b"/bin/ksh";
 const BIN_CSH: &[u8] = b"/bin/csh";
@@ -99,6 +101,7 @@ pub enum Pattern {
 #[derive(Debug, Clone, Copy)]
 pub enum Interesting {
     // --- Reverse shells / remote exec ---
+    PythonUse,
     BashReverse,
     PythonReverse,
     PHPReverse,
@@ -183,7 +186,7 @@ pub enum Interesting {
     MoneroMention,
     BitcoinMention,
     // --- Binary / wide-string markers & packers ---
-        PeMagic,
+    PeMagic,
     ElfMagic,
     MachOMagic,
     OleCfbMagic,
@@ -264,6 +267,8 @@ impl Interesting {
 
         // --- Binary: embedded shell/stager hints ---
         v.extend([
+            ("python_use", Pattern::Bytes(PYTHON)),
+            ("python3_use", Pattern::Bytes(PYTHON3)),
             ("bin_sh_use", Pattern::Bytes(BIN_SH)),
             ("bin_bash_use", Pattern::Bytes(BIN_BASH)),
             ("bin_ksh_use", Pattern::Bytes(BIN_KSH)),
@@ -298,7 +303,7 @@ impl Interesting {
             ("python_reverse", Pattern::Str("import socket,subprocess,os;")),
             ("php_reverse", Pattern::Str("php -r '$sock=fsockopen(")),
             ("perl_reverse", Pattern::Str("perl -e 'use Socket;")),
-            ("nc_reverse", Pattern::Str("nc -e /bin/sh")),
+            ("nc_reverse", Pattern::Str("nc -e /bin/")),
             ("nc_use", Pattern::Str(" nc -")),
             ("socat_use", Pattern::Str("socat ")),
             ("pwsh_IEX", Pattern::Str("powershell -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command IEX")),
