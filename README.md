@@ -403,7 +403,7 @@ Hunt for IoCs and potentially interesting bytes within a file:
 ```
 {
   "File": "/usr/local/bin/kubectl",
-  "Report time": "2025-08-15 23:42:29.578969484 UTC",
+  "Report time": "2025-08-16 02:37:54.280406353 UTC",
   "Matched patterns": [
     {
       "Pattern name": "pe_magic",
@@ -436,6 +436,10 @@ Hunt for IoCs and potentially interesting bytes within a file:
     {
       "Pattern name": "zip_magic_end",
       "Byte offset": [867683, 20532282]
+    },
+    {
+      "Pattern name": "python3_use",
+      "Byte offset": [29339887]
     },
     {
       "Pattern name": "bin_bash_use",
