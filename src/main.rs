@@ -616,7 +616,6 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let starting_byte: u64 = starting_bytein.parse()?;
           let ending_byte: u64 = ending_bytein.parse()?;
 
-
           match atype.as_str() {
             "hexdump" => {
               let report = bithack::hexdump_range(file_path, starting_byte, ending_byte)?;
