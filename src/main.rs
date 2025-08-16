@@ -605,19 +605,32 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         "byte_range" => {
-          if args.len() != 5 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
+          if args.len() != 6 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <hexdump, hex> <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
             process::exit(1);
           }
-          let file_path = &args[2];
-          let starting_bytein = &args[3];
-          let ending_bytein = &args[4];
+          let atype = &args[2];
+          let file_path = &args[3];
+          let starting_bytein = &args[4];
+          let ending_bytein = &args[5];
           let starting_byte: u64 = starting_bytein.parse()?;
           let ending_byte: u64 = ending_bytein.parse()?;
 
 
-          let report = bithack::hexdump_range(file_path, starting_byte, ending_byte)?;
-          println!("{report:?}");
+          match atype.as_str() {
+            "hexdump" => {
+              let report = bithack::hexdump_range(file_path, starting_byte, ending_byte)?;
+              println!("{report:?}");
+            },
+            "hex" => {
+              let report = bithack::hex_range(file_path, starting_byte, ending_byte)?;
+              println!("{report:?}");
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <hexdump, hex> <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
           Ok(())
         },
 
