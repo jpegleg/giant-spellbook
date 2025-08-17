@@ -155,7 +155,7 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
         let jumper = read_password()?;
         let nowjump = jumper.parse::<usize>();
         match nowjump {
-            Ok(value) => {
+            Ok(_value) => {
               row = nowjump.unwrap()
             },
             _ => {
