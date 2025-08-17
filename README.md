@@ -480,7 +480,6 @@ giant-spellbook byte_range hexdump /usr/local/bin/kubectl 29339887 29340000
 0000000001bfb13f  4c 69 63 65 6e 73 65 2c  20 56 65 72 73 69 6f 6e  |License, Version|
 0000000001bfb14f  20 32 2e 30 20 28 74 68  65 20 22 4c 69 63 65 6e  | 2.0 (the "Licen|
 0000000001bfb15f  73                                                |s|
-()
 ```
 
 To review a byte position and only output the hex (with the trailing '()' at the end):
@@ -495,9 +494,32 @@ giant-spellbook byte_range hex /usr/local/bin/kubectl 29339887 29340000
 4c 69 63 65 6e 73 65 2c  20 56 65 72 73 69 6f 6e
 20 32 2e 30 20 28 74 68  65 20 22 4c 69 63 65 6e
 73
-()
 ```
 
+There is also a subcommand to remove the spacing named 's_hex':
+
+```
+giant-spellbook byte_range s_hex /usr/local/bin/kubectl 29339887 29340000
+707974686f6e330a0a2320436f707972
+69676874203230313720546865204b75
+6265726e6574657320417574686f7273
+2e0a230a23204c6963656e7365642075
+6e646572207468652041706163686520
+4c6963656e73652c2056657273696f6e
+20322e30202874686520224c6963656e
+73
+```
+
+If the purpose is to decode back to binary, then the s_hex is nicer,
+although the newlines still need to be removed before giant-spellbook will decode it.
+
+```
+cat hex.file | tr -d '\n' > test2
+giant-spellbook decode hex test2
+{ "Result": "Hex data decoded and written to file: test2" }
+```
+
+If the decode has no output and left a `.tmp` file in pwd, then the decoding failed.
 
 ### File type detections
 
@@ -557,6 +579,10 @@ There are two features for bitflipping in giant-spellbook. The first one bitflip
 
 The tool can encode and decode files in place. Hex, base64, and base58 encoding options are available.
 
+If the decode has no output and left a `.tmp` file in pwd, then the decoding failed.
+
+If decoding is successful, JSON will be printed. If decoding fails, check the file for invalid data and try again or use another approach.
+
 ## Commander
 
 The 'commander' option enables command execution iteration with detailed logging. There are many potential uses for this, including cryptanalysis and batch processing.
@@ -576,6 +602,7 @@ giant-spellbook commander "/usr/local/bin/cryptex.sh batch_xor /opt/workspace/ci
 
 The output is stored in a `results.log` that contains date and time in UTC, the input line number, the command, the exit status of the command, the input, STDOUT, and STDERR.
 
+
 ## Researcher
 
 The 'researcher' option is an interactive hexdump with disassembly. The hexdump has color highlighting to mark ELF and PE magic, ASCII control characters, and more.
@@ -585,3 +612,7 @@ Use the 'help_map' subcommand to print the meanings of the colors and symbols an
 The interactive session of 'researcher' is a line-by-line hexdump and disassembly with the 'read' subcommand.
 
 Use control + c to exit, or read to the end of the file by pressing the enter key.
+
+This 'researcher' option may not work well with all terminals/consoles and all platforms. I noted that some alpine linux consoles needed to run `reset` to get the display back after exiting the 'researcher'.
+
+Use a full color terminal emulator to get the full experience with the byte coloring. I can recommend [WezTerm](https://wezterm.org/).
