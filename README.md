@@ -384,21 +384,21 @@ Disassemble a file:
 
 ```
 giant-spellbook disassemble /usr/local/bin/kubectl
-{"Disassembly output": "./disassembly.asmod"}
+{"Disassembly output": "./disassembly.txt"}
 head -n10 disassembly.asmod # show first 10 lines
-L_0000:
-    ; 0000: 457F
-    RST 17791
-L_0001:
-    ; 0001: 464C
-    RST 17996
-L_0002:
-    ; 0002: 0102
-    RST 258
-L_0003:
+00000000: 7f 45                   jg 0x47
+00000002: 4c 46 02 01             add r8b, byte ptr [rcx]
+00000006: 01 00                   add dword ptr [rax], eax
+00000008: 00 00                   add byte ptr [rax], al
+0000000a: 00 00                   add byte ptr [rax], al
+0000000c: 00 00                   add byte ptr [rax], al
+0000000e: 00 00                   add byte ptr [rax], al
+00000010: 02 00                   add al, byte ptr [rax]
+00000012: 3e 00 01                add byte ptr ds:[rcx], al
+00000015: 00 00                   add byte ptr [rax], al
 ```
-_Note that the disassembly.asmod output file can be rather large. Also the function writes to that file in pwd, so
-a previously existing disassembly.asmod file in pwd would be overwritten._
+_Note that the disassembly.txt output file can be rather large. Also the function writes to that file in pwd, so
+a previously existing disassembly.txt file in pwd would be overwritten._
 
 Hunt for IoCs and potentially interesting bytes within a file:
 
@@ -598,7 +598,7 @@ The output is stored in a `results.log` that contains date and time in UTC, the 
 
 ## Researcher
 
-The 'researcher' option is an interactive hexdump with disassembly. The hexdump has color highlighting to mark ELF and PE magic, ASCII control characters, and more.
+The 'researcher' option is an interactive hexdump with disassembly. The hexdump has color highlighting to mark ELF, PE, and Mach-O magic, ASCII control characters, and more.
 
 Use the 'help_map' subcommand to print the meanings of the colors and symbols and print out some tips for using this mode.
 
