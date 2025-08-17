@@ -6,7 +6,7 @@ use std::fs;
 pub fn le_dis_to_string(path: &str) -> Result<(), Box<dyn std::error::Error>> {
     let bytes = fs::read(path)?;
     let asm = capstone_disassemble_to_string(&bytes)?;
-    fs::write("disassembly.asmod", asm)?;
+    fs::write("disassembly.txt", asm)?;
     Ok(())
 }
 
