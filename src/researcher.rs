@@ -149,8 +149,8 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
         let printme1 = format!("{:?}", disassemble::le_dis_segment(&buf[start..end]));
         let printme2 = printme1.remove_ok();
         println!("{}", printme2.remove_last());
-        // Wait for input, without needing fancy crates that bloat the program.
-        // Use what we have already.
+        // read_password is already available, 
+        // so we use what we have here, no need for fancy bloat
         let jumper = read_password()?;
         let nowjump = jumper.parse::<usize>();
         match nowjump {
