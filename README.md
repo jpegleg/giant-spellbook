@@ -598,13 +598,15 @@ The output is stored in a `results.log` that contains date and time in UTC, the 
 
 ## Researcher
 
-The 'researcher' option is an interactive hexdump with disassembly. The hexdump has color highlighting to mark ELF, PE, and Mach-O magic, ASCII control characters, and more.
+The 'researcher' option is an interactive hexdump with x86_64 (intel) disassembly. The hexdump has color highlighting to mark ELF, PE, and Mach-O magic, ASCII control characters, and more.
 
 Use the 'help_map' subcommand to print the meanings of the colors and symbols and print out some tips for using this mode.
 
-The interactive session of 'researcher' is a line-by-line hexdump and disassembly with the 'read' subcommand.
+The interactive session of 'researcher' is a segment-by-segment hexdump and disassembly with the 'read' subcommand.
 
-Pressing enter will move on to the next line. Typing a number and pressing enter will jump to that buffer number in the file.
+The functionality attempts to ensure that instructions are not chopped at the end with look-head/over-read.
+
+Pressing enter will move on to the next line. Typing a number and pressing enter will jump to that buffer number in the file. The buffers are 64 bytes, plus the 15 byte lookahead.
 
 Use control + c to exit, or read to the end of the file by pressing the enter key.
 
