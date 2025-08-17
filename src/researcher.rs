@@ -20,7 +20,7 @@ pub fn color_map() {
     println!("  {}██{}  Non-ASCII bytes (light pink)", clr_ros, RESET);
     println!("  {}██{}  ASCII control characters (coral orange)", clr_cor, RESET);
     println!("  {}██{}  Null bytes (light blue)", clr_trb, RESET);
-    println!("  {}██{}  ELF/PE magic bytes (purple/indigo)", clr_ndi, RESET);
+    println!("  {}██{}  ELF/PE/Mach-O magic bytes (purple/indigo)", clr_ndi, RESET);
     println!("  {}██{}  Column separators / structure (grey)", clr_wgr, RESET);
     println!();
     println!("Symbol replacements:");
@@ -101,6 +101,8 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
 
     let is_elf = buf.starts_with(&[0x7F, b'E', b'L', b'F']);
     let is_pe  = buf.starts_with(&[0x4D, 0x5A]); // MZ
+    let is_macho = is_macho_magic_prefix(&buf);
+
     let mut row = 0usize;
 
     while row * bytes_per_row < buf.len().max(1) {
@@ -124,6 +126,7 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
             hex_w,
             is_elf,
             is_pe,
+            is_macho,
         );
 
         let ascii_area = build_ascii_area_styled(
@@ -138,6 +141,7 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
             RESET,
             is_elf,
             is_pe,
+            is_macho,
         );
 
         print!(" {}|{} ", &clr_wgr, RESET);
@@ -238,6 +242,7 @@ fn build_hex_area_styled(
     target_w: usize,
     is_elf: bool,
     is_pe: bool,
+    is_macho: bool,
 ) -> String {
     use std::fmt::Write as _;
     let mut s = String::with_capacity(target_w + 64);
@@ -246,7 +251,7 @@ fn build_hex_area_styled(
         if i < n {
             let b = chunk[i];
             let abs = base_off + i as u64;
-            let is_magic = (is_elf && abs < 4) || (is_pe && abs < 2);
+            let is_magic = (is_elf && abs < 4) || (is_pe && abs < 2) || (is_macho && abs < 4);
             let color = if is_magic {
                 hex_magic
             } else if b == 0x00 {
@@ -290,13 +295,14 @@ fn build_ascii_area_styled(
     reset: &str,
     is_elf: bool,
     is_pe: bool,
+    is_macho: bool,
 ) -> String {
     let mut out = String::with_capacity(bytes_per_row * 6);
     for i in 0..bytes_per_row {
         if i < chunk.len() {
             let b = chunk[i];
             let abs = base_off + i as u64;
-            let is_magic = (is_elf && abs < 4) || (is_pe && abs < 2);
+            let is_magic = (is_elf && abs < 4) || (is_pe && abs < 2) || (is_macho && abs < 4);
             let (color, ch) = if is_magic {
                 (ascii_magic, if (0x20..=0x7E).contains(&b) { b as char } else { '✦' })
             } else if b == 0x00 {
@@ -316,4 +322,20 @@ fn build_ascii_area_styled(
         }
     }
     out
+}
+
+fn is_macho_magic_prefix(buf: &[u8]) -> bool {
+    if buf.len() < 4 { return false; }
+    let head = [buf[0], buf[1], buf[2], buf[3]];
+    const MAGICS: [[u8; 4]; 8] = [
+        [0xCE, 0xFA, 0xED, 0xFE],
+        [0xCF, 0xFA, 0xED, 0xFE],
+        [0xFE, 0xED, 0xFA, 0xCE],
+        [0xFE, 0xED, 0xFA, 0xCF],
+        [0xCA, 0xFE, 0xBA, 0xBE],
+        [0xBE, 0xBA, 0xFE, 0xCA],
+        [0xCA, 0xFE, 0xBA, 0xBF],
+        [0xBF, 0xBA, 0xFE, 0xCA],
+    ];
+    MAGICS.iter().any(|m| *m == head)
 }
