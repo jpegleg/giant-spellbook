@@ -58,7 +58,8 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | disassemble   | disassemble machine code to assembly text file                                     |
 | hunter        | search a file for IoCs and potentially interesting bytes and strings               |
 | byte_range    | print hex or hex and ascii of a file from a byte position range                    |
-
+| commander     | run a command for each line in a file, supplying the line as STDIN to command      |
+| researcher    | interactive disassembly and hexdump of a file with colored byte highlighting       |
 
 ## Installing
 
@@ -281,8 +282,8 @@ Enter validation string (ciphertext_hash):
 Enter password:
 {"Result": "file decrypted"}
 ```
-_Note that the 'validation string' does not need to be treated as a secret. 
-Also it can also be recovered with a decryption attempt if you know the password 
+_Note that the 'validation string' does not need to be treated as a secret.
+Also it can also be recovered with a decryption attempt if you know the password
 and the ciphertext hasn't been tampered with. The purpose of the validation
 string is an additional ciphertext integrity mechanism - if the ciphertext
 is tampered with, the validation string generated at the time of encryption
@@ -555,3 +556,27 @@ There are two features for bitflipping in giant-spellbook. The first one bitflip
 ## Encoding and decoding
 
 The tool can encode and decode files in place. Hex, base64, and base58 encoding options are available.
+
+## Commander
+
+The 'commander' option enables command execution iteration with detailed logging. There are many potential uses for this, including cryptanalysis and batch processing.
+
+The input file is a line delimited file that can contain any data to send into the given command.
+
+The command is in double quotes so it can contain spaces.
+
+```
+giant-spellbook commander /bin/bash maintenance_actions.txt
+```
+
+The output is stored in a `results.log` that contains date and time in UTC, the exit status of the command, the input, and output.
+
+## Researcher
+
+The 'researcher' option is an interactive hexdump with disassembly. The hexdump has color highlighting to mark ELF and PE magic, ASCII control characters, and more.
+
+Use the 'help_map' subcommand to print the meanings of the colors and symbols and print out some tips for using this mode.
+
+The interactive session of 'researcher' is a line-by-line hexdump and disassembly with the 'read' subcommand.
+
+Use control + c to exit, or read to the end of the file by pressing the enter key.
