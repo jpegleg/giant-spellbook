@@ -684,7 +684,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               print!("{}", printme2.remove_last());
             },
             "s_hex" => {
-              let report = bithack::serialish_hex_range(file_path, starting_byte, ending_byte)?;
+              let report = bithack::serialized_hex_range(file_path, starting_byte, ending_byte)?;
               let printme1 = format!("{report:?}");
               let printme2 = printme1.remove_last();
               print!("{}", printme2.remove_last());
