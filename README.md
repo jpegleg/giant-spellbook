@@ -563,11 +563,16 @@ The 'commander' option enables command execution iteration with detailed logging
 
 The input file is a line delimited file that can contain any data to send into the given command.
 
-The command is in double quotes so it can contain spaces.
-
 ```
 giant-spellbook commander /bin/bash maintenance_actions.txt
 ```
+
+The command can use double quotes so it can contain spaces.
+
+```
+giant-spellbook commander "/usr/local/bin/cryptex.sh batch_xor /opt/workspace/ciphertexts/" xor_keys.txt
+```
+
 
 The output is stored in a `results.log` that contains date and time in UTC, the exit status of the command, the input, and output.
 
