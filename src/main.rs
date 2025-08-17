@@ -593,7 +593,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           let file_path = &args[2];
           let _ = disassemble::le_dis_to_string(file_path)?;
-          println!("{{\"Disassembly output\": \"./disassembly.asmod\"}}");
+          println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
           Ok(())
         },
 
