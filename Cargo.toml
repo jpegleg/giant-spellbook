@@ -1,6 +1,6 @@
 [package]
 name = "giant-spellbook"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2024"
 authors = ["Keegan Bowen <carefuldata@protonmail.com>"]
 license = "MIT"
@@ -33,4 +33,4 @@ enchanter = "0.1.0"
 wormsign = "0.1.8"
 x509-parser = "0.17.0"
 der-parser = "10.0.0"
-dismael = "0.1.1"
+capstone = "0.13.0"
