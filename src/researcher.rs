@@ -151,8 +151,16 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
         println!("{}", printme2.remove_last());
         // Wait for input, without needing fancy crates that bloat the program.
         // Use what we have already.
-        let _ = read_password()?;
-        row += 1;
+        let jumper = read_password()?;
+        let nowjump = jumper.parse::<usize>();
+        match nowjump {
+            Ok(value) => {
+              row = nowjump.unwrap()
+            },
+            _ => {
+              row += 1;
+            }
+        }
     }
 
     Ok(())
