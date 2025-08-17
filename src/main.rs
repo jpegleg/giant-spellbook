@@ -626,7 +626,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let _ = researcher::annotated_dump(input);
             },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <color_map, read> <target_file>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read> <target_file>\"\n}}", args[0]);
               process::exit(1);
             }
           }
