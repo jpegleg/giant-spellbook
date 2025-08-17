@@ -11,16 +11,27 @@ const KEY_COMPAT:  &[u8] = b"compatibility version ";
 const MUSL_KEY_CURRENT: &[u8] = b"ld-musl-";
 const MUSL_KEY_COMPAT: &[u8] =  b"musl libc";
 const IMAGE_FILE_DLL: u16 = 0x2000;
-const OID_RSA_ENC: &[u8] = b"\x06\x09*\x86H\x86\xf7\r\x01\x01\x01";
 const OID_X509_EXT_ARC: &[u8] = b"\x06\x03\x55\x1D";
 const OID_X509_ATTR_ARC: &[u8] = b"\x06\x03\x55\x04";
-const OID_PKCS7_SIGNEDDATA: &[u8] = b"\x06\x09*\x86H\x86\xf7\r\x01\x07\x02";
-const OID_PKCS12_ARC: &[u8] = b"\x06\x0A*\x86H\x86\xf7\r\x01\x0C";
 const OFFSETS: [usize; 3] = [0x8001, 0x8801, 0x9001];
 const FAT_MAGIC: u32 = 0xCAFEBABE;
 const FAT_CIGAM: u32 = 0xBEBAFECA;
 const FAT_MAGIC_64: u32 = 0xCAFED00D;
 const FAT_CIGAM_64: u32 = 0xD00DCAFE;
+const OIDVAL_PKCS12_ARC: &[u8] = b"\x2A\x86\x48\x86\xF7\x0D\x01\x0C";
+const OIDVAL_PKCS12_BAG_PREFIX: &[u8] = b"\x2A\x86\x48\x86\xF7\x0D\x01\x0C\x0A\x01";
+const OIDVAL_PKCS12_PBE_PREFIX: &[u8] = b"\x2A\x86\x48\x86\xF7\x0D\x01\x0C\x01";
+const OID_PKCS9_FRIENDLYNAME: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x09\x14";
+const OID_PKCS9_LOCALKEYID: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x09\x15";
+const OID_PKCS7_DATA_TLV: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x07\x01";
+const OID_PKCS7_ENCRYPTED_TLV: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x07\x06";
+const OID_PKCS12_KEYBAG: &[u8] = b"\x06\x0B\x2A\x86\x48\x86\xF7\x0D\x01\x0C\x0A\x01\x01";
+const OID_PKCS12_SKEYBAG: &[u8] = b"\x06\x0B\x2A\x86\x48\x86\xF7\x0D\x01\x0C\x0A\x01\x02";
+const OID_PKCS12_CERTBAG: &[u8] = b"\x06\x0B\x2A\x86\x48\x86\xF7\x0D\x01\x0C\x0A\x01\x03";
+const OID_PKCS7_DATA: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x07\x01";
+const OID_PKCS7_SIGNED: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x07\x02";
+const OID_PKCS7_ENCRYPTED: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x07\x06";
+const OID_RSA_ENC: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x01\x01";
 
 /// This function is a wrapper function for a quick cryptanalysis report.
 /// The report tries a number of quick tests, including file detection,
@@ -111,8 +122,8 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         else if is_vhd { "VHD" }
         else if is_tar { "TAR" }
         else if asn1.0 && asn1.1 { "DER (X.509 likely)" }
-        else if asn1.0 && asn1.2 { "DER (PKCS#7/CMS likely)" }
         else if asn1.0 && asn1.3 { "DER (PKCS#12 likely)" }
+        else if asn1.0 && asn1.2 { "DER (PKCS#7/CMS likely)" }
         else if is_pickle { "Python pickle" }
         else if is_pem { "PEM" }
         else { "Unknown" };
@@ -511,34 +522,149 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
         (is_vhd, is_vhdx)
     }
 
-       fn detect_der_asn1(d: &[u8]) -> (bool, bool, bool, bool) {
-        if d.len() < 2 || d[0] != 0x30 { return (false, false, false, false); }
-        let mut idx = 1usize;
-        let total = d.len();
-        let (len_ok, content_len, len_bytes) = parse_der_len(&d[idx..]);
-        if !len_ok { return (false, false, false, false); }
-        idx += len_bytes;
-        if idx + content_len != total { return (false, false, false, false); }
-
-        let likely_x509 = memmem(d, OID_X509_EXT_ARC).is_some() || memmem(d, OID_X509_ATTR_ARC).is_some() || memmem(d, OID_RSA_ENC).is_some();
-        let likely_pkcs7 = memmem(d, OID_PKCS7_SIGNEDDATA).is_some();
-        let likely_pkcs12 = memmem(d, OID_PKCS12_ARC).is_some();
-
-        (true, likely_x509, likely_pkcs7, likely_pkcs12)
-    }
-
-        fn parse_der_len(d: &[u8]) -> (bool, usize, usize) {
-        if d.is_empty() { return (false, 0, 0); }
+    fn parse_der_len_ex(d: &[u8]) -> (bool, usize, usize, bool) {
+        if d.is_empty() { return (false, 0, 0, false); }
         let b0 = d[0];
         if b0 & 0x80 == 0 {
-            (true, b0 as usize, 1)
-        } else {
-            let n = (b0 & 0x7F) as usize;
-            if n == 0 || n > 4 || d.len() < 1 + n { return (false, 0, 0); }
-            let mut len = 0usize;
-            for i in 0..n { len = (len << 8) | d[1 + i] as usize; }
-            (true, len, 1 + n)
+            return (true, (b0 & 0x7F) as usize, 1, false);
         }
+        let n = (b0 & 0x7F) as usize;
+        if n == 0 {
+            return (true, 0, 1, true);
+        }
+        if n > 4 || d.len() < 1 + n { return (false, 0, 0, false); }
+        let mut len = 0usize;
+        for i in 0..n { len = (len << 8) | (d[1 + i] as usize); }
+        (true, len, 1 + n, false)
+    }
+
+    fn detect_der_asn1(d: &[u8]) -> (bool, bool, bool, bool) {
+        let x509ish  = has_x509ish_oids(d);
+        let pkcs7ish = has_pkcs7ish_oids(d);
+        if d.len() < 2 || d[0] != 0x30 {
+            let pkcs12ish = has_pkcs12ish_oids(d, false, false);
+            return (false, x509ish, pkcs7ish, pkcs12ish);
+        }
+
+        let (ok_seq, content_len, len_bytes, indefinite) = parse_der_len_ex(&d[1..]);
+        if !ok_seq {
+            let pkcs12ish = has_pkcs12ish_oids(d, false, false);
+            return (false, x509ish, pkcs7ish, pkcs12ish);
+        }
+        let seq_hdr = 1 + len_bytes;
+        let (seq_content_start, seq_content_end) = if indefinite {
+            if let Some(eoc) = find_eoc(&d[seq_hdr..]) {
+                let end = seq_hdr + eoc;
+                (seq_hdr, end)
+            } else {
+                let pkcs12ish = has_pkcs12ish_oids(d, true, false);
+                return (true, x509ish, pkcs7ish, pkcs12ish);
+            }
+        } else {
+            let end = seq_hdr + content_len;
+            if end > d.len() {
+                let pkcs12ish = has_pkcs12ish_oids(d, true, false);
+                return (true, x509ish, pkcs7ish, pkcs12ish);
+            }
+            (seq_hdr, end)
+        };
+
+        let (tag1, len1, _hdr1, c1_start) = match parse_tlv_at(d, seq_content_start, seq_content_end) {
+            Some(t) => t, None => {
+                let pkcs12ish = has_pkcs12ish_oids(d, true, false);
+                return (true, x509ish, pkcs7ish, pkcs12ish);
+            }
+        };
+        let mut cursor = c1_start + len1;
+        let mut version_ok = false;
+        if tag1 == 0x02 && len1 > 0 && len1 <= 4 && c1_start + len1 <= d.len() {
+            let mut val: u32 = 0;
+            for &b in &d[c1_start..c1_start+len1] { val = (val << 8) | (b as u32); }
+            version_ok = val == 0 || val == 3;
+        }
+
+        let (tag2, len2, _hdr2, c2_start) = match parse_tlv_at(d, cursor, seq_content_end) {
+            Some(t) => t, None => {
+                let pkcs12ish = has_pkcs12ish_oids(d, true, version_ok);
+                return (true, x509ish, pkcs7ish, pkcs12ish);
+            }
+        };
+        cursor = c2_start + len2;
+        let mut authsafe_ok = false;
+        if tag2 == 0x30 && c2_start + len2 <= d.len() {
+            if let Some((oid_tag, oid_len, _oid_hdr, oid_val_start)) = parse_tlv_at(d, c2_start, c2_start + len2) {
+                if oid_tag == 0x06 && oid_val_start + oid_len <= d.len() {
+                    let oid_tlv = &d[oid_val_start - 2..oid_val_start + oid_len];
+                    if oid_tlv == OID_PKCS7_DATA_TLV || oid_tlv == OID_PKCS7_ENCRYPTED_TLV {
+                        if let Some((c0_tag, c0_len, _c0_hdr, c0_start)) = parse_tlv_at(d, oid_val_start + oid_len, c2_start + len2) {
+                            if c0_tag & 0xE0 == 0xA0 {
+                                if let Some((in_tag, in_len, _in_hdr, in_start)) = parse_tlv_at(d, c0_start, c0_start + c0_len) {
+                                    if in_tag == 0x04 && in_start + in_len <= d.len() {
+                                        let os_payload = &d[in_start..in_start+in_len];
+                                        let looks_seq = !os_payload.is_empty() && os_payload[0] == 0x30;
+                                        let inner_pkcs12ish = has_pkcs12ish_oids(os_payload, true, version_ok);
+                                        authsafe_ok = looks_seq && inner_pkcs12ish;
+                                    } else {
+                                        let inner = &d[c0_start..c0_start + c0_len];
+                                        authsafe_ok = has_pkcs12ish_oids(inner, true, version_ok);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let mut macdata_seen = false;
+        if cursor < seq_content_end {
+            if let Some((tag3, _len3, _hdr3, _c3_start)) = parse_tlv_at(d, cursor, seq_content_end) {
+                if tag3 == 0x30 { macdata_seen = true; }
+            }
+        }
+
+        let pkcs12_confidence = version_ok && authsafe_ok || (authsafe_ok && macdata_seen);
+        let likely_pkcs12 = pkcs12_confidence || has_pkcs12ish_oids(d, true, version_ok);
+        (true, x509ish, pkcs7ish, likely_pkcs12)
+    }
+
+    fn parse_tlv_at(d: &[u8], off: usize, end: usize) -> Option<(u8, usize, usize, usize)> {
+        if off + 2 > d.len() || off >= end { return None; }
+        let tag = d[off];
+        let (ok, len, len_bytes, _indef) = parse_der_len_ex(&d[off + 1..]) ;
+        if !ok { return None; }
+        let hdr = 1 + len_bytes;
+        let cstart = off + hdr;
+        if cstart + len > end || cstart + len > d.len() { return None; }
+        Some((tag, len, hdr, cstart))
+    }
+
+    fn find_eoc(d: &[u8]) -> Option<usize> {
+        let mut i = 0usize;
+        while i + 1 < d.len() {
+            if d[i] == 0x00 && d[i + 1] == 0x00 { return Some(i); }
+            i += 1;
+        }
+        None
+    }
+
+    fn has_x509ish_oids(d: &[u8]) -> bool {
+        memmem(d, OID_X509_EXT_ARC).is_some() || memmem(d, OID_X509_ATTR_ARC).is_some() || memmem(d, OID_RSA_ENC).is_some()
+    }
+
+    fn has_pkcs7ish_oids(d: &[u8]) -> bool {
+        memmem(d, OID_PKCS7_DATA).is_some() || memmem(d, OID_PKCS7_SIGNED).is_some() || memmem(d, OID_PKCS7_ENCRYPTED).is_some()
+    }
+
+    fn has_pkcs12ish_oids(d: &[u8], _seq_at_start: bool, _version_ok: bool) -> bool {
+        let has_arc       = memmem(d, OIDVAL_PKCS12_ARC).is_some();
+        let has_bag_pref  = memmem(d, OIDVAL_PKCS12_BAG_PREFIX).is_some();
+        let has_pbe_pref  = memmem(d, OIDVAL_PKCS12_PBE_PREFIX).is_some();
+        let has_any_bag   = memmem(d, OID_PKCS12_KEYBAG).is_some()
+                         || memmem(d, OID_PKCS12_SKEYBAG).is_some()
+                         || memmem(d, OID_PKCS12_CERTBAG).is_some();
+        let has_attrs     = memmem(d, OID_PKCS9_FRIENDLYNAME).is_some() || memmem(d, OID_PKCS9_LOCALKEYID).is_some();
+
+        has_any_bag || has_bag_pref || (has_arc && (has_pbe_pref || has_attrs))
     }
 
     fn detect_python_pickle(d: &[u8]) -> (bool, Option<u8>) {
