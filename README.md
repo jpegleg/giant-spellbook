@@ -385,7 +385,7 @@ Disassemble a file:
 ```
 giant-spellbook disassemble /usr/local/bin/kubectl
 {"Disassembly output": "./disassembly.txt"}
-head -n10 disassembly.asmod # show first 10 lines
+head -n10 disassembly.txt # show first 10 lines
 00000000: 7f 45                   jg 0x47
 00000002: 4c 46 02 01             add r8b, byte ptr [rcx]
 00000006: 01 00                   add dword ptr [rax], eax
