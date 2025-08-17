@@ -34,7 +34,7 @@ pub fn color_map() {
     println!("Tip:");
     println!("  export COLUMNS=64 # the column size is adjusted by the COLUMNS environment variable");
     println!("  press the enter key to print the next line");
-    println!("  enter a number then press enter to jump to that line in the file");
+    println!("  enter a number then press enter to jump to that number in the file data buffer");
     println!("  use control + c to end the session, or read through the end of the file");
     println!();
 
