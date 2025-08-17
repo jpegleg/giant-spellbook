@@ -496,25 +496,18 @@ giant-spellbook byte_range hex /usr/local/bin/kubectl 29339887 29340000
 73
 ```
 
-There is also a subcommand to remove the spacing named 's_hex':
+There is also a subcommand to print serialized hex with no spaces or newlines, 's_hex':
 
 ```
 giant-spellbook byte_range s_hex /usr/local/bin/kubectl 29339887 29340000
-707974686f6e330a0a2320436f707972
-69676874203230313720546865204b75
-6265726e6574657320417574686f7273
-2e0a230a23204c6963656e7365642075
-6e646572207468652041706163686520
-4c6963656e73652c2056657273696f6e
-20322e30202874686520224c6963656e
-73
+707974686f6e330a0a2320436f70797269676874203230313720546865204b756265726e6574657320417574686f72732e0a230a23204c6963656e73656420756e6465722074686520417061636865204c6963656e73652c2056657273696f6e20322e30202874686520224c6963656e73
 ```
 
-If the purpose is to decode back to binary, then the s_hex is nicer,
-although the newlines still need to be removed before giant-spellbook will decode it.
+If the purpose is to decode back to binary, then the s_hex output is ready to go.
+
 
 ```
-cat hex.file | tr -d '\n' > test2
+giant-spellbook byte_range s_hex /usr/local/bin/kubectl 29339887 29340000 > test2
 giant-spellbook decode hex test2
 { "Result": "Hex data decoded and written to file: test2" }
 ```
