@@ -24,7 +24,7 @@ pub fn color_map() {
     println!("  {}██{}  Column separators / structure (grey)", clr_wgr, RESET);
     println!();
     println!("Symbol replacements:");
-    println!("  {}◆{} - ASCII control character (diamond symbol)", clr_cor, RESET);
+    println!("  {}◆{}  - ASCII control character (diamond symbol)", clr_cor, RESET);
     println!("  .  - Non-ASCII byte (period symbol)");
     println!("  {}✦{}  - Magic byte (star glyph symbol)", clr_ndi, RESET);
     println!();
