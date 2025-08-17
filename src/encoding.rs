@@ -12,7 +12,8 @@ fn base64_encode<R: Read, W: Write>(input: &mut R, output: &mut W) -> io::Result
         if bytes_read == 0 {
             break;
         }
-        let encoded_chunk = base64::engine::general_purpose::STANDARD_NO_PAD.encode(&buffer[..bytes_read]);
+        let encoded_chunk = base64::engine::general_purpose::STANDARD_NO_PAD
+            .encode(&buffer[..bytes_read]);
         output.write_all(encoded_chunk.as_bytes())?;
     }
     Ok(())
@@ -25,8 +26,9 @@ fn base64_decode<R: Read, W: Write>(input: &mut R, output: &mut W) -> io::Result
         if bytes_read == 0 {
             break;
         }
-        let decoded_chunk = base64::engine::general_purpose::STANDARD_NO_PAD.decode(&buffer[..bytes_read])
-            .map_err(|err| io::Error::new(io::ErrorKind::Other, format!("Base64 decode error: {}", err)))?;
+        let decoded_chunk = base64::engine::general_purpose::STANDARD_NO_PAD
+            .decode(&buffer[..bytes_read])
+            .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, format!("Base64 decode error: {err}")))?;
         output.write_all(&decoded_chunk)?;
     }
     Ok(())
@@ -52,7 +54,9 @@ fn base58_decode<R: Read, W: Write>(input: &mut R, output: &mut W) -> io::Result
         if bytes_read == 0 {
             break;
         }
-        let decoded_chunk = bs58::decode(&buffer[..bytes_read]).into_vec().unwrap();
+        let decoded_chunk = bs58::decode(&buffer[..bytes_read])
+            .into_vec()
+            .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, format!("Base58 decode error: {err}")))?;
         output.write_all(&decoded_chunk)?;
     }
     Ok(())
@@ -64,17 +68,17 @@ pub fn hexon(file_path: &str, out_path: &str) -> io::Result<()> {
     let outfile = File::create(out_path)?;
     let mut output_writer = BufWriter::new(outfile);
     let mut input_reader = BufReader::new(file);
-    let mut buffer = [0u8; 4096];
+    let mut buffer = [0u8; CHUNK_SIZE];
 
     loop {
-        let bytes_read = input_reader.read(&mut buffer).unwrap();
+        let bytes_read = input_reader.read(&mut buffer)?;
         if bytes_read == 0 {
             break;
         }
         let hex_string = hex::encode(&buffer[..bytes_read]);
-        let _ = output_writer.write_all(hex_string.as_bytes());
+        output_writer.write_all(hex_string.as_bytes())?;
     }
-    let _ = output_writer.flush();
+    output_writer.flush()?;
     Ok(())
 }
 
@@ -84,17 +88,18 @@ pub fn hexoff(file_path: &str, out_path: &str) -> io::Result<()> {
     let outfile = File::create(out_path)?;
     let mut output_writer = BufWriter::new(outfile);
     let mut input_reader = BufReader::new(file);
-    let mut buffer = [0u8; 4096];
+    let mut buffer = [0u8; CHUNK_SIZE];
 
     loop {
-        let bytes_read = input_reader.read(&mut buffer).unwrap();
+        let bytes_read = input_reader.read(&mut buffer)?;
         if bytes_read == 0 {
             break;
         }
-        let binary = hex::decode(&buffer[..bytes_read]).unwrap();
-        let _ = output_writer.write_all(&binary);
+        let binary = hex::decode(&buffer[..bytes_read])
+            .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, format!("Hex decode error: {err}")))?;
+        output_writer.write_all(&binary)?;
     }
-    let _ = output_writer.flush();
+    output_writer.flush()?;
     Ok(())
 }
 
@@ -107,7 +112,6 @@ pub fn base64_encode_file(file_path: &str) -> io::Result<()> {
     println!("{{ \"Result\": \"Data encoded in Base64 and written to file: {}\" }}", file_path);
     Ok(())
 }
-
 
 pub fn base64_decode_file(file_path: &str) -> io::Result<()> {
     let mut input_file = File::open(file_path)?;
@@ -129,7 +133,6 @@ pub fn base58_encode_file(file_path: &str) -> io::Result<()> {
     Ok(())
 }
 
-
 pub fn base58_decode_file(file_path: &str) -> io::Result<()> {
     let mut input_file = File::open(file_path)?;
     let temp_file_path = format!("{}.tmp", file_path);
@@ -147,7 +150,6 @@ pub fn hex_encode_file(file_path: &str) -> io::Result<()> {
     println!("{{ \"Result\": \"Data encoded in hex and written to file: {}\" }}", file_path);
     Ok(())
 }
-
 
 pub fn hex_decode_file(file_path: &str) -> io::Result<()> {
     let temp_file_path = format!("{}.tmp", file_path);
