@@ -23,6 +23,8 @@ mod bithack;
 mod analysis;
 mod disassemble;
 mod hashfunctions;
+mod commander;
+mod researcher;
 
 use crate::hunter::Interesting;
 
@@ -62,7 +64,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -70,7 +72,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" => {
-          println!("{{\"Version\": \"0.1.4\"}}");
+          println!("{{\"Version\": \"0.1.5\"}}");
           process::exit(0)
         },
 
@@ -593,6 +595,45 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           Ok(())
         },
 
+        "commander" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} commander <\"command to iterate>\">\" <input_file>\n}}", args[0]);
+            process::exit(1);
+          }
+          let commands = &args[2];
+          let inputs = &args[3];
+          let _ = commander::run_iter(commands, inputs)?;
+          Ok(())
+        },
+
+        "researcher" => {
+          if args.len() < 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read> <input_file>\n}}", args[0]);
+            process::exit(1);
+          }
+          if args.len() > 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read> <input_file>\n}}", args[0]);
+            process::exit(1);
+          }
+
+          let otype = &args[2];
+          match otype.as_str() {
+            "help_map" => {
+              let _ = researcher::color_map();
+            },
+            "read" => {
+              let input = &args[3];
+              let _ = researcher::annotated_dump(input);
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <color_map, read> <target_file>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+
+          Ok(())
+        },
+
         "reverse_bytes" => {
           if args.len() != 3 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} reverse_bytes <target_file>\"\n}}", args[0]);
@@ -831,7 +872,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
