@@ -39,6 +39,27 @@ pub fn color_map() {
 
 }
 
+trait StrExt {
+    fn remove_last(&self) -> &str;
+    fn remove_ok(&self) -> &str;
+}
+
+impl StrExt for str {
+    fn remove_last(&self) -> &str {
+        match self.char_indices().next_back() {
+            Some((i, _)) => &self[..i],
+            None => self,
+        }
+    }
+    fn remove_ok(&self) -> &str {
+        let mut chars = self.chars();
+        chars.next();
+        chars.next();
+        chars.next();
+        chars.as_str()
+    }
+}
+
 pub fn annotated_dump(path: &str) -> io::Result<()> {
     const RESET: &str = "\x1b[0m";
     let clr_cor = fg_rgb(255,107,107);
@@ -125,8 +146,11 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
         print!(" {}|{} ", &clr_wgr, RESET);
         println!("{}", ascii_area);
         print!(" {}|{} ", &clr_wgr, RESET);
-        println!("{:?}", disassemble::le_dis_segment(&buf[start..end]));
-
+        let printme1 = format!("{:?}", disassemble::le_dis_segment(&buf[start..end]));
+        let printme2 = printme1.remove_ok();
+        println!("{}", printme2.remove_last());
+        // Wait for input, without needing fancy crates that bloat the program.
+        // Use what we have already.
         let _ = read_password()?;
         row += 1;
     }
