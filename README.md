@@ -574,7 +574,7 @@ giant-spellbook commander "/usr/local/bin/cryptex.sh batch_xor /opt/workspace/ci
 ```
 
 
-The output is stored in a `results.log` that contains date and time in UTC, the exit status of the command, the input, and output.
+The output is stored in a `results.log` that contains date and time in UTC, the input line number, the command, the exit status of the command, the input, and output.
 
 ## Researcher
 
