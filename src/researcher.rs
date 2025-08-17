@@ -148,9 +148,9 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
         println!("{}", ascii_area);
         print!(" {}|{} ", &clr_wgr, RESET);
         let printme1 = format!("{:?}", disassemble::le_dis_segment(&buf[start..end]));
-        let printme2 = printme1.remove_ok();
-        println!("{}", printme2.remove_last());
-        // read_password is already available, 
+        let printme2 = printme1.remove_ok().replace("\\n", "");
+        println!("{}", printme2.remove_last().replace("  ", " ").replace("  ; ", ";").replace("  ", " "));
+        // read_password is already available,
         // so we use what we have here, no need for fancy bloat
         let jumper = read_password()?;
         let nowjump = jumper.parse::<usize>();
