@@ -604,6 +604,8 @@ Use the 'help_map' subcommand to print the meanings of the colors and symbols an
 
 The interactive session of 'researcher' is a line-by-line hexdump and disassembly with the 'read' subcommand.
 
+Pressing enter will move on to the next line. Typing a number and pressing enter will jump to that buffer number in the file.
+
 Use control + c to exit, or read to the end of the file by pressing the enter key.
 
 This 'researcher' option may not work well with all terminals/consoles and all platforms. I noted that some alpine linux consoles needed to run `reset` to get the display back after exiting the 'researcher'.
