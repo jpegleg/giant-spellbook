@@ -321,3 +321,55 @@ pub fn hex_range(path: &str, start: u64, end: u64) -> Result<(), Box<dyn std::er
 
     Ok(())
 }
+
+pub fn serialized_hex_range(path: &str, start: u64, end: u64) -> Result<(), Box<dyn std::error::Error>> {
+    if start >= end {
+        return Err("start must be less than end".into());
+    }
+
+    let p = Path::new(path);
+    let mut file = File::open(p)?;
+    let file_len = file.metadata()?.len();
+
+    if start >= file_len {
+        return Err("start position is beyond end of file".into());
+    }
+
+    let to_end = min(end, file_len);
+    if to_end <= start {
+        return Ok(());
+    }
+
+    file.seek(SeekFrom::Start(start))?;
+
+    let mut buf = vec![0u8; 8192];
+    let mut remaining = to_end - start;
+
+    while remaining > 0 {
+        let want = min(buf.len() as u64, remaining) as usize;
+        let n = file.read(&mut buf[..want])?;
+        if n == 0 {
+            break;
+        }
+
+        let mut idx = 0usize;
+        while idx < n {
+            let line_len = min(16, n - idx);
+            let line = &buf[idx..idx + line_len];
+
+            let mut hex_cols = String::with_capacity(16 * 3 + 2);
+            for i in 0..16 {
+               if i < line_len {
+                    hex_cols.push_str(&format!("{:02x}", line[i]));
+                }
+            }
+
+            print!("{}", hex_cols);
+            idx += line_len;
+        }
+
+        remaining -= n as u64;
+    }
+
+    Ok(())
+}
