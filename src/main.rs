@@ -57,6 +57,19 @@ macro_rules! try_print_json {
 }
 
 
+trait StrExt {
+    fn remove_last(&self) -> &str;
+}
+
+impl StrExt for str {
+    fn remove_last(&self) -> &str {
+        match self.char_indices().next_back() {
+            Some((i, _)) => &self[..i],
+            None => self,
+        }
+    }
+}
+
 /// This function is wrapped by the main function for error catching.
 /// It handles the input arguments and applies the corresponding functionality.
 #[allow(deprecated)]
@@ -647,7 +660,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "byte_range" => {
           if args.len() != 6 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <hexdump, hex> <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <hexdump, hex, s_hex> <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
             process::exit(1);
           }
           let atype = &args[2];
@@ -660,14 +673,25 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           match atype.as_str() {
             "hexdump" => {
               let report = bithack::hexdump_range(file_path, starting_byte, ending_byte)?;
-              println!("{report:?}");
+              let printme1 = format!("{report:?}");
+              let printme2 = printme1.remove_last();
+              print!("{}", printme2.remove_last());
             },
             "hex" => {
               let report = bithack::hex_range(file_path, starting_byte, ending_byte)?;
-              println!("{report:?}");
+              let printme1 = format!("{report:?}");
+              let printme2 = printme1.remove_last();
+              print!("{}", printme2.remove_last());
             },
+            "s_hex" => {
+              let report = bithack::serialish_hex_range(file_path, starting_byte, ending_byte)?;
+              let printme1 = format!("{report:?}");
+              let printme2 = printme1.remove_last();
+              print!("{}", printme2.remove_last());
+            },
+
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <hexdump, hex> <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <hexdump, hex, s_hex> <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
               process::exit(1);
             }
           }
