@@ -610,7 +610,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "commander" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} commander <\"command to iterate>\">\" <input_file>\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} commander <\"command to iterate>\"> <input_file>\n}}", args[0]);
             process::exit(1);
           }
           let commands = &args[2];
