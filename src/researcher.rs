@@ -26,6 +26,7 @@ pub fn color_map() {
     println!("Symbol replacements:");
     println!("  {}◆{} - ASCII control character (diamond symbol)", clr_cor, RESET);
     println!("  .  - Non-ASCII byte (period symbol)");
+    println!("  ✦  - Magic byte (star glyph symbol)");
     println!();
     println!("Column meanings:");
     println!("  byte positions as u64 | hex | ascii | disassembly results");
