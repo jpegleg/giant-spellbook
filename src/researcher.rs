@@ -1,4 +1,3 @@
-use std::env;
 use std::fs::File;
 use std::io::{self, Read};
 use rpassword::read_password;
@@ -6,6 +5,7 @@ use rpassword::read_password;
 use crate::disassemble;
 
 const RESET: &str = "\x1b[0m";
+const OVERLAP: usize = 15;
 
 pub fn color_map() {
     let clr_cor = fg_rgb(255,107,107);
@@ -32,33 +32,11 @@ pub fn color_map() {
     println!("  byte positions as u64 | hex | ascii | disassembly results");
     println!();
     println!("Tip:");
-    println!("  export COLUMNS=64 # the column size is adjusted by the COLUMNS environment variable");
     println!("  press the enter key to print the next line");
     println!("  enter a number then press enter to jump to that number in the file data buffer");
     println!("  use control + c to end the session, or read through the end of the file");
     println!();
 
-}
-
-trait StrExt {
-    fn remove_last(&self) -> &str;
-    fn remove_ok(&self) -> &str;
-}
-
-impl StrExt for str {
-    fn remove_last(&self) -> &str {
-        match self.char_indices().next_back() {
-            Some((i, _)) => &self[..i],
-            None => self,
-        }
-    }
-    fn remove_ok(&self) -> &str {
-        let mut chars = self.chars();
-        chars.next();
-        chars.next();
-        chars.next();
-        chars.as_str()
-    }
 }
 
 pub fn annotated_dump(path: &str) -> io::Result<()> {
@@ -69,80 +47,53 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
     let clr_wgr = fg_rgb(214,211,209);
     let clr_eco = fg_rgb(163,201,168);
     let clr_ros = fg_rgb(243,161,191);
-
     let mut f = File::open(path)?;
     let mut buf = Vec::new();
     f.read_to_end(&mut buf)?;
 
-    let mut line_map = Vec::with_capacity(buf.len());
-    let mut cur_line = 1usize;
-    for &b in &buf {
-        line_map.push(cur_line);
-        if b == b'\n' { cur_line += 1; }
-    }
-
-    let term_cols = env::var("COLUMNS").ok().and_then(|v| v.parse::<usize>().ok()).filter(|&n| n >= 60).unwrap_or(120);
-
-    let line_w = 7usize;
-    let hex_range_w = 19usize;
-
+    let hex_w = 64; 
     let max_idx = buf.len().saturating_sub(1) as u64;
     let digits = dec_digits(max_idx);
     let dec_range_w = (2 + digits + 1 + digits + 1).max("Byte Range (u64,u64)".len());
-
-    let candidates = [16usize, 12, 8, 4];
-    let mut bytes_per_row = 16usize;
-    for &cand in &candidates {
-        let hex_w = hex_col_width(cand);
-        let row_w = line_w + 3 + hex_range_w + 3 + dec_range_w + 3 + hex_w + 3 + cand;
-        if row_w <= term_cols { bytes_per_row = cand; break; }
-    }
-    let hex_w = hex_col_width(bytes_per_row);
-
     let is_elf = buf.starts_with(&[0x7F, b'E', b'L', b'F']);
-    let is_pe  = buf.starts_with(&[0x4D, 0x5A]); // MZ
+    let is_pe  = buf.starts_with(&[0x4D, 0x5A]);
     let is_macho = is_macho_magic_prefix(&buf);
-
     let mut row = 0usize;
 
-    while row * bytes_per_row < buf.len().max(1) {
-        let start = row * bytes_per_row;
+    while row * hex_w < buf.len().max(1) {
+        let start = row * hex_w;
         if start >= buf.len() { break; }
-        let end = (start + bytes_per_row).min(buf.len());
+        let end = (start + hex_w).min(buf.len());
         let last = end.saturating_sub(1);
         let range_dec = format!("({},{})", start, last);
 
         let hex_area = build_hex_area_styled(
             &buf[start..end],
             start as u64,
-            bytes_per_row,
-            &clr_eco,
-            &clr_ros,
-            &clr_cor,
-            &clr_trb,
-            &clr_ndi,
-            &clr_wgr,
-            RESET,
             hex_w,
-            is_elf,
-            is_pe,
-            is_macho,
+            &clr_eco, &clr_ros, &clr_cor, &clr_trb, &clr_ndi, &clr_wgr, RESET,
+            hex_w, is_elf, is_pe, is_macho,
         );
 
         let ascii_area = build_ascii_area_styled(
             &buf[start..end],
             start as u64,
-            bytes_per_row,
-            &clr_eco,
-            &clr_cor,
-            &clr_trb,
-            &clr_ros,
-            &clr_ndi,
-            RESET,
-            is_elf,
-            is_pe,
-            is_macho,
+            hex_w,
+            &clr_eco, &clr_cor, &clr_trb, &clr_ros, &clr_ndi, RESET,
+            is_elf, is_pe, is_macho,
         );
+        
+        let lookahead_end = (end + OVERLAP).min(buf.len());
+        let dis_slice = &buf[start..lookahead_end];
+        let base_addr = start as u64;
+        let print_limit = end as u64;
+        let printme1 = disassemble::le_dis_segment_bounded(dis_slice, base_addr, print_limit)
+            .unwrap_or_else(|_| String::from(""));
+
+        let printme2 = printme1
+            .replace('\n', " ")
+            .replace('\t', " ")
+            .replace("  ", " ");
 
         print!(" {}|{} ", &clr_wgr, RESET);
         print!("{:>drw$}", range_dec, drw = dec_range_w);
@@ -151,20 +102,12 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
         print!(" {}|{} ", &clr_wgr, RESET);
         println!("{}", ascii_area);
         print!(" {}|{} ", &clr_wgr, RESET);
-        let printme1 = format!("{:?}", disassemble::le_dis_segment(&buf[start..end]));
-        let printme2 = printme1.remove_ok().replace("\\n", "");
-        println!("{}", printme2.remove_last().replace("  ", " ").replace("  ; ", ";").replace("  ", " "));
-        // read_password is already available,
-        // so we use what we have here, no need for fancy bloat
+        println!("{}", printme2.trim());
+
         let jumper = read_password()?;
-        let nowjump = jumper.parse::<usize>();
-        match nowjump {
-            Ok(_value) => {
-              row = nowjump.unwrap()
-            },
-            _ => {
-              row += 1;
-            }
+        match jumper.parse::<usize>() {
+            Ok(n) => row = n,
+            Err(_) => row += 1,
         }
     }
 
@@ -178,15 +121,6 @@ fn fg_rgb(r: u8, g: u8, b: u8) -> String {
 fn dec_digits(mut x: u64) -> usize {
     if x == 0 { return 1; }
     let mut d = 0; while x > 0 { x /= 10; d += 1; } d
-}
-
-fn hex_col_width(bytes_per_row: usize) -> usize {
-    if bytes_per_row == 0 { return 0; }
-    let base = (3 * bytes_per_row).saturating_sub(1);
-    if bytes_per_row < 8 { return base; }
-    let full_groups = bytes_per_row / 8;
-    let seps = full_groups.saturating_sub(1);
-    base + seps * 2
 }
 
 fn visible_len(s: &str) -> usize {
