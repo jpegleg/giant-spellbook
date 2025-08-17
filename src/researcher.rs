@@ -25,15 +25,15 @@ pub fn color_map() {
     println!();
     println!("Symbol replacements:");
     println!("  {}◆{} - ASCII control character (diamond symbol)", clr_cor, RESET);
-    println!("  . - Non-ASCII byte (period symbol)");
+    println!("  .  - Non-ASCII byte (period symbol)");
     println!();
     println!("Column meanings:");
     println!("  byte positions as u64 | hex | ascii | disassembly results");
     println!();
     println!("Tip:");
     println!("  export COLUMNS=64 # the column size is adjusted by the COLUMNS environment variable");
-    println!("  there will be a small lock symbol on the screen, press the enter key to print the next line");
-    println!("  use control + c to end the session");
+    println!("  press the enter key to print the next line");
+    println!("  use control + c to end the session, or read through the end of the file");
     println!();
 
 }
