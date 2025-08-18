@@ -610,7 +610,7 @@ The functionality attempts to ensure that diassembled instructions are not chopp
 
 Pressing enter will move on to the next (64 byte) buffer number. Typing a number and pressing enter will jump to that buffer number in the file. The buffers are 64 bytes, plus the 15 byte lookahead.
 
-Use control + c to exit, or read to the end of the file by pressing the enter key or entering a number past the lenth of the file.
+Use control + c to exit, or read to the end of the file by pressing the enter key or entering a buffer number past the length of the file.
 
 This 'researcher' option may not work well with all terminals/consoles and all platforms. I noted that some alpine linux consoles needed to run `reset` to get the display back after exiting the 'researcher'.
 
