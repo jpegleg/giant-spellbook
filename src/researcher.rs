@@ -37,7 +37,6 @@ pub fn color_map() {
     println!("  base64 - print the buffer segment as base64");
     println!("  binary - print the buffer segment as binary text");
     println!();
-
     println!("Tip:");
     println!("  press the enter key to print the next line");
     println!("  enter a number then press enter to jump to that number in the file data buffer");
