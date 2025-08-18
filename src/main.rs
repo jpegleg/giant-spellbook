@@ -85,7 +85,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" => {
-          println!("{{\"Version\": \"0.1.8\"}}");
+          println!("{{\"Version\": \"0.1.9\"}}");
           process::exit(0)
         },
 
@@ -592,7 +592,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             process::exit(1);
           }
           let file_path = &args[2];
-          let _ = disassemble::le_dis_to_string(file_path)?;
+          let _ = disassemble::intel_dis_to_string(file_path)?;
           println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
           Ok(())
         },
