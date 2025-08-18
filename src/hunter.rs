@@ -3,6 +3,9 @@ use std::fs;
 use chrono::Utc;
 use std::fmt::Write as _;
 
+mod cve;
+use cve::*;
+
 const PE_MAGIC: &[u8] = b"PE\0\0";
 const ELF_MAGIC: &[u8] = b"\x7FELF";
 const MACHO_MAGIC_32: &[u8] = &[0xFE, 0xED, 0xFA, 0xCE];
@@ -105,149 +108,91 @@ pub enum Pattern {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
-pub enum Interesting {
-    // --- Reverse shells / remote exec ---
-    PythonUse,
-    PowershellUse,
-    CmdUse,
-    BashUse,
-    ShUse,
-    BashReverse,
-    PythonReverse,
-    PerlUse,
-    PHPReverse,
-    PerlReverse,
-    NcReverse,
-    NcUse,
-    SocatReverse,
-    PowershellIEX,
-    PowershellEncoded,
-    CertutilDownload,
-    BitsadminDownload,
-    CurlHttp,
-    WgetHttp,
-    CurlHttps,
-    WgetHttps,
-    InvokeWebRequest,
-    MshtaExec,
-    Rundll32Js,
-    WmicExec,
-    PsexecSvc,
-    Smbexec,
-    // --- Privilege / policy tamper ---
-    SudoersNoPasswd,
-    ShadowAccess,
-    PasswdAccess,
-    SeDebugPrivilege,
-    // --- Windows shadow copy & recovery destruction (ransomware TTPs) ---
-    VssadminDeleteShadows,
-    WmicShadowcopyDelete,
-    BcdeditIgnoreAllFailures,
-    BcdeditRecoveryDisabled,
-    CipherWipe,
-    // --- Service/process killing typical before encryption ---
-    NetStopSql,
-    NetStopVeeam,
-    NetStopBackupExec,
-    ScStopVss,
-    TaskkillBackup,
-    // --- Discovery & lateral movement helpers ---
-    NltestDomain,
-    NetView,
-    NetUse,
-    AtOrSchtasksExec,
-    // --- Persistence (Windows) ---
-    SchtasksCreate,
-    RunKeyHKCU,
-    RunKeyHKLM,
-    StartupFolder,
-    WMIEventConsumer,
-    // --- Persistence (macOS/Linux) ---
-    CronReboot,
-    SystemdService,
-    LaunchAgents,
-    RcLocal,
-    // --- Stealth / anti-forensics ---
-    HistoryClear,
-    LogWipeVarLog,
-    ChattrImmutable,
-    // --- Ransomware ransom-note filename patterns (common) ---
-    RansomNoteReadme,
-    RansomNoteHowToDecrypt,
-    RansomNoteDecryptInstructions,
-    RansomNoteRyuk,
-    RansomNoteLockBit,
-    RansomNoteBlackCat,
-    RansomNoteClop,
-    RansomNoteConti,
-    RansomNoteSodinokibi,
-    // --- Ransomware extension/name markers (generic/family hints) ---
-    ExtWcry,
-    ExtRyuk,
-    ExtLockBit,
-    ExtBlackCat,
-    ExtClop,
-    ExtConti,
-    ExtSodinokibi,
-    // --- Exfil/comms tools often bundled ---
-    TorExe,
-    RcloneConfig,
-    MegaCli,
-    // --- Suspicious crypto demands (generic) ---
-    MoneroMention,
-    BitcoinMention,
-    // --- Binary / wide-string markers & packers ---
-    PeMagic,
-    ElfMagic,
-    MachOMagic,
-    OleCfbMagic,
-    GzipMagic,
-    SevenZMagic,
-    RarMagic,
-    ZipMagic,
-    UpxMagic,
-    UpxSection0,
-    UpxSection1,
-    AspackMarker,
-    MpressMarker,
-    ThemidaMarker,
-    VmprotectMarker,
-    PetiteMarker,
-    EnigmaMarker,
-    KkrunchyMarker,
-    // --- Embedded shell / stager hints (binary) ---
-    BinShUse,
-    BinBashUse,
-    BinKshUse,
-    BinCshUse,
-    BinZshUse,
-    BinFishUse,
-    BinDashUse,
-    BinAshUse,
-    MzBase64Prefix,
-    // --- Suspicious Windows strings in UTF-16LE (wide) ---
-    WidePowershellExe,
-    WideIEXCall,
-    WideFromBase64String,
-    WideCmdExe,
-    WideRundll32,
-    WideMshta,
-    WideRegsvr32,
-    WideWscriptShell,
-    WideSchtasks,
-    WideVssadminDelete,
-    WideWevtutilClear,
-    WideBcdedit,
-    WideWbadminDeleteCatalog,
-    // --- Windows registry run keys (wide) ---
-    WideRunKeyHKCU,
-    WideRunKeyHKLM,
-}
+pub enum Interesting {}
 
 impl Interesting {
     pub fn all() -> Vec<(&'static str, Pattern)> {
         let mut v: Vec<(&'static str, Pattern)> = Vec::new();
 
+        // --- Exploit patterns ---
+        v.extend([
+            // log4shell exploit patterns
+            ("exploiting_CVEs_log4shell_jndi_use", Pattern::Bytes(cve_bytes::CVE_2021_44228_JNDI_PREFIX)),
+            ("exploiting_CVEs_log4shell_jndi_ldap", Pattern::Bytes(cve_bytes::CVE_2021_44228_JNDI_LDAP)),
+            ("exploiting_CVEs_log4shell_jndi_ldaps", Pattern::Bytes(cve_bytes::CVE_2021_44228_JNDI_LDAPS)),
+            ("exploiting_CVEs_log4shell_jndi_rmi", Pattern::Bytes(cve_bytes::CVE_2021_44228_JNDI_RMI)),
+            ("exploiting_CVEs_log4shell_jndi_dns", Pattern::Bytes(cve_bytes::CVE_2021_44228_JNDI_DNS)),
+            ("exploiting_CVEs_log4shell_jndi_obfuscation_lower", Pattern::Bytes(cve_bytes::CVE_2021_44228_OBF_LOWER)),
+            ("exploiting_CVEs_log4shell_jndi_obfuscation_colon", Pattern::Bytes(cve_bytes::CVE_2021_44228_OBF_COLON)),
+            ("exploiting_CVEs_log4shell_java_lookup", Pattern::Bytes(cve_bytes::CVE_2021_44228_JAVA_LOOKUP)),
+            ("exploiting_CVEs_log4shell_ctx_server", Pattern::Bytes(cve_bytes::CVE_2021_44228_CTX_SERVER)),
+
+            // spring4shell exploit patterns
+            ("exploiting_CVEs_spring4shell_class_module", Pattern::Bytes(cve_bytes::CVE_2022_22965_CLASS_MODULE)),
+            ("exploiting_CVEs_spring4shell_class_protection_domain", Pattern::Bytes(cve_bytes::CVE_2022_22965_CLASS_PROTDOMAIN)),
+            ("exploiting_CVEs_spring4shell_class_pipeline", Pattern::Bytes(cve_bytes::CVE_2022_22965_PIPELINE)),
+            ("exploiting_CVEs_spring4shell_tomcat_logs", Pattern::Bytes(cve_bytes::CVE_2022_22965_TOMCAT_LOGS)),
+            ("exploiting_CVEs_spring4shell_routing_header", Pattern::Bytes(cve_bytes::CVE_2022_22965_ROUTING_HEADER)),
+
+            // MSDT RCE
+            ("exploiting_CVEs_msdt_rce_ms_msdt_scheme_use", Pattern::Bytes(cve_bytes::CVE_2022_30190_MS_MSDT_SCHEME)),
+            ("exploiting_CVEs_mstdt_rce_ms_msdt_id", Pattern::Bytes(cve_bytes::CVE_2022_30190_MS_MSDT_ID)),
+            ("exploiting_CVEs_mstdt_rce_pcwdiagnostic", Pattern::Bytes(cve_bytes::CVE_2022_30190_PCWDIAG)),
+            ("exploiting_CVEs_mstdt_rce_sdiagnhost_exe", Pattern::Bytes(cve_bytes::CVE_2022_30190_SDIAGNHOST)),
+            ("exploiting_CVEs_mstdt_rce_hcp_scheme", Pattern::Bytes(cve_bytes::CVE_2022_30190_HCP_SCHEME)),
+
+            // Outlook reminder UNC leak
+            ("exploiting_CVEs_outlook_pid_rem_file_param", Pattern::Bytes(cve_bytes::CVE_2023_23397_PID_REM_FILE_PARAM)),
+            ("exploiting_CVEs_outlook_pid_rem_override", Pattern::Bytes(cve_bytes::CVE_2023_23397_PID_REM_OVERRIDE)),
+            ("exploiting_CVEs_outlook_web_dav_unc", Pattern::Bytes(cve_bytes::CVE_2023_23397_WEB_DAV)),
+
+            // Equation Editor MS Office memory corruption
+            ("exploiting_CVEs_ms_office_mem_eqnedt_exe", Pattern::Bytes(cve_bytes::CVE_2017_11882_EQNEDT_EXE)),
+            ("exploiting_CVEs_ms_office_mem_equation_3", Pattern::Bytes(cve_bytes::CVE_2017_11882_EQUATION_3)),
+            ("exploiting_CVEs_ms_office_mem_eqnedt_clsid", Pattern::Bytes(cve_bytes::CVE_2017_11882_EQNEDT_CLSID)),
+
+            // Pulse Secure arbitrary file read
+            ("exploiting_CVEs_pulse_secure_dana_na", Pattern::Bytes(cve_bytes::CVE_2019_11510_DANA_NA)),
+            ("exploiting_CVEs_pulse_secure_viewcert", Pattern::Bytes(cve_bytes::CVE_2019_11510_VIEWCERT)),
+            ("exploiting_CVEs_pulse_secure_portal_welcome", Pattern::Bytes(cve_bytes::CVE_2019_11510_PORTAL_WELCOME)),
+            ("exploiting_CVEs_pulse_secure_mention", Pattern::Bytes(cve_bytes::CVE_2019_11510_SSL_VPN)),
+
+            // Citrix ADC/Gateway path traversal
+            ("exploiting_CVEs_citrix_vpns_newbm", Pattern::Bytes(cve_bytes::CVE_2019_19781_VPNS_NEWBM)),
+            ("exploiting_CVEs_citrix_traversal", Pattern::Bytes(cve_bytes::CVE_2019_19781_TRAVERSAL)),
+            ("exploiting_CVEs_citrix_netscaler", Pattern::Bytes(cve_bytes::CVE_2019_19781_NETSCALER)),
+
+            // F5 BIG-IP iControl REST auth bypass RCE
+            ("exploiting_CVEs_f5_icontrol_bash", Pattern::Bytes(cve_bytes::CVE_2022_1388_ICONTROL_BASH)),
+            ("exploiting_CVEs_f5_x_f5_token", Pattern::Bytes(cve_bytes::CVE_2022_1388_X_F5_TOKEN)),
+            ("exploiting_CVEs_f5_x_conn_xf5", Pattern::Bytes(cve_bytes::CVE_2022_1388_CONN_XF5)),
+            ("exploiting_CVEs_f5_util_cmdargs", Pattern::Bytes(cve_bytes::CVE_2022_1388_UTIL_CMDARGS)),
+
+            // WebLogic console traversal
+            ("exploiting_CVEs_weblogic_console", Pattern::Bytes(cve_bytes::CVE_2020_14882_CONSOLE)),
+
+            // Exchange ProxyLogon
+            ("exploiting_CVEs_exchange_proxy_x_beresource", Pattern::Bytes(cve_bytes::CVE_2021_26855_X_BERESOURCE)),
+            ("exploiting_CVEs_exchange_proxy_x_anon_backend", Pattern::Bytes(cve_bytes::CVE_2021_26855_X_ANON_BACKEND)),
+            ("exploiting_CVEs_exchange_proxy_ecp", Pattern::Bytes(cve_bytes::CVE_2021_26855_ECP)),
+
+            // Exchange ProxyShell
+            ("exploiting_CVEs_exchange_autodiscover", Pattern::Bytes(cve_bytes::CVE_2021_34473_AUTODISCOVER)),
+            ("exploiting_CVEs_exchange_x_anon", Pattern::Bytes(cve_bytes::CVE_2021_34473_X_ANON)),
+
+            // Apache Struts RCE
+            ("exploiting_CVEs_apache_struts_ognl_ct", Pattern::Bytes(cve_bytes::CVE_2017_5638_OGNL_CT)),
+
+            // Shellshock
+            ("exploiting_CVEs_shellshock", Pattern::Bytes(cve_bytes::CVE_2014_6271_SHELLSHOCK)),
+
+            // xz/libzma backdoor
+            ("exploiting_CVEs_xz_backdoor", Pattern::Bytes(cve_bytes::CVE_2024_3094_LZMA_SO_56)),
+
+            // Fortinet FortiOS path traversal
+            ("exploiting_CVEs_fortinet_traversal_fgt_lang", Pattern::Bytes(cve_bytes::CVE_2018_13379_FGT_LANG)),
+        ]);
+        
         // --- Binary: file format / packers (often used to pack malware) ---
         v.extend([
             ("pe_magic", Pattern::Bytes(PE_MAGIC)),
