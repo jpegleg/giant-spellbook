@@ -608,7 +608,7 @@ The interactive session of 'researcher' is a segment-by-segment hexdump and disa
 
 The functionality attempts to ensure that diassembled instructions are not chopped at the end with look-head/over-read.
 
-Pressing enter will move on to the next line. Typing a number and pressing enter will jump to that buffer number in the file. The buffers are 64 bytes, plus the 15 byte lookahead.
+Pressing enter will move on to the next (64 byte) buffer number. Typing a number and pressing enter will jump to that buffer number in the file. The buffers are 64 bytes, plus the 15 byte lookahead.
 
 Use control + c to exit, or read to the end of the file by pressing the enter key or entering a number past the lenth of the file.
 
