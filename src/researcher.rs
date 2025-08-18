@@ -94,7 +94,7 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
         let dis_slice = &buf[start..lookahead_end];
         let base_addr = start as u64;
         let print_limit = end as u64;
-        let printme1 = disassemble::le_dis_segment_bounded(dis_slice, base_addr, print_limit)
+        let printme1 = disassemble::intel_dis_segment_bounded(dis_slice, base_addr, print_limit)
             .unwrap_or_else(|_| String::from(""));
 
         let printme2 = printme1
