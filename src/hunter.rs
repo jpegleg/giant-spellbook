@@ -136,10 +136,10 @@ impl Interesting {
 
             // MSDT RCE
             ("exploiting_CVEs_msdt_rce_ms_msdt_scheme_use", Pattern::Bytes(cve_bytes::CVE_2022_30190_MS_MSDT_SCHEME)),
-            ("exploiting_CVEs_mstdt_rce_ms_msdt_id", Pattern::Bytes(cve_bytes::CVE_2022_30190_MS_MSDT_ID)),
-            ("exploiting_CVEs_mstdt_rce_pcwdiagnostic", Pattern::Bytes(cve_bytes::CVE_2022_30190_PCWDIAG)),
-            ("exploiting_CVEs_mstdt_rce_sdiagnhost_exe", Pattern::Bytes(cve_bytes::CVE_2022_30190_SDIAGNHOST)),
-            ("exploiting_CVEs_mstdt_rce_hcp_scheme", Pattern::Bytes(cve_bytes::CVE_2022_30190_HCP_SCHEME)),
+            ("exploiting_CVEs_msdt_rce_ms_msdt_id", Pattern::Bytes(cve_bytes::CVE_2022_30190_MS_MSDT_ID)),
+            ("exploiting_CVEs_msdt_rce_pcwdiagnostic", Pattern::Bytes(cve_bytes::CVE_2022_30190_PCWDIAG)),
+            ("exploiting_CVEs_msdt_rce_sdiagnhost_exe", Pattern::Bytes(cve_bytes::CVE_2022_30190_SDIAGNHOST)),
+            ("exploiting_CVEs_msdt_rce_hcp_scheme", Pattern::Bytes(cve_bytes::CVE_2022_30190_HCP_SCHEME)),
 
             // Outlook reminder UNC leak
             ("exploiting_CVEs_outlook_pid_rem_file_param", Pattern::Bytes(cve_bytes::CVE_2023_23397_PID_REM_FILE_PARAM)),
