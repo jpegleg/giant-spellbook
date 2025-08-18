@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::{self, Read};
 use rpassword::read_password;
+use base64::{Engine as _};
 
 use crate::disassemble;
 
@@ -31,6 +32,12 @@ pub fn color_map() {
     println!("Column meanings:");
     println!("  byte positions as u64 | hex | ascii | disassembly results");
     println!();
+    println!("Session commands:");
+    println!("  these commands can be typed (will not display) to print additional data");
+    println!("  base64 - print the buffer segment as base64");
+    println!("  binary - print the buffer segment as binary text");
+    println!();
+
     println!("Tip:");
     println!("  press the enter key to print the next line");
     println!("  enter a number then press enter to jump to that number in the file data buffer");
@@ -51,7 +58,7 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
     let mut buf = Vec::new();
     f.read_to_end(&mut buf)?;
 
-    let hex_w = 64; 
+    let hex_w = 64;
     let max_idx = buf.len().saturating_sub(1) as u64;
     let digits = dec_digits(max_idx);
     let dec_range_w = (2 + digits + 1 + digits + 1).max("Byte Range (u64,u64)".len());
@@ -82,7 +89,7 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
             &clr_eco, &clr_cor, &clr_trb, &clr_ros, &clr_ndi, RESET,
             is_elf, is_pe, is_macho,
         );
-        
+
         let lookahead_end = (end + OVERLAP).min(buf.len());
         let dis_slice = &buf[start..lookahead_end];
         let base_addr = start as u64;
@@ -105,10 +112,30 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
         println!("{}", printme2.trim());
 
         let jumper = read_password()?;
-        match jumper.parse::<usize>() {
-            Ok(n) => row = n,
-            Err(_) => row += 1,
+
+        match jumper.parse::<String>() {
+            Ok(val) if val == "binary".to_string() => {
+                let out: String = dis_slice
+                  .iter()
+                  .map(|b| format!("[ {:08b} ]", b))
+                  .collect::<Vec<_>>()
+                  .join(" ");
+                println!("{}\n", out);
+            },
+            Ok(val) if val == "base64".to_string() => {
+                let out: String = base64::engine::general_purpose::STANDARD_NO_PAD
+                  .encode(&dis_slice);
+                println!("{}\n", out);
+            },
+
+            _ => {
+                match jumper.parse::<usize>() {
+                  Ok(n) => row = n,
+                  Err(_) => row += 1,
+               }
+            }
         }
+
     }
 
     Ok(())
