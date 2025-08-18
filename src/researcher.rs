@@ -166,28 +166,6 @@ fn visible_len(s: &str) -> usize {
     n
 }
 
-fn truncate_visible(s: &str, max_vis: usize) -> String {
-    let bytes = s.as_bytes();
-    let mut i = 0usize;
-    let mut n = 0usize;
-    let mut out = String::with_capacity(s.len());
-    while i < bytes.len() {
-        if bytes[i] == 0x1B && i + 1 < bytes.len() && bytes[i+1] == b'[' {
-            let start = i;
-            i += 2;
-            while i < bytes.len() && bytes[i] != b'm' { i += 1; }
-            if i < bytes.len() { i += 1; }
-            out.push_str(&String::from_utf8_lossy(&bytes[start..i]));
-        } else {
-            if n >= max_vis { break; }
-            out.push(bytes[i] as char);
-            n += 1;
-            i += 1;
-        }
-    }
-    out
-}
-
 fn build_hex_area_styled(
     chunk: &[u8],
     base_off: u64,
@@ -238,8 +216,9 @@ fn build_hex_area_styled(
         }
     }
     let vis = visible_len(&s);
-    if vis < target_w { s.push_str(&" ".repeat(target_w - vis)); }
-    else if vis > target_w { s = truncate_visible(&s, target_w); }
+    if vis < target_w { 
+        s.push_str(&" ".repeat(target_w - vis));
+    }
     s
 }
 
