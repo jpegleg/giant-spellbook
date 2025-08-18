@@ -1,34 +1,35 @@
-use capstone::arch::x86::{ArchMode, ArchSyntax};
+use capstone::arch::*;
+
 use capstone::prelude::*;
 use std::fmt::Write as _;
 use std::fs;
 
 const BYTES_COL_WIDTH: usize = 24;
 
-pub fn le_dis_to_string(path: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn intel_dis_to_string(path: &str) -> Result<(), Box<dyn std::error::Error>> {
     let bytes = fs::read(path)?;
-    let asm = capstone_disassemble_to_string_with_base_and_limit(&bytes, 0, u64::MAX)?;
+    let asm = intelx86_64_string(&bytes, 0, u64::MAX)?;
     fs::write("disassembly.txt", asm)?;
     Ok(())
 }
 
-pub fn le_dis_segment_bounded(
+pub fn intel_dis_segment_bounded(
     segment: &[u8],
     base_addr: u64,
     limit_end: u64,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    capstone_disassemble_to_string_with_base_and_limit(segment, base_addr, limit_end)
+    intelx86_64_string(segment, base_addr, limit_end)
 }
 
-fn capstone_disassemble_to_string_with_base_and_limit(
+fn intelx86_64_string(
     code: &[u8],
     base_addr: u64,
     limit_end: u64,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut cs = Capstone::new()
         .x86()
-        .mode(ArchMode::Mode64)
-        .syntax(ArchSyntax::Intel)
+        .mode(capstone::arch::x86::ArchMode::Mode64)
+        .syntax(capstone::arch::x86::ArchSyntax::Intel)
         .build()?;
     cs.set_skipdata(true)?;
 
