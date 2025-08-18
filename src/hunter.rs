@@ -99,14 +99,12 @@ const W_RUN_HKLM: &[u8] = &[
     b'R',0,b'u',0,b'n',0
 ];
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum Pattern {
     Bytes(&'static [u8]),
     Str(&'static str),
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum Interesting {}
 
