@@ -639,7 +639,7 @@ giant-spellbook commander "giant-spellbook seek /usr/local/bin/kubectl" ./find_s
 
 The strings don't have to be binary, and neither does the file. Plain text strings and plain text files work as well.
 
-Note that large lines will only match with the first 4096 bytes of that line.
+With 'seek', any pattern that is longer than 4096 bytes will be truncated to 4096 bytes when searching for it in the file.
 
 Use caution with sending binary inputs via 'commander' as the `results.log` will become binary as the STDIN that was piped is logged to the file.
 
