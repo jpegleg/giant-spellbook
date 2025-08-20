@@ -111,7 +111,6 @@ pub enum Interesting {}
 impl Interesting {
     pub fn all() -> Vec<(&'static str, Pattern)> {
         let mut v: Vec<(&'static str, Pattern)> = Vec::new();
-
         // --- Exploit patterns ---
         v.extend([
             // log4shell exploit patterns
@@ -166,6 +165,11 @@ impl Interesting {
             ("exploiting_CVEs_f5_x_conn_xf5", Pattern::Bytes(cve_bytes::CVE_2022_1388_CONN_XF5)),
             ("exploiting_CVEs_f5_util_cmdargs", Pattern::Bytes(cve_bytes::CVE_2022_1388_UTIL_CMDARGS)),
 
+            // F5 TMUI directory traversal
+            ("exploiting_CVEs_f5_tmui_login", Pattern::Bytes(cve_bytes::CVE_2020_5902_TMUI_LOGIN)),
+            ("exploiting_CVEs_f5_tmui_file_read", Pattern::Bytes(cve_bytes::CVE_2020_5902_FILE_READ)),
+            ("exploiting_CVEs_dot_dot_semicolon_path", Pattern::Bytes(cve_bytes::CVE_2020_5902_DOT_DOT_SC)),
+
             // WebLogic console traversal
             ("exploiting_CVEs_weblogic_console", Pattern::Bytes(cve_bytes::CVE_2020_14882_CONSOLE)),
 
@@ -190,7 +194,7 @@ impl Interesting {
             // Fortinet FortiOS path traversal
             ("exploiting_CVEs_fortinet_traversal_fgt_lang", Pattern::Bytes(cve_bytes::CVE_2018_13379_FGT_LANG)),
         ]);
-        
+
         // --- Binary: file format / packers (often used to pack malware) ---
         v.extend([
             ("pe_magic", Pattern::Bytes(PE_MAGIC)),
