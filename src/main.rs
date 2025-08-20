@@ -25,6 +25,7 @@ mod disassemble;
 mod hashfunctions;
 mod commander;
 mod researcher;
+mod seek;
 
 use crate::hunter::Interesting;
 
@@ -77,7 +78,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -85,7 +86,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" => {
-          println!("{{\"Version\": \"0.1.9\"}}");
+          println!("{{\"Version\": \"0.2.0\"}}");
           process::exit(0)
         },
 
@@ -608,6 +609,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           Ok(())
         },
 
+        "seek" => {
+          if args.len() != 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: echo -e \"pattern\" | {} seek <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
+          let _ = seek::search_in_file(file_path);
+          Ok(())
+        },
+
         "commander" => {
           if args.len() != 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} commander <\"command to iterate>\"> <input_file>\n}}", args[0]);
@@ -896,7 +907,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
