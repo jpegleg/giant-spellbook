@@ -60,6 +60,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | byte_range    | print hex or hex and ascii of a file from a byte position range                    |
 | commander     | run a command for each line in a file, supplying the line as STDIN to command      |
 | researcher    | interactive disassembly and hexdump of a file with colored byte highlighting       |
+| seek          | search for binary or strings from within a file and report byte positions          |
 
 ## Installing
 
@@ -613,3 +614,33 @@ Use control + c to exit, or read to the end of the file by pressing the enter ke
 This 'researcher' option may not work well with all terminals/consoles and all platforms. I noted that some alpine linux consoles needed to run `reset` to get the display back after exiting the 'researcher'.
 
 Use a full color terminal emulator to get the full experience with the byte coloring. I can recommend [WezTerm](https://wezterm.org/).
+
+## Seek
+
+The 'seek' option can find binary segments and strings in files (including binaries). The binary/strings to search for are piped into STDIN. Note the `-e` is important on linux to getting an echo to work for hex escaped binary to be treated as binary.
+
+
+```
+echo -e '\x0f\x05\x00\x00' | giant-spellbook seek /usr/local/bin/kubectl
+{
+  "File": "/usr/local/bin/kubectl",
+  "Input_pattern_hex_encoded": "0f050000",
+  "Positions": [1937006,3891372,4036491,4042036,9434822,9907622,11606779,11917851,12595758,21210542,25101129,25101321,25899241,26881545,27464457,27637513,27717993,27726633,31177866,31201788,31414152,31778284,32131924,32443880,32443928,32554448,32656736,32671788,32719612,40064279,40555741,43173492,43324241]
+}
+
+```
+
+This can also be used with 'commander', although the file needs to actually contain the binary on each line, not escaped hex like the echo.
+
+```
+giant-spellbook commander "giant-spellbook seek /usr/local/bin/kubectl" ./find_segments.bin.in
+
+```
+
+The strings don't have to be binary, and neither does the file. Plain text strings and plain text files work as well.
+
+Note that large lines will only match with the first 4096 bytes of that line.
+
+Use caution with sending binary inputs via 'commander' as the `results.log` will become binary as the STDIN that was piped is logged to the file.
+
+If the STDOUT or STDERR of with 'commander' "command" have binary, then an error message will be logged to the `results.log` as it uses lossy UTF-8 parsing for STDOUT and STDERR and will log the line number and a stream error about invalid UTF-8 if that occurs.
