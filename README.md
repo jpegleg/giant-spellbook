@@ -644,3 +644,11 @@ With 'seek', any pattern that is longer than 4096 bytes will be truncated to 409
 Use caution with sending binary inputs via 'commander' as the `results.log` will become binary as the STDIN that was piped is logged to the file.
 
 If the STDOUT or STDERR of with 'commander' "command" have binary, then an error message will be logged to the `results.log` as it uses lossy UTF-8 parsing for STDOUT and STDERR and will log the line number and a stream error about invalid UTF-8 if that occurs.
+
+## Project promises
+
+This project will never use AI-slop. All code is reviewed, tested, implemented by a human that is academically trained in cryptography and information security. This repository and the crates.io repository is carefully managed and protected.
+
+This project will never break backwards compatibility in releases regarding the signature validation or decryption.
+
+This project will be maintained as best as is reasonable.
