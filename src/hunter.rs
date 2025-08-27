@@ -170,7 +170,11 @@ impl Interesting {
             ("wide_wbadmin_delete_catalog", Pattern::Bytes(misc_bytes::W_WBADMIN_DEL_CAT)),
             ("wide_run_key_hkcu", Pattern::Bytes(misc_bytes::W_RUN_HKCU)),
             ("wide_run_key_hklm", Pattern::Bytes(misc_bytes::W_RUN_HKLM)),
+        ]);
 
+        // Strings section
+        
+        v.extend([
             // ---- Reverse shells / remote exec ----
             ("bash_reverse_1", Pattern::Str("bash -i >& /dev/tcp/")),
             ("bash_reverse_2", Pattern::Str("bash -l > /dev/tcp")),
@@ -215,6 +219,9 @@ impl Interesting {
             ("net_stop_backup_exec", Pattern::Str("net stop \"Backup Exec\"")),
             ("sc_stop_vss", Pattern::Str("sc stop VSS")),
             ("taskkill_backup", Pattern::Str("taskkill /F /IM backup*")),
+            ("pkill_use", Pattern::Str("pkill ")),
+            ("kill_9_use", Pattern::Str("kill -9 ")),
+            ("systemctl_stop_use", Pattern::Str("systemctl stop ")),
 
             // ---- Discovery & lateral movement ----
             ("nltest_domain", Pattern::Str("nltest /dclist:")),
