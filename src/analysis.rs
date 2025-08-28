@@ -517,11 +517,27 @@ fn json_escape(s: &str) -> String {
     }
     out
 }
-fn bool_to_json(b: bool) -> &'static str { if b { "true" } else { "false" } }
-fn f64_json(v: f64) -> String { if v.is_finite() { format!("{:.6}", v) } else { "null".to_string() } }
-fn f64_or_null(v: f64, cond_null: bool) -> String {
-    if cond_null || !v.is_finite() { "null".to_string() } else { format!("{:.6}", v) }
+
+fn bool_to_json(b: bool) -> &'static str { 
+    if b { "true" } else { "false" }
 }
+
+fn f64_json(v: f64) -> String { 
+    if v.is_finite() { 
+        format!("{:.6}", v) 
+    } else { 
+        "null".to_string() 
+    } 
+}
+
+fn f64_or_null(v: f64, cond_null: bool) -> String {
+    if cond_null || !v.is_finite() { 
+        "null".to_string() 
+    } else { 
+        format!("{:.6}", v) 
+    }
+}
+
 fn json_str_array(items: &[String]) -> String {
     if items.is_empty() { "[]".to_string() } else {
         let mut s = String::from("[");
@@ -607,7 +623,6 @@ fn detect_pe(d: &[u8]) -> (bool, Option<u16>, bool, Option<u16>, &'static str) {
 fn is_uefi_subsystem(sub: u16) -> bool {
     matches!(sub, 10 | 11 | 12 | 13)
 }
-
 
 fn detect_macho(d: &[u8]) -> (bool, bool, u64, &'static str) {
     if d.len() < 4 { return (false, false, 0, "Unknown"); }
@@ -984,6 +999,7 @@ fn find_darwin_libsystem(d: &[u8]) -> (bool, Vec<String>) {
 fn memmem(hay: &[u8], needle: &[u8]) -> Option<usize> {
     memmem_from(hay, needle, 0)
 }
+
 fn memmem_from(hay: &[u8], needle: &[u8], mut start: usize) -> Option<usize> {
     if needle.is_empty() { return Some(start.min(hay.len())); }
     while start + needle.len() <= hay.len() {
