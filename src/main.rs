@@ -588,13 +588,28 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         "disassemble" => {
-          if args.len() != 3 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} disassemble <target_file>\"\n}}", args[0]);
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} disassemble <arm64, x86_64> <target_file>\"\n}}", args[0]);
             process::exit(1);
           }
-          let file_path = &args[2];
-          let _ = disassemble::intel_dis_to_string(file_path)?;
-          println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
+          let dis_type = &args[2];
+          let file_path = &args[3];
+
+          match dis_type.as_str() {
+            "arm64" => {
+              let _ = disassemble::arm_dis_to_string(file_path)?;
+              println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
+            },
+            "x86_64" => {
+              let _ = disassemble::intel_dis_to_string(file_path)?;
+              println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} disassemble <arm64, x86_64> <target_file>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+
           Ok(())
         },
 
@@ -632,11 +647,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "researcher" => {
           if args.len() < 3 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read> <input_file>\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64> <input_file>\n}}", args[0]);
             process::exit(1);
           }
           if args.len() > 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read> <input_file>\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64> <input_file>\n}}", args[0]);
             process::exit(1);
           }
 
@@ -649,8 +664,12 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let input = &args[3];
               let _ = researcher::annotated_dump(input);
             },
+            "read_arm64" => {
+              let input = &args[3];
+              let _ = researcher::arm_annotated_dump(input);
+            },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read> <target_file>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read>, read_arm64 <target_file>\"\n}}", args[0]);
               process::exit(1);
             }
           }
