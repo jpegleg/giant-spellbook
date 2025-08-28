@@ -39,6 +39,38 @@ fn intelx86_64_string(
     Ok(out)
 }
 
+pub fn arm_dis_to_string(path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let bytes = fs::read(path)?;
+    let asm = arm_64_string(&bytes, 0, u64::MAX)?;
+    fs::write("disassembly.txt", asm)?;
+    Ok(())
+}
+
+pub fn arm_dis_segment_bounded(
+    segment: &[u8],
+    base_addr: u64,
+    limit_end: u64,
+) -> Result<String, Box<dyn std::error::Error>> {
+    arm_64_string(segment, base_addr, limit_end)
+}
+
+fn arm_64_string(
+    code: &[u8],
+    base_addr: u64,
+    limit_end: u64,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let mut cs = Capstone::new()
+        .arm64()
+        .mode(capstone::arch::arm64::ArchMode::Arm)
+        .build()?;
+    cs.set_skipdata(true)?;
+
+    let insns = cs.disasm_all(code, base_addr)?;
+    let mut out = String::new();
+    format_instructions_bounded(&mut out, &insns, limit_end)?;
+    Ok(out)
+}
+
 fn format_instructions_bounded(
     out: &mut String,
     insns: &capstone::Instructions,
