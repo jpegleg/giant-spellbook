@@ -382,7 +382,7 @@ giant-spellbook parse certs mystery.file
 Disassemble a file (x86_64):
 
 ```
-giant-spellbook disassemble /usr/local/bin/kubectl
+giant-spellbook disassemble x86_64 /usr/local/bin/kubectl
 {"Disassembly output": "./disassembly.txt"}
 head -n10 disassembly.txt # show first 10 lines
 00000000: 7f 45                   jg 0x47
@@ -398,6 +398,8 @@ head -n10 disassembly.txt # show first 10 lines
 ```
 _Note that the disassembly.txt output file can be rather large. Also the function writes to that file in pwd, so
 a previously existing disassembly.txt file in pwd would be overwritten._
+
+ARM64 disassembly is supported via the 'arm64' subcommand to 'dsassemble'.
 
 Hunt for IoCs and potentially interesting bytes within a file:
 
@@ -597,7 +599,7 @@ The output is stored in a `results.log` that contains date and time in UTC, the 
 
 ## Researcher
 
-The 'researcher' option is an interactive hexdump with x86_64 (intel) disassembly. The hexdump has color highlighting to mark ELF, PE, and Mach-O magic, ASCII control characters, and more.
+The 'researcher' option is an interactive hexdump with x86_64 (intel) or ARM64 disassembly. The hexdump has color highlighting to mark ELF, PE, and Mach-O magic, ASCII control characters, and more.
 
 Use the 'help_map' subcommand to print the meanings of the colors and symbols and print out some tips for using this mode.
 The 'help_map' has commands and explanations for using 'researcher'. These commands include 'base64' and 'binary' which can
