@@ -33,7 +33,7 @@ const OID_PKCS7_SIGNED: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x07\x02";
 const OID_PKCS7_ENCRYPTED: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x07\x06";
 const OID_RSA_ENC: &[u8] = b"\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x01\x01";
 
-/// This function is a wrapper function for a quick cryptanalysis report.
+/// This function is for a quick cryptanalysis report.
 /// The report tries a number of quick tests, including file detection,
 /// and a few algorithms like Chi, Hamming, as well as a few different XOR tests,
 /// Shannon entropy calculation, and some ECB and repetition tests.
@@ -354,497 +354,6 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
 
     writeln!(&mut out, "}}\n")?;
 
-    fn json_escape(s: &str) -> String {
-        let mut out = String::with_capacity(s.len() + 8);
-        for ch in s.chars() {
-            match ch {
-                '"' => out.push_str("\\\""),
-                '\\' => out.push_str("\\\\"),
-                '\n' => out.push_str("\\n"),
-                '\r' => out.push_str("\\r"),
-                '\t' => out.push_str("\\t"),
-                c if c.is_control() => out.push_str(&format!("\\u{:04X}", c as u32)),
-                c => out.push(c),
-            }
-        }
-        out
-    }
-    fn bool_to_json(b: bool) -> &'static str { if b { "true" } else { "false" } }
-    fn f64_json(v: f64) -> String { if v.is_finite() { format!("{:.6}", v) } else { "null".to_string() } }
-    fn f64_or_null(v: f64, cond_null: bool) -> String {
-        if cond_null || !v.is_finite() { "null".to_string() } else { format!("{:.6}", v) }
-    }
-    fn json_str_array(items: &[String]) -> String {
-        if items.is_empty() { "[]".to_string() } else {
-            let mut s = String::from("[");
-            for (i, it) in items.iter().enumerate() {
-                if i > 0 { s.push(','); }
-                s.push('"'); s.push_str(&json_escape(it)); s.push('"');
-            }
-            s.push(']'); s
-        }
-    }
-
-    fn elf_os_abi_name(os_abi: u64) -> &'static str {
-        match os_abi {
-            0 => "SYSV/Default '0'",
-            2 => "NetBSD",
-            3 => "GNU",
-            6 => "Solaris",
-            9 => "FreeBSD",
-            12 => "OpenBSD",
-            _ => "Unknown",
-        }
-    }
-
-    fn detect_elf(d: &[u8]) -> (bool, u64, &'static str, u64) {
-        if d.len() >= 16 && &d[0..4] == b"\x7FELF" {
-            let class = match d[4] { 1 => 32, 2 => 64, _ => 0 };
-            let data = match d[5] { 1 => "LSB", 2 => "MSB", _ => "Unknown" };
-            let os_abi = d[7] as u64;
-            (true, class, data, os_abi)
-        } else {
-            (false, 0, "Unknown", 0)
-        }
-    }
-
-    fn detect_pe(d: &[u8]) -> (bool, Option<u16>, bool, Option<u16>, &'static str) {
-        if d.len() < 64 || &d[0..2] != b"MZ" { return (false, None, false, None, ""); }
-        if d.len() < 0x40 { return (false, None, false, None, ""); }
-
-        let e_lfanew = u32::from_le_bytes([d[0x3C], d[0x3D], d[0x3E], d[0x3F]]) as usize;
-        if e_lfanew + 0x18 >= d.len() { return (false, None, false, None, ""); }
-        if &d[e_lfanew..e_lfanew+4] != b"PE\0\0" { return (false, None, false, None, ""); }
-
-        let coff = e_lfanew + 4;
-        let machine = u16::from_le_bytes([d[coff + 0], d[coff + 1]]);
-        let size_of_optional_header = u16::from_le_bytes([d[e_lfanew + 0x14], d[e_lfanew + 0x15]]) as usize;
-        let characteristics = u16::from_le_bytes([d[e_lfanew + 0x16], d[e_lfanew + 0x17]]);
-        let is_dll = (characteristics & IMAGE_FILE_DLL) != 0;
-
-        let opt_off = e_lfanew + 0x18;
-        if opt_off + size_of_optional_header > d.len() {
-            return (true, Some(machine), is_dll, None, if is_dll { "PE/DLL" } else { "PE/EXE" });
-        }
-        if opt_off + 2 > d.len() {
-            return (true, Some(machine), is_dll, None, if is_dll { "PE/DLL" } else { "PE/EXE" });
-        }
-
-        let magic = u16::from_le_bytes([d[opt_off], d[opt_off + 1]]);
-        let subsystem_off = if magic == 0x10B {
-            opt_off + 0x44
-        } else if magic == 0x20B {
-            opt_off + 0x5C
-        } else {
-            opt_off + 0x44
-        };
-
-        let subsystem = if subsystem_off + 2 <= d.len() {
-            Some(u16::from_le_bytes([d[subsystem_off], d[subsystem_off + 1]]))
-        } else {
-            None
-        };
-
-        let kind = if subsystem.map(|s| is_uefi_subsystem(s)).unwrap_or(false) {
-            "PE/UEFI"
-        } else if is_dll {
-            "PE/DLL"
-        } else {
-            "PE/EXE"
-        };
-
-        (true, Some(machine), is_dll, subsystem, kind)
-    }
-
-    fn is_uefi_subsystem(sub: u16) -> bool {
-        matches!(sub, 10 | 11 | 12 | 13)
-    }
-
-
-    fn detect_macho(d: &[u8]) -> (bool, bool, u64, &'static str) {
-        if d.len() < 4 { return (false, false, 0, "Unknown"); }
-        let m_be = u32::from_be_bytes([d[0], d[1], d[2], d[3]]);
-        let m_le = u32::from_le_bytes([d[0], d[1], d[2], d[3]]);
-        if m_be == FAT_MAGIC || m_be == FAT_MAGIC_64 {
-            if d.len() >= 8 {
-                let nfat = u32::from_be_bytes([d[4], d[5], d[6], d[7]]) as u64;
-                return (true, true, nfat, "Fat/BE");
-            }
-        }
-        if m_be == FAT_CIGAM || m_be == FAT_CIGAM_64 {
-            if d.len() >= 8 {
-                let nfat = u32::from_le_bytes([d[4], d[5], d[6], d[7]]) as u64;
-                return (true, true, nfat, "Fat/LE");
-            }
-        }
-        match (m_be, m_le) {
-            (0xFEEDFACE, _) => (true, false, 1, "MH_MAGIC (BE 32)"),
-            (0xFEEDFACF, _) => (true, false, 1, "MH_MAGIC_64 (BE 64)"),
-            (_, 0xFEEDFACE) => (true, false, 1, "MH_MAGIC (LE 32)"),
-            (_, 0xFEEDFACF) => (true, false, 1, "MH_MAGIC_64 (LE 64)"),
-            (0xCEFAEDFE, _) => (true, false, 1, "MH_CIGAM (swap 32)"),
-            (0xCFFAEDFE, _) => (true, false, 1, "MH_CIGAM_64 (swap 64)"),
-            _ => (false, false, 0, "Unknown"),
-        }
-    }
-
-    fn detect_wasm(d: &[u8]) -> bool {
-        d.len() >= 8 && &d[0..4] == b"\0asm" && (d[4] == 0x01 || d[4] == 0x00)
-    }
-
-    fn detect_7z(d: &[u8]) -> bool {
-        d.len() >= 6 && d[0] == 0x37 && d[1] == 0x7A && d[2] == 0xBC && d[3] == 0xAF && d[4] == 0x27 && d[5] == 0x1C
-    }
-
-    fn detect_rar(d: &[u8]) -> (bool, bool) {
-        let rar4 = d.len() >= 7 && &d[0..7] == b"Rar!\x1A\x07\x00";
-        let rar5 = d.len() >= 8 && &d[0..8] == b"Rar!\x1A\x07\x01\x00";
-        (rar4, rar5)
-    }
-
-    fn detect_iso9660(d: &[u8]) -> bool {
-        for &off in &OFFSETS {
-            if off + 5 <= d.len() && &d[off..off+5] == b"CD001" { return true; }
-        }
-        false
-    }
-
-    fn detect_vhd(d: &[u8]) -> (bool, bool) {
-        let is_vhdx = d.len() >= 8 && &d[0..8] == b"vhdxfile";
-        let mut is_vhd = false;
-        if d.len() >= 512 {
-            let start_cookie = &d[0..8.min(d.len())];
-            if start_cookie == b"conectix" { is_vhd = true; }
-            let end = d.len();
-            let foot_start = end.saturating_sub(512);
-            if &d[foot_start..foot_start+8.min(d.len()-foot_start)] == b"conectix" { is_vhd = true; }
-        }
-        (is_vhd, is_vhdx)
-    }
-
-    fn parse_der_len_ex(d: &[u8]) -> (bool, usize, usize, bool) {
-        if d.is_empty() { return (false, 0, 0, false); }
-        let b0 = d[0];
-        if b0 & 0x80 == 0 {
-            return (true, (b0 & 0x7F) as usize, 1, false);
-        }
-        let n = (b0 & 0x7F) as usize;
-        if n == 0 {
-            return (true, 0, 1, true);
-        }
-        if n > 4 || d.len() < 1 + n { return (false, 0, 0, false); }
-        let mut len = 0usize;
-        for i in 0..n { len = (len << 8) | (d[1 + i] as usize); }
-        (true, len, 1 + n, false)
-    }
-
-    fn detect_der_asn1(d: &[u8]) -> (bool, bool, bool, bool) {
-        let x509ish  = has_x509ish_oids(d);
-        let pkcs7ish = has_pkcs7ish_oids(d);
-        if d.len() < 2 || d[0] != 0x30 {
-            let pkcs12ish = has_pkcs12ish_oids(d, false, false);
-            return (false, x509ish, pkcs7ish, pkcs12ish);
-        }
-
-        let (ok_seq, content_len, len_bytes, indefinite) = parse_der_len_ex(&d[1..]);
-        if !ok_seq {
-            let pkcs12ish = has_pkcs12ish_oids(d, false, false);
-            return (false, x509ish, pkcs7ish, pkcs12ish);
-        }
-        let seq_hdr = 1 + len_bytes;
-        let (seq_content_start, seq_content_end) = if indefinite {
-            if let Some(eoc) = find_eoc(&d[seq_hdr..]) {
-                let end = seq_hdr + eoc;
-                (seq_hdr, end)
-            } else {
-                let pkcs12ish = has_pkcs12ish_oids(d, true, false);
-                return (true, x509ish, pkcs7ish, pkcs12ish);
-            }
-        } else {
-            let end = seq_hdr + content_len;
-            if end > d.len() {
-                let pkcs12ish = has_pkcs12ish_oids(d, true, false);
-                return (true, x509ish, pkcs7ish, pkcs12ish);
-            }
-            (seq_hdr, end)
-        };
-
-        let (tag1, len1, _hdr1, c1_start) = match parse_tlv_at(d, seq_content_start, seq_content_end) {
-            Some(t) => t, None => {
-                let pkcs12ish = has_pkcs12ish_oids(d, true, false);
-                return (true, x509ish, pkcs7ish, pkcs12ish);
-            }
-        };
-        let mut cursor = c1_start + len1;
-        let mut version_ok = false;
-        if tag1 == 0x02 && len1 > 0 && len1 <= 4 && c1_start + len1 <= d.len() {
-            let mut val: u32 = 0;
-            for &b in &d[c1_start..c1_start+len1] { val = (val << 8) | (b as u32); }
-            version_ok = val == 0 || val == 3;
-        }
-
-        let (tag2, len2, _hdr2, c2_start) = match parse_tlv_at(d, cursor, seq_content_end) {
-            Some(t) => t, None => {
-                let pkcs12ish = has_pkcs12ish_oids(d, true, version_ok);
-                return (true, x509ish, pkcs7ish, pkcs12ish);
-            }
-        };
-        cursor = c2_start + len2;
-        let mut authsafe_ok = false;
-        if tag2 == 0x30 && c2_start + len2 <= d.len() {
-            if let Some((oid_tag, oid_len, _oid_hdr, oid_val_start)) = parse_tlv_at(d, c2_start, c2_start + len2) {
-                if oid_tag == 0x06 && oid_val_start + oid_len <= d.len() {
-                    let oid_tlv = &d[oid_val_start - 2..oid_val_start + oid_len];
-                    if oid_tlv == OID_PKCS7_DATA_TLV || oid_tlv == OID_PKCS7_ENCRYPTED_TLV {
-                        if let Some((c0_tag, c0_len, _c0_hdr, c0_start)) = parse_tlv_at(d, oid_val_start + oid_len, c2_start + len2) {
-                            if c0_tag & 0xE0 == 0xA0 {
-                                if let Some((in_tag, in_len, _in_hdr, in_start)) = parse_tlv_at(d, c0_start, c0_start + c0_len) {
-                                    if in_tag == 0x04 && in_start + in_len <= d.len() {
-                                        let os_payload = &d[in_start..in_start+in_len];
-                                        let looks_seq = !os_payload.is_empty() && os_payload[0] == 0x30;
-                                        let inner_pkcs12ish = has_pkcs12ish_oids(os_payload, true, version_ok);
-                                        authsafe_ok = looks_seq && inner_pkcs12ish;
-                                    } else {
-                                        let inner = &d[c0_start..c0_start + c0_len];
-                                        authsafe_ok = has_pkcs12ish_oids(inner, true, version_ok);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        let mut macdata_seen = false;
-        if cursor < seq_content_end {
-            if let Some((tag3, _len3, _hdr3, _c3_start)) = parse_tlv_at(d, cursor, seq_content_end) {
-                if tag3 == 0x30 { macdata_seen = true; }
-            }
-        }
-
-        let pkcs12_confidence = version_ok && authsafe_ok || (authsafe_ok && macdata_seen);
-        let likely_pkcs12 = pkcs12_confidence || has_pkcs12ish_oids(d, true, version_ok);
-        (true, x509ish, pkcs7ish, likely_pkcs12)
-    }
-
-    fn parse_tlv_at(d: &[u8], off: usize, end: usize) -> Option<(u8, usize, usize, usize)> {
-        if off + 2 > d.len() || off >= end { return None; }
-        let tag = d[off];
-        let (ok, len, len_bytes, _indef) = parse_der_len_ex(&d[off + 1..]) ;
-        if !ok { return None; }
-        let hdr = 1 + len_bytes;
-        let cstart = off + hdr;
-        if cstart + len > end || cstart + len > d.len() { return None; }
-        Some((tag, len, hdr, cstart))
-    }
-
-    fn find_eoc(d: &[u8]) -> Option<usize> {
-        let mut i = 0usize;
-        while i + 1 < d.len() {
-            if d[i] == 0x00 && d[i + 1] == 0x00 { return Some(i); }
-            i += 1;
-        }
-        None
-    }
-
-    fn has_x509ish_oids(d: &[u8]) -> bool {
-        memmem(d, OID_X509_EXT_ARC).is_some() || memmem(d, OID_X509_ATTR_ARC).is_some() || memmem(d, OID_RSA_ENC).is_some()
-    }
-
-    fn has_pkcs7ish_oids(d: &[u8]) -> bool {
-        memmem(d, OID_PKCS7_DATA).is_some() || memmem(d, OID_PKCS7_SIGNED).is_some() || memmem(d, OID_PKCS7_ENCRYPTED).is_some()
-    }
-
-    fn has_pkcs12ish_oids(d: &[u8], _seq_at_start: bool, _version_ok: bool) -> bool {
-        let has_arc       = memmem(d, OIDVAL_PKCS12_ARC).is_some();
-        let has_bag_pref  = memmem(d, OIDVAL_PKCS12_BAG_PREFIX).is_some();
-        let has_pbe_pref  = memmem(d, OIDVAL_PKCS12_PBE_PREFIX).is_some();
-        let has_any_bag   = memmem(d, OID_PKCS12_KEYBAG).is_some()
-                         || memmem(d, OID_PKCS12_SKEYBAG).is_some()
-                         || memmem(d, OID_PKCS12_CERTBAG).is_some();
-        let has_attrs     = memmem(d, OID_PKCS9_FRIENDLYNAME).is_some() || memmem(d, OID_PKCS9_LOCALKEYID).is_some();
-
-        has_any_bag || has_bag_pref || (has_arc && (has_pbe_pref || has_attrs))
-    }
-
-    fn detect_python_pickle(d: &[u8]) -> (bool, Option<u8>) {
-        if d.len() >= 2 && d[0] == 0x80 && (2..=5).contains(&d[1]) {
-            return (true, Some(d[1]));
-        }
-
-        if !d.is_empty() && (d[0] == b'(' || d[0] == b'd' || d[0] == b'l' || d[0] == b'p' || d[0] == b'I') {
-            return (true, None);
-        }
-        (false, None)
-    }
-
-    fn find_glibc_versions(d: &[u8]) -> Vec<String> {
-        let needle = b"GLIBC_";
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        while i + needle.len() < d.len() {
-            if &d[i..i+needle.len()] == needle {
-                let mut j = i + needle.len();
-                while j < d.len() && (d[j].is_ascii_digit() || d[j] == b'.') { j += 1; }
-                if j > i + needle.len() {
-                    out.push(String::from_utf8_lossy(&d[i..j]).to_string());
-                    i = j; continue;
-                }
-            }
-            i += 1;
-        }
-        out.sort(); out.dedup(); out
-    }
-
-    fn find_musl_versions_strict_and_loose(d: &[u8]) -> Vec<String> {
-        let mut out = Vec::new();
-
-        let keys: [&[u8]; 2] = [MUSL_KEY_CURRENT, MUSL_KEY_COMPAT];
-
-        for &key in &keys {
-            let mut pos = 0usize;
-            while let Some(idx) = memmem_from(d, key.as_ref(), pos) {
-                let start = idx + key.len();
-                let end = (start + 64).min(d.len());
-                let slice = &d[start..end];
-                let mut j = 0usize;
-                while j < slice.len() && !slice[j].is_ascii_digit() { j += 1; }
-                if j < slice.len() {
-                    let mut k = j;
-                    while k < slice.len() && (slice[k].is_ascii_digit() || slice[k] == b'.') { k += 1; }
-                    out.push(format!("musl_{}", String::from_utf8_lossy(&slice[j..k])));
-                } else {
-                    out.push("musl".to_string());
-                }
-                pos = end;
-            }
-        }
-
-        let mut i = 0usize;
-        while i + 4 <= d.len() {
-            if (d[i] | 0x20) == b'm' && (d[i+1] | 0x20) == b'u' && (d[i+2] | 0x20) == b's' && (d[i+3] | 0x20) == b'l' {
-                let start = i;
-                let end = (i + 64).min(d.len());
-                let slice = &d[start..end];
-                let mut j = 0usize;
-                while j < slice.len() && !slice[j].is_ascii_digit() { j += 1; }
-                if j < slice.len() {
-                    let mut k = j;
-                    while k < slice.len() && (slice[k].is_ascii_digit() || slice[k] == b'.') { k += 1; }
-                    out.push(format!("musl_{}", String::from_utf8_lossy(&slice[j..k])));
-                } else {
-                    out.push("musl".to_string());
-                }
-                i = end; continue;
-            }
-            i += 1;
-        }
-
-        out.sort(); out.dedup(); out
-    }
-
-    fn detect_xz(d: &[u8]) -> bool {
-        d.len() >= 6 && d[0] == 0xFD && d[1] == 0x37 && d[2] == 0x7A && d[3] == 0x58 && d[4] == 0x5A && d[5] == 0x00
-    }
-
-    fn detect_tar(d: &[u8]) -> bool {
-        if d.len() >= 265 {
-            let tag = &d[257..263];
-            if tag == b"ustar\0" { return true; }
-            if &d[257..263] == b"ustar " && &d[263..265] == b" \0" { return true; }
-        }
-        false
-    }
-
-    fn find_uclibc_versions(d: &[u8]) -> Vec<String> {
-        let needle = b"uClibc";
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        while i + needle.len() <= d.len() {
-            if &d[i..i+needle.len()] == needle {
-                let start = i;
-                let end = (i + 64).min(d.len());
-                let slice = &d[start..end];
-                let mut j = needle.len();
-                while j < slice.len() && !slice[j].is_ascii_digit() { j += 1; }
-                if j < slice.len() {
-                    let mut k = j;
-                    while k < slice.len() && (slice[k].is_ascii_digit() || slice[k] == b'.') { k += 1; }
-                    out.push(format!("uClibc_{}", String::from_utf8_lossy(&slice[j..k])));
-                } else {
-                    out.push("uClibc".to_string());
-                }
-                i = end; continue;
-            }
-            i += 1;
-        }
-        out.sort(); out.dedup(); out
-    }
-
-    fn find_bsd_libc_so_names(d: &[u8]) -> Vec<String> {
-        let pat = b"libc.so.";
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        while i + pat.len() < d.len() {
-            if &d[i..i+pat.len()] == pat {
-                let mut j = i + pat.len();
-                let mut seen_digit = false;
-                while j < d.len() && (d[j].is_ascii_digit() || d[j] == b'.') {
-                    if d[j].is_ascii_digit() { seen_digit = true; }
-                    j += 1;
-                }
-                if seen_digit {
-                    out.push(String::from_utf8_lossy(&d[i..j]).to_string());
-                    i = j; continue;
-                }
-            }
-            i += 1;
-        }
-        out.sort(); out.dedup(); out
-    }
-
-    fn find_darwin_libsystem(d: &[u8]) -> (bool, Vec<String>) {
-        let mut present = false;
-        let mut versions = Vec::new();
-
-        let ls = b"libSystem.B.dylib";
-        if memmem(d, ls).is_some() { present = true; }
-
-        let keys: [&[u8]; 2] = [KEY_CURRENT, KEY_COMPAT];
-
-        for &key in &keys {
-            let mut pos = 0usize;
-            while let Some(idx) = memmem_from(d, key, pos) {
-                let start = idx + key.len();
-                let mut j = start;
-                while j < d.len() && (d[j].is_ascii_digit() || d[j] == b'.') { j += 1; }
-                if j > start {
-                    versions.push(format!(
-                        "{}{}",
-                        String::from_utf8_lossy(key),
-                        String::from_utf8_lossy(&d[start..j])
-                    ));
-                }
-                pos = j;
-            }
-        }
-
-        versions.sort(); versions.dedup();
-        (present, versions)
-    }
-
-    fn memmem(hay: &[u8], needle: &[u8]) -> Option<usize> {
-        memmem_from(hay, needle, 0)
-    }
-    fn memmem_from(hay: &[u8], needle: &[u8], mut start: usize) -> Option<usize> {
-        if needle.is_empty() { return Some(start.min(hay.len())); }
-        while start + needle.len() <= hay.len() {
-            if &hay[start..start + needle.len()] == needle { return Some(start); }
-            start += 1;
-        }
-        None
-    }
-
     Ok(out)
 
 }
@@ -991,4 +500,495 @@ pub fn xor_analysis(file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("}}");
 
     Ok(())
+}
+
+fn json_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 8);
+    for ch in s.chars() {
+        match ch {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if c.is_control() => out.push_str(&format!("\\u{:04X}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out
+}
+fn bool_to_json(b: bool) -> &'static str { if b { "true" } else { "false" } }
+fn f64_json(v: f64) -> String { if v.is_finite() { format!("{:.6}", v) } else { "null".to_string() } }
+fn f64_or_null(v: f64, cond_null: bool) -> String {
+    if cond_null || !v.is_finite() { "null".to_string() } else { format!("{:.6}", v) }
+}
+fn json_str_array(items: &[String]) -> String {
+    if items.is_empty() { "[]".to_string() } else {
+        let mut s = String::from("[");
+        for (i, it) in items.iter().enumerate() {
+            if i > 0 { s.push(','); }
+            s.push('"'); s.push_str(&json_escape(it)); s.push('"');
+        }
+        s.push(']'); s
+    }
+}
+
+fn elf_os_abi_name(os_abi: u64) -> &'static str {
+    match os_abi {
+        0 => "SYSV/Default '0'",
+        2 => "NetBSD",
+        3 => "GNU",
+        6 => "Solaris",
+        9 => "FreeBSD",
+        12 => "OpenBSD",
+        _ => "Unknown",
+    }
+}
+
+fn detect_elf(d: &[u8]) -> (bool, u64, &'static str, u64) {
+    if d.len() >= 16 && &d[0..4] == b"\x7FELF" {
+        let class = match d[4] { 1 => 32, 2 => 64, _ => 0 };
+        let data = match d[5] { 1 => "LSB", 2 => "MSB", _ => "Unknown" };
+        let os_abi = d[7] as u64;
+        (true, class, data, os_abi)
+    } else {
+        (false, 0, "Unknown", 0)
+    }
+}
+
+fn detect_pe(d: &[u8]) -> (bool, Option<u16>, bool, Option<u16>, &'static str) {
+    if d.len() < 64 || &d[0..2] != b"MZ" { return (false, None, false, None, ""); }
+    if d.len() < 0x40 { return (false, None, false, None, ""); }
+
+    let e_lfanew = u32::from_le_bytes([d[0x3C], d[0x3D], d[0x3E], d[0x3F]]) as usize;
+    if e_lfanew + 0x18 >= d.len() { return (false, None, false, None, ""); }
+    if &d[e_lfanew..e_lfanew+4] != b"PE\0\0" { return (false, None, false, None, ""); }
+
+    let coff = e_lfanew + 4;
+    let machine = u16::from_le_bytes([d[coff + 0], d[coff + 1]]);
+    let size_of_optional_header = u16::from_le_bytes([d[e_lfanew + 0x14], d[e_lfanew + 0x15]]) as usize;
+    let characteristics = u16::from_le_bytes([d[e_lfanew + 0x16], d[e_lfanew + 0x17]]);
+    let is_dll = (characteristics & IMAGE_FILE_DLL) != 0;
+
+    let opt_off = e_lfanew + 0x18;
+    if opt_off + size_of_optional_header > d.len() {
+        return (true, Some(machine), is_dll, None, if is_dll { "PE/DLL" } else { "PE/EXE" });
+    }
+    if opt_off + 2 > d.len() {
+        return (true, Some(machine), is_dll, None, if is_dll { "PE/DLL" } else { "PE/EXE" });
+    }
+
+    let magic = u16::from_le_bytes([d[opt_off], d[opt_off + 1]]);
+    let subsystem_off = if magic == 0x10B {
+        opt_off + 0x44
+    } else if magic == 0x20B {
+        opt_off + 0x5C
+    } else {
+        opt_off + 0x44
+    };
+
+    let subsystem = if subsystem_off + 2 <= d.len() {
+        Some(u16::from_le_bytes([d[subsystem_off], d[subsystem_off + 1]]))
+    } else {
+        None
+    };
+
+    let kind = if subsystem.map(|s| is_uefi_subsystem(s)).unwrap_or(false) {
+        "PE/UEFI"
+    } else if is_dll {
+        "PE/DLL"
+    } else {
+        "PE/EXE"
+    };
+
+    (true, Some(machine), is_dll, subsystem, kind)
+}
+
+fn is_uefi_subsystem(sub: u16) -> bool {
+    matches!(sub, 10 | 11 | 12 | 13)
+}
+
+
+fn detect_macho(d: &[u8]) -> (bool, bool, u64, &'static str) {
+    if d.len() < 4 { return (false, false, 0, "Unknown"); }
+    let m_be = u32::from_be_bytes([d[0], d[1], d[2], d[3]]);
+    let m_le = u32::from_le_bytes([d[0], d[1], d[2], d[3]]);
+    if m_be == FAT_MAGIC || m_be == FAT_MAGIC_64 {
+        if d.len() >= 8 {
+            let nfat = u32::from_be_bytes([d[4], d[5], d[6], d[7]]) as u64;
+            return (true, true, nfat, "Fat/BE");
+        }
+    }
+    if m_be == FAT_CIGAM || m_be == FAT_CIGAM_64 {
+        if d.len() >= 8 {
+            let nfat = u32::from_le_bytes([d[4], d[5], d[6], d[7]]) as u64;
+            return (true, true, nfat, "Fat/LE");
+        }
+    }
+    match (m_be, m_le) {
+        (0xFEEDFACE, _) => (true, false, 1, "MH_MAGIC (BE 32)"),
+        (0xFEEDFACF, _) => (true, false, 1, "MH_MAGIC_64 (BE 64)"),
+        (_, 0xFEEDFACE) => (true, false, 1, "MH_MAGIC (LE 32)"),
+        (_, 0xFEEDFACF) => (true, false, 1, "MH_MAGIC_64 (LE 64)"),
+        (0xCEFAEDFE, _) => (true, false, 1, "MH_CIGAM (swap 32)"),
+        (0xCFFAEDFE, _) => (true, false, 1, "MH_CIGAM_64 (swap 64)"),
+        _ => (false, false, 0, "Unknown"),
+    }
+}
+
+fn detect_wasm(d: &[u8]) -> bool {
+    d.len() >= 8 && &d[0..4] == b"\0asm" && (d[4] == 0x01 || d[4] == 0x00)
+}
+
+fn detect_7z(d: &[u8]) -> bool {
+    d.len() >= 6 && d[0] == 0x37 && d[1] == 0x7A && d[2] == 0xBC && d[3] == 0xAF && d[4] == 0x27 && d[5] == 0x1C
+}
+
+fn detect_rar(d: &[u8]) -> (bool, bool) {
+    let rar4 = d.len() >= 7 && &d[0..7] == b"Rar!\x1A\x07\x00";
+    let rar5 = d.len() >= 8 && &d[0..8] == b"Rar!\x1A\x07\x01\x00";
+    (rar4, rar5)
+}
+
+fn detect_iso9660(d: &[u8]) -> bool {
+    for &off in &OFFSETS {
+        if off + 5 <= d.len() && &d[off..off+5] == b"CD001" { return true; }
+    }
+    false
+}
+
+fn detect_vhd(d: &[u8]) -> (bool, bool) {
+    let is_vhdx = d.len() >= 8 && &d[0..8] == b"vhdxfile";
+    let mut is_vhd = false;
+    if d.len() >= 512 {
+        let start_cookie = &d[0..8.min(d.len())];
+        if start_cookie == b"conectix" { is_vhd = true; }
+        let end = d.len();
+        let foot_start = end.saturating_sub(512);
+        if &d[foot_start..foot_start+8.min(d.len()-foot_start)] == b"conectix" { is_vhd = true; }
+    }
+    (is_vhd, is_vhdx)
+}
+
+fn parse_der_len_ex(d: &[u8]) -> (bool, usize, usize, bool) {
+    if d.is_empty() { return (false, 0, 0, false); }
+    let b0 = d[0];
+    if b0 & 0x80 == 0 {
+        return (true, (b0 & 0x7F) as usize, 1, false);
+    }
+    let n = (b0 & 0x7F) as usize;
+    if n == 0 {
+        return (true, 0, 1, true);
+    }
+    if n > 4 || d.len() < 1 + n { return (false, 0, 0, false); }
+    let mut len = 0usize;
+    for i in 0..n { len = (len << 8) | (d[1 + i] as usize); }
+    (true, len, 1 + n, false)
+}
+
+fn detect_der_asn1(d: &[u8]) -> (bool, bool, bool, bool) {
+    let x509ish  = has_x509ish_oids(d);
+    let pkcs7ish = has_pkcs7ish_oids(d);
+    if d.len() < 2 || d[0] != 0x30 {
+        let pkcs12ish = has_pkcs12ish_oids(d, false, false);
+        return (false, x509ish, pkcs7ish, pkcs12ish);
+    }
+
+    let (ok_seq, content_len, len_bytes, indefinite) = parse_der_len_ex(&d[1..]);
+    if !ok_seq {
+        let pkcs12ish = has_pkcs12ish_oids(d, false, false);
+        return (false, x509ish, pkcs7ish, pkcs12ish);
+    }
+    let seq_hdr = 1 + len_bytes;
+    let (seq_content_start, seq_content_end) = if indefinite {
+        if let Some(eoc) = find_eoc(&d[seq_hdr..]) {
+            let end = seq_hdr + eoc;
+            (seq_hdr, end)
+        } else {
+            let pkcs12ish = has_pkcs12ish_oids(d, true, false);
+            return (true, x509ish, pkcs7ish, pkcs12ish);
+        }
+    } else {
+        let end = seq_hdr + content_len;
+        if end > d.len() {
+            let pkcs12ish = has_pkcs12ish_oids(d, true, false);
+            return (true, x509ish, pkcs7ish, pkcs12ish);
+        }
+        (seq_hdr, end)
+    };
+
+    let (tag1, len1, _hdr1, c1_start) = match parse_tlv_at(d, seq_content_start, seq_content_end) {
+        Some(t) => t, None => {
+            let pkcs12ish = has_pkcs12ish_oids(d, true, false);
+            return (true, x509ish, pkcs7ish, pkcs12ish);
+        }
+    };
+    let mut cursor = c1_start + len1;
+    let mut version_ok = false;
+    if tag1 == 0x02 && len1 > 0 && len1 <= 4 && c1_start + len1 <= d.len() {
+        let mut val: u32 = 0;
+        for &b in &d[c1_start..c1_start+len1] { val = (val << 8) | (b as u32); }
+        version_ok = val == 0 || val == 3;
+    }
+
+    let (tag2, len2, _hdr2, c2_start) = match parse_tlv_at(d, cursor, seq_content_end) {
+        Some(t) => t, None => {
+            let pkcs12ish = has_pkcs12ish_oids(d, true, version_ok);
+            return (true, x509ish, pkcs7ish, pkcs12ish);
+        }
+    };
+    cursor = c2_start + len2;
+    let mut authsafe_ok = false;
+    if tag2 == 0x30 && c2_start + len2 <= d.len() {
+        if let Some((oid_tag, oid_len, _oid_hdr, oid_val_start)) = parse_tlv_at(d, c2_start, c2_start + len2) {
+            if oid_tag == 0x06 && oid_val_start + oid_len <= d.len() {
+                let oid_tlv = &d[oid_val_start - 2..oid_val_start + oid_len];
+                if oid_tlv == OID_PKCS7_DATA_TLV || oid_tlv == OID_PKCS7_ENCRYPTED_TLV {
+                    if let Some((c0_tag, c0_len, _c0_hdr, c0_start)) = parse_tlv_at(d, oid_val_start + oid_len, c2_start + len2) {
+                        if c0_tag & 0xE0 == 0xA0 {
+                            if let Some((in_tag, in_len, _in_hdr, in_start)) = parse_tlv_at(d, c0_start, c0_start + c0_len) {
+                                if in_tag == 0x04 && in_start + in_len <= d.len() {
+                                    let os_payload = &d[in_start..in_start+in_len];
+                                    let looks_seq = !os_payload.is_empty() && os_payload[0] == 0x30;
+                                    let inner_pkcs12ish = has_pkcs12ish_oids(os_payload, true, version_ok);
+                                    authsafe_ok = looks_seq && inner_pkcs12ish;
+                                } else {
+                                    let inner = &d[c0_start..c0_start + c0_len];
+                                    authsafe_ok = has_pkcs12ish_oids(inner, true, version_ok);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let mut macdata_seen = false;
+    if cursor < seq_content_end {
+        if let Some((tag3, _len3, _hdr3, _c3_start)) = parse_tlv_at(d, cursor, seq_content_end) {
+            if tag3 == 0x30 { macdata_seen = true; }
+        }
+    }
+
+    let pkcs12_confidence = version_ok && authsafe_ok || (authsafe_ok && macdata_seen);
+    let likely_pkcs12 = pkcs12_confidence || has_pkcs12ish_oids(d, true, version_ok);
+    (true, x509ish, pkcs7ish, likely_pkcs12)
+}
+
+fn parse_tlv_at(d: &[u8], off: usize, end: usize) -> Option<(u8, usize, usize, usize)> {
+    if off + 2 > d.len() || off >= end { return None; }
+    let tag = d[off];
+    let (ok, len, len_bytes, _indef) = parse_der_len_ex(&d[off + 1..]) ;
+    if !ok { return None; }
+    let hdr = 1 + len_bytes;
+    let cstart = off + hdr;
+    if cstart + len > end || cstart + len > d.len() { return None; }
+    Some((tag, len, hdr, cstart))
+}
+
+fn find_eoc(d: &[u8]) -> Option<usize> {
+    let mut i = 0usize;
+    while i + 1 < d.len() {
+        if d[i] == 0x00 && d[i + 1] == 0x00 { return Some(i); }
+        i += 1;
+    }
+    None
+}
+
+fn has_x509ish_oids(d: &[u8]) -> bool {
+    memmem(d, OID_X509_EXT_ARC).is_some() || memmem(d, OID_X509_ATTR_ARC).is_some() || memmem(d, OID_RSA_ENC).is_some()
+}
+
+fn has_pkcs7ish_oids(d: &[u8]) -> bool {
+    memmem(d, OID_PKCS7_DATA).is_some() || memmem(d, OID_PKCS7_SIGNED).is_some() || memmem(d, OID_PKCS7_ENCRYPTED).is_some()
+}
+
+fn has_pkcs12ish_oids(d: &[u8], _seq_at_start: bool, _version_ok: bool) -> bool {
+    let has_arc       = memmem(d, OIDVAL_PKCS12_ARC).is_some();
+    let has_bag_pref  = memmem(d, OIDVAL_PKCS12_BAG_PREFIX).is_some();
+    let has_pbe_pref  = memmem(d, OIDVAL_PKCS12_PBE_PREFIX).is_some();
+    let has_any_bag   = memmem(d, OID_PKCS12_KEYBAG).is_some()
+                     || memmem(d, OID_PKCS12_SKEYBAG).is_some()
+                     || memmem(d, OID_PKCS12_CERTBAG).is_some();
+    let has_attrs     = memmem(d, OID_PKCS9_FRIENDLYNAME).is_some() || memmem(d, OID_PKCS9_LOCALKEYID).is_some();
+
+    has_any_bag || has_bag_pref || (has_arc && (has_pbe_pref || has_attrs))
+}
+
+fn detect_python_pickle(d: &[u8]) -> (bool, Option<u8>) {
+    if d.len() >= 2 && d[0] == 0x80 && (2..=5).contains(&d[1]) {
+        return (true, Some(d[1]));
+    }
+
+    if !d.is_empty() && (d[0] == b'(' || d[0] == b'd' || d[0] == b'l' || d[0] == b'p' || d[0] == b'I') {
+        return (true, None);
+    }
+    (false, None)
+}
+
+fn find_glibc_versions(d: &[u8]) -> Vec<String> {
+    let needle = b"GLIBC_";
+    let mut out = Vec::new();
+    let mut i = 0usize;
+    while i + needle.len() < d.len() {
+        if &d[i..i+needle.len()] == needle {
+            let mut j = i + needle.len();
+            while j < d.len() && (d[j].is_ascii_digit() || d[j] == b'.') { j += 1; }
+            if j > i + needle.len() {
+                out.push(String::from_utf8_lossy(&d[i..j]).to_string());
+                i = j; continue;
+            }
+        }
+        i += 1;
+    }
+    out.sort(); out.dedup(); out
+}
+
+fn find_musl_versions_strict_and_loose(d: &[u8]) -> Vec<String> {
+    let mut out = Vec::new();
+
+    let keys: [&[u8]; 2] = [MUSL_KEY_CURRENT, MUSL_KEY_COMPAT];
+
+    for &key in &keys {
+        let mut pos = 0usize;
+        while let Some(idx) = memmem_from(d, key.as_ref(), pos) {
+            let start = idx + key.len();
+            let end = (start + 64).min(d.len());
+            let slice = &d[start..end];
+            let mut j = 0usize;
+            while j < slice.len() && !slice[j].is_ascii_digit() { j += 1; }
+            if j < slice.len() {
+                let mut k = j;
+                while k < slice.len() && (slice[k].is_ascii_digit() || slice[k] == b'.') { k += 1; }
+                out.push(format!("musl_{}", String::from_utf8_lossy(&slice[j..k])));
+            } else {
+                out.push("musl".to_string());
+            }
+            pos = end;
+        }
+    }
+
+    let mut i = 0usize;
+    while i + 4 <= d.len() {
+        if (d[i] | 0x20) == b'm' && (d[i+1] | 0x20) == b'u' && (d[i+2] | 0x20) == b's' && (d[i+3] | 0x20) == b'l' {
+            let start = i;
+            let end = (i + 64).min(d.len());
+            let slice = &d[start..end];
+            let mut j = 0usize;
+            while j < slice.len() && !slice[j].is_ascii_digit() { j += 1; }
+            if j < slice.len() {
+                let mut k = j;
+                while k < slice.len() && (slice[k].is_ascii_digit() || slice[k] == b'.') { k += 1; }
+                out.push(format!("musl_{}", String::from_utf8_lossy(&slice[j..k])));
+            } else {
+                out.push("musl".to_string());
+            }
+            i = end; continue;
+        }
+        i += 1;
+    }
+
+    out.sort(); out.dedup(); out
+}
+
+fn detect_xz(d: &[u8]) -> bool {
+    d.len() >= 6 && d[0] == 0xFD && d[1] == 0x37 && d[2] == 0x7A && d[3] == 0x58 && d[4] == 0x5A && d[5] == 0x00
+}
+
+fn detect_tar(d: &[u8]) -> bool {
+    if d.len() >= 265 {
+        let tag = &d[257..263];
+        if tag == b"ustar\0" { return true; }
+        if &d[257..263] == b"ustar " && &d[263..265] == b" \0" { return true; }
+    }
+    false
+}
+
+fn find_uclibc_versions(d: &[u8]) -> Vec<String> {
+    let needle = b"uClibc";
+    let mut out = Vec::new();
+    let mut i = 0usize;
+    while i + needle.len() <= d.len() {
+        if &d[i..i+needle.len()] == needle {
+            let start = i;
+            let end = (i + 64).min(d.len());
+            let slice = &d[start..end];
+            let mut j = needle.len();
+            while j < slice.len() && !slice[j].is_ascii_digit() { j += 1; }
+            if j < slice.len() {
+                let mut k = j;
+                while k < slice.len() && (slice[k].is_ascii_digit() || slice[k] == b'.') { k += 1; }
+                out.push(format!("uClibc_{}", String::from_utf8_lossy(&slice[j..k])));
+            } else {
+                out.push("uClibc".to_string());
+            }
+            i = end; continue;
+        }
+        i += 1;
+    }
+    out.sort(); out.dedup(); out
+}
+
+fn find_bsd_libc_so_names(d: &[u8]) -> Vec<String> {
+    let pat = b"libc.so.";
+    let mut out = Vec::new();
+    let mut i = 0usize;
+    while i + pat.len() < d.len() {
+        if &d[i..i+pat.len()] == pat {
+            let mut j = i + pat.len();
+            let mut seen_digit = false;
+            while j < d.len() && (d[j].is_ascii_digit() || d[j] == b'.') {
+                if d[j].is_ascii_digit() { seen_digit = true; }
+                j += 1;
+            }
+            if seen_digit {
+                out.push(String::from_utf8_lossy(&d[i..j]).to_string());
+                i = j; continue;
+            }
+        }
+        i += 1;
+    }
+    out.sort(); out.dedup(); out
+}
+
+fn find_darwin_libsystem(d: &[u8]) -> (bool, Vec<String>) {
+    let mut present = false;
+    let mut versions = Vec::new();
+
+    let ls = b"libSystem.B.dylib";
+    if memmem(d, ls).is_some() { present = true; }
+
+    let keys: [&[u8]; 2] = [KEY_CURRENT, KEY_COMPAT];
+
+    for &key in &keys {
+        let mut pos = 0usize;
+        while let Some(idx) = memmem_from(d, key, pos) {
+            let start = idx + key.len();
+            let mut j = start;
+            while j < d.len() && (d[j].is_ascii_digit() || d[j] == b'.') { j += 1; }
+            if j > start {
+                versions.push(format!(
+                    "{}{}",
+                    String::from_utf8_lossy(key),
+                    String::from_utf8_lossy(&d[start..j])
+                ));
+            }
+            pos = j;
+        }
+    }
+
+    versions.sort(); versions.dedup();
+    (present, versions)
+}
+
+fn memmem(hay: &[u8], needle: &[u8]) -> Option<usize> {
+    memmem_from(hay, needle, 0)
+}
+fn memmem_from(hay: &[u8], needle: &[u8], mut start: usize) -> Option<usize> {
+    if needle.is_empty() { return Some(start.min(hay.len())); }
+    while start + needle.len() <= hay.len() {
+        if &hay[start..start + needle.len()] == needle { return Some(start); }
+        start += 1;
+    }
+    None
 }
