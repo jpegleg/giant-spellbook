@@ -635,7 +635,7 @@ echo -e '\x0f\x05\x00\x00' | giant-spellbook seek /usr/local/bin/kubectl
 This can also be used with 'commander', although the file needs to actually contain the binary on each line, not escaped hex like the echo.
 
 ```
-giant-spellbook commander "giant-spellbook seek /usr/local/bin/kubectl >> kubectl_sements.bin.log" ./find_segments.bin.in
+giant-spellbook commander "giant-spellbook seek /usr/local/bin/kubectl >> kubectl_segments.bin.log" ./find_segments.bin.in
 
 ```
 
