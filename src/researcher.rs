@@ -140,6 +140,102 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
     Ok(())
 }
 
+pub fn arm_annotated_dump(path: &str) -> io::Result<()> {
+    const RESET: &str = "\x1b[0m";
+    let clr_cor = fg_rgb(255,107,107);
+    let clr_trb = fg_rgb(160,216,239);
+    let clr_ndi = fg_rgb(108,99,255);
+    let clr_wgr = fg_rgb(214,211,209);
+    let clr_eco = fg_rgb(163,201,168);
+    let clr_ros = fg_rgb(243,161,191);
+    let mut f = File::open(path)?;
+    let mut buf = Vec::new();
+    f.read_to_end(&mut buf)?;
+
+    let hex_w = 64;
+    let max_idx = buf.len().saturating_sub(1) as u64;
+    let digits = dec_digits(max_idx);
+    let dec_range_w = (2 + digits + 1 + digits + 1).max("Byte Range (u64,u64)".len());
+    let is_elf = buf.starts_with(&[0x7F, b'E', b'L', b'F']);
+    let is_pe  = buf.starts_with(&[0x4D, 0x5A]);
+    let is_macho = is_macho_magic_prefix(&buf);
+    let mut row = 0usize;
+
+    while row * hex_w < buf.len().max(1) {
+        let start = row * hex_w;
+        if start >= buf.len() { break; }
+        let end = (start + hex_w).min(buf.len());
+        let last = end.saturating_sub(1);
+        let range_dec = format!("({},{})", start, last);
+
+        let hex_area = build_hex_area_styled(
+            &buf[start..end],
+            start as u64,
+            hex_w,
+            &clr_eco, &clr_ros, &clr_cor, &clr_trb, &clr_ndi, &clr_wgr, RESET,
+            hex_w, is_elf, is_pe, is_macho,
+        );
+
+        let ascii_area = build_ascii_area_styled(
+            &buf[start..end],
+            start as u64,
+            hex_w,
+            &clr_eco, &clr_cor, &clr_trb, &clr_ros, &clr_ndi, RESET,
+            is_elf, is_pe, is_macho,
+        );
+
+        let lookahead_end = (end + OVERLAP).min(buf.len());
+        let dis_slice = &buf[start..lookahead_end];
+        let base_addr = start as u64;
+        let print_limit = end as u64;
+        let printme1 = disassemble::arm_dis_segment_bounded(dis_slice, base_addr, print_limit)
+            .unwrap_or_else(|_| String::from(""));
+
+        let printme2 = printme1
+            .replace('\n', " ")
+            .replace('\t', " ")
+            .replace("  ", " ");
+
+        print!(" {}|{} ", &clr_wgr, RESET);
+        print!("{:>drw$}", range_dec, drw = dec_range_w);
+        print!(" {}|{} ", &clr_wgr, RESET);
+        print!("{:<hexw$}", hex_area, hexw = hex_w);
+        print!(" {}|{} ", &clr_wgr, RESET);
+        println!("{}", ascii_area);
+        print!(" {}|{} ", &clr_wgr, RESET);
+        println!("{}", printme2.trim());
+
+        let jumper = read_password()?;
+
+        match jumper.parse::<String>() {
+            Ok(val) if val == "binary".to_string() => {
+                let out: String = dis_slice
+                  .iter()
+                  .map(|b| format!("[ {:08b} ]", b))
+                  .collect::<Vec<_>>()
+                  .join(" ");
+                println!("{}\n", out);
+            },
+            Ok(val) if val == "base64".to_string() => {
+                let out: String = base64::engine::general_purpose::STANDARD_NO_PAD
+                  .encode(&dis_slice);
+                println!("{}\n", out);
+            },
+
+            _ => {
+                match jumper.parse::<usize>() {
+                  Ok(n) => row = n,
+                  Err(_) => row += 1,
+               }
+            }
+        }
+
+    }
+
+    Ok(())
+}
+
+
 fn fg_rgb(r: u8, g: u8, b: u8) -> String {
     format!("\x1b[38;2;{};{};{}m", r, g, b)
 }
@@ -216,7 +312,7 @@ fn build_hex_area_styled(
         }
     }
     let vis = visible_len(&s);
-    if vis < target_w { 
+    if vis < target_w {
         s.push_str(&" ".repeat(target_w - vis));
     }
     s
