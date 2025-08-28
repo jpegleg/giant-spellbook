@@ -399,7 +399,7 @@ head -n10 disassembly.txt # show first 10 lines
 _Note that the disassembly.txt output file can be rather large. Also the function writes to that file in pwd, so
 a previously existing disassembly.txt file in pwd would be overwritten._
 
-ARM64 disassembly is supported via the 'arm64' subcommand to 'dsassemble'.
+ARM64 disassembly is supported via the 'arm64' subcommand to 'disassemble'.
 
 Hunt for IoCs and potentially interesting bytes within a file:
 
