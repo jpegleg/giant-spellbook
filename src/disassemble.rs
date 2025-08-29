@@ -1,5 +1,4 @@
 use capstone::arch::*;
-
 use capstone::prelude::*;
 use std::fmt::Write as _;
 use std::fs;
@@ -62,6 +61,38 @@ fn arm_64_string(
     let mut cs = Capstone::new()
         .arm64()
         .mode(capstone::arch::arm64::ArchMode::Arm)
+        .build()?;
+    cs.set_skipdata(true)?;
+
+    let insns = cs.disasm_all(code, base_addr)?;
+    let mut out = String::new();
+    format_instructions_bounded(&mut out, &insns, limit_end)?;
+    Ok(out)
+}
+
+pub fn bpf_dis_to_string(path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let bytes = fs::read(path)?;
+    let asm = bpf_string(&bytes, 0, u64::MAX)?;
+    fs::write("disassembly.txt", asm)?;
+    Ok(())
+}
+
+pub fn bpf_dis_segment_bounded(
+    segment: &[u8],
+    base_addr: u64,
+    limit_end: u64,
+) -> Result<String, Box<dyn std::error::Error>> {
+    bpf_string(segment, base_addr, limit_end)
+}
+
+fn bpf_string(
+    code: &[u8],
+    base_addr: u64,
+    limit_end: u64,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let mut cs = Capstone::new()
+        .bpf()
+        .mode(capstone::arch::bpf::ArchMode::Ebpf)
         .build()?;
     cs.set_skipdata(true)?;
 
