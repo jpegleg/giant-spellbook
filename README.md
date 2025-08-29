@@ -53,7 +53,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | analyze       | file data, Chi, Hamming, Shannon entropy, rolling entropy, XOR, periodicity, ECB   |
 | file_split    | split a file at a bit position to two new files                                    |
 | reverse_bytes | reverse the byte order of a file                                                   |
-| bruteforce    | XOR and Caesar English bruteforce decryption                                       |
+| bruteforce    | XOR and Caesar English bruteforce decryption, and single byte XOR batch processing |
 | parse         | parse PEM and DER x509 certificates inside files                                   |
 | disassemble   | disassemble machine code to assembly text file                                     |
 | hunter        | search a file for IoCs and potentially interesting bytes and strings               |
