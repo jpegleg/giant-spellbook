@@ -386,7 +386,7 @@ giant-spellbook parse certs mystery.file
 Capture detailed TLS inforamtion from a website or SSL/TLS endpoint. 
 
 ```
-giant-spellbook tls_debug https://pq.cloudflareresearch.com:443 /etc/ssl/certs/ca-certificates.crt false
+giant-spellbook tls_debug https://pq.cloudflareresearch.com:443 /etc/ssl/certs/ca-certificates.crt no_auth
 2025-08-29T19:26:04.818Z INFO: Starting TLS handshake run against pq.cloudflareresearch.com:443
 2025-08-29T19:26:04.818Z CLIENT: Resolving & connecting to 104.18.31.220:443
 2025-08-29T19:26:04.820Z CLIENT: TCP connected
@@ -415,7 +415,9 @@ The log and server certificates are saved to files with each run.
 
 The timeout for read and write for the 'tls_debug' is set to 20 seconds. The client is RusTLS, and so old and weak protocols are not supported in the 'tls_debug' client.
 
-If the last argument to 'tls_debug' is 'false' regular TLS will be used. If that argument is 'true', then an additional argument of a path to a PEM bundle for client auth and mTLS is used.
+RusTLS is very correct, but that also makes it less useful for further probing of misconfigured or legacy endpoints. Another function and library is likely to get added to expand debugging.
+
+If the last argument to 'tls_debug' is 'no_auth' regular TLS will be used. If that argument is 'auth', then an additional argument of a path to a PEM bundle for client auth and mTLS is used. The mTLS with RusTLS is perhaps overly picky, again, so there will likely be another function and library added to expand mTLS testing as well.
 
 
 Disassemble a file (x86_64):
