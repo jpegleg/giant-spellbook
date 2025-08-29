@@ -555,6 +555,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
           match auth_bool.as_str() {
             "auth" => {
+              if args.len() != 6 {
+                 eprintln!("{{\n  \"ERROR\": \"Usage: {} tls_debug <url:port> <trusted_roots PEM> <no_auth, auth> <if 'auth', then this is the client auth PEM path is required>\"\n}}", args[0]);
+                 process::exit(1);
+              }
               let auth_path = &args[5];
               let _ = tls_debug::auth_debug(target_arg, roots_path, auth_path);
             },
