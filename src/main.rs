@@ -545,7 +545,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         "tls_debug" => {
-          if args.len() > 5 || args.len() < 4 {
+          if args.len() > 6 || args.len() < 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} tls_debug <url:port> <trusted_roots PEM> <true or false (client auth)> <optional client auth PEM>\"\n}}", args[0]);
             process::exit(1);
           }
