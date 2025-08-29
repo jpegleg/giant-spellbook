@@ -127,8 +127,8 @@ fn run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>> {
     events.push(Event::new(Side::Info, format!("Starting TLS handshake run against {addr_str}")));
     events.push(Event::new(Side::Client, format!("Resolving & connecting to {sock_addr}")));
     let mut tcp = TcpStream::connect_timeout(&sock_addr, Duration::from_secs(10))?;
-    tcp.set_read_timeout(Some(Duration::from_secs(10)))?;
-    tcp.set_write_timeout(Some(Duration::from_secs(10)))?;
+    tcp.set_read_timeout(Some(Duration::from_secs(20)))?;
+    tcp.set_write_timeout(Some(Duration::from_secs(20)))?;
     events.push(Event::new(Side::Client, "TCP connected"));
 
     let server_name: ServerName<'static> = host.clone().try_into()
@@ -288,8 +288,8 @@ fn auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) -> Resul
     events.push(Event::new(Side::Info, format!("Starting TLS handshake run against {addr_str}")));
     events.push(Event::new(Side::Client, format!("Resolving & connecting to {sock_addr}")));
     let mut tcp = TcpStream::connect_timeout(&sock_addr, Duration::from_secs(10))?;
-    tcp.set_read_timeout(Some(Duration::from_secs(10)))?;
-    tcp.set_write_timeout(Some(Duration::from_secs(10)))?;
+    tcp.set_read_timeout(Some(Duration::from_secs(20)))?;
+    tcp.set_write_timeout(Some(Duration::from_secs(20)))?;
     events.push(Event::new(Side::Client, "TCP connected"));
 
     let server_name: ServerName<'static> = host.clone().try_into()
