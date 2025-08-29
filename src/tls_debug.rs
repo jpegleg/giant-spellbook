@@ -84,7 +84,7 @@ impl<'a> Write for RecordingIo<'a> {
             let displ = enco.trim_end_matches('0');
             self.events.push(Event::new(
                 Side::Client,
-                format!("wrote {n} byte(s) to server ->> hex={displ}"),
+                format!("sent {n} byte(s) to server ->> hex={displ}"),
             ));
         }
         Ok(n)
