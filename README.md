@@ -483,7 +483,7 @@ giant-spellbook byte_range hexdump /usr/local/bin/kubectl 29339887 29340000
 0000000001bfb15f  73                                                |s|
 ```
 
-To review a byte position and only output the hex (with the trailing '()' at the end):
+To review a byte position and only output the hex:
 
 ```
 giant-spellbook byte_range hex /usr/local/bin/kubectl 29339887 29340000
@@ -635,7 +635,7 @@ echo -e '\x0f\x05\x00\x00' | giant-spellbook seek /usr/local/bin/kubectl
 This can also be used with 'commander', although the file needs to actually contain the binary on each line, not escaped hex like the echo.
 
 ```
-giant-spellbook commander "giant-spellbook seek /usr/local/bin/kubectl >> kubectl_segments.bin.log" ./find_segments.bin.in
+giant-spellbook commander "giant-spellbook seek /usr/local/bin/kubectl >> kubectl_segment_$(date +%Y%m%d%H%M%S)_$RANDOM.json" ./find_segments.bin.in
 
 ```
 
@@ -643,9 +643,9 @@ The strings don't have to be binary, and neither does the file. Plain text strin
 
 With 'seek', any pattern that is longer than 4096 bytes will be truncated to 4096 bytes when searching for it in the file.
 
-Use caution with sending binary inputs via 'commander' as the `results.log` will become binary as the STDIN that was piped is logged to the file. Redirecting the output within the command is an option for keeping `results.log` as text.
+Use caution with sending binary inputs via 'commander' as the `results.log` will become binary as the STDIN that was piped is logged to the file..
 
-If the STDOUT or STDERR of with 'commander' "command" have binary, then an error message will be logged to the `results.log` as it uses lossy UTF-8 parsing for STDOUT and STDERR and will log the line number and a stream error about invalid UTF-8 if that occurs.
+If the STDOUT or STDERR of with 'commander' "command" have binary, then an error message will be logged to the `results.log` as it uses lossy UTF-8 parsing for STDOUT and STDERR and will log the line number and a stream error about invalid UTF-8 if that occurs. Redirecting the output of the command to another file or log can be helpful if the output of the command might be binary.
 
 ## Project promises
 
