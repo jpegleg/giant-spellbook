@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::error::Error;
 use std::fs::{self, File};
 use std::io::{self, BufReader, Read, Write};
@@ -122,7 +123,7 @@ fn run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>> {
     let root_store = load_roots(&roots_path)?;
     let builder = ClientConfig::builder().with_root_certificates(root_store);
     let config = builder.with_no_client_auth();
-    let config = std::sync::Arc::new(config);
+    let config = Arc::new(config);
     let mut events: Vec<Event> = Vec::new();
     events.push(Event::new(Side::Info, format!("Starting TLS handshake run against {addr_str}")));
     events.push(Event::new(Side::Client, format!("Resolving & connecting to {sock_addr}")));
@@ -283,7 +284,7 @@ fn auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) -> Resul
         let (certs, key) = load_client_auth(&client_auth_path)?;
         builder.with_client_auth_cert(certs, key)?
     };
-    let config = std::sync::Arc::new(config);
+    let config = Arc::new(config);
     let mut events: Vec<Event> = Vec::new();
     events.push(Event::new(Side::Info, format!("Starting TLS handshake run against {addr_str}")));
     events.push(Event::new(Side::Client, format!("Resolving & connecting to {sock_addr}")));
@@ -462,9 +463,7 @@ fn load_roots<P: AsRef<Path>>(pem_path: P) -> io::Result<RootCertStore> {
 }
 
 /// Load user supplied client auth PEM bundle for mTLS - optional.
-fn load_client_auth<P: AsRef<Path>>(pem_path: P)
-    -> io::Result<(Vec<rustls::pki_types::CertificateDer<'static>>, rustls::pki_types::PrivateKeyDer<'static>)>
-{
+fn load_client_auth<P: AsRef<Path>>(pem_path: P) -> io::Result<(Vec<rustls::pki_types::CertificateDer<'static>>, rustls::pki_types::PrivateKeyDer<'static>)> {
     use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs1KeyDer, PrivatePkcs8KeyDer, PrivateSec1KeyDer};
 
     let mut rd = BufReader::new(File::open(pem_path.as_ref())?);
