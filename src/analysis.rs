@@ -4,6 +4,7 @@ use std::path::Path;
 use std::time::Instant;
 use std::collections::HashMap;
 use std::fmt::Write;
+use zerocopy::IntoBytes;
 use chrono::Utc;
 
 const KEY_CURRENT: &[u8] = b"current version ";
@@ -457,6 +458,40 @@ fn english_score(text: &[u8]) -> f64 {
     1.0 - (score / 100.0)
 }
 
+
+pub fn xor_batch(file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let start_time = Instant::now();
+
+    let input_path = Path::new(file_path);
+    let mut buffer = Vec::new();
+    BufReader::new(File::open(input_path)?).read_to_end(&mut buffer)?;
+
+    let chronox: String = Utc::now().to_rfc3339().to_string();
+    let dformat = chronox.replace(":", "_");
+    let workspace = "./xor_batch_".to_owned() + &dformat;
+    fs::create_dir_all(&workspace)?;
+
+    for key in 0u8..=255 {
+        let decrypted: Vec<u8> = buffer.iter().map(|b| b ^ key).collect();
+        let keybytes = key.as_bytes();
+        let key_workspace = workspace.clone() + &hex::encode(keybytes).to_string();
+        fs::create_dir_all(&key_workspace)?;
+        let xorpath = key_workspace + "/xor.out";
+        let _ = fs::write(xorpath, decrypted);
+    }
+
+    let duration = start_time.elapsed().as_secs_f64();
+    let now = Utc::now();
+
+    println!("{{");
+    println!("  \"Analysis_duration_seconds\": {:.6},", duration);
+    println!("  \"Report_time_UTC\": \"{}\",", now.to_rfc3339());
+    println!("  \"Input_file\": \"{}\"", file_path);
+    println!("}}");
+
+    Ok(())
+}
+
 pub fn xor_analysis(file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     let start_time = Instant::now();
 
@@ -518,23 +553,23 @@ fn json_escape(s: &str) -> String {
     out
 }
 
-fn bool_to_json(b: bool) -> &'static str { 
+fn bool_to_json(b: bool) -> &'static str {
     if b { "true" } else { "false" }
 }
 
-fn f64_json(v: f64) -> String { 
-    if v.is_finite() { 
-        format!("{:.6}", v) 
-    } else { 
-        "null".to_string() 
-    } 
+fn f64_json(v: f64) -> String {
+    if v.is_finite() {
+        format!("{:.6}", v)
+    } else {
+        "null".to_string()
+    }
 }
 
 fn f64_or_null(v: f64, cond_null: bool) -> String {
-    if cond_null || !v.is_finite() { 
-        "null".to_string() 
-    } else { 
-        format!("{:.6}", v) 
+    if cond_null || !v.is_finite() {
+        "null".to_string()
+    } else {
+        format!("{:.6}", v)
     }
 }
 
