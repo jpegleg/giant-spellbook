@@ -664,4 +664,4 @@ The `0.1.X` versions are not recommended but if only core functionality is desir
 
 The `0.2.X` versions _do not_ include network debugging features and do compile on OpenBSD. The `0.2.X` versions _do not_ get _network_ feature updates, but do get other feature updates.
 
-The `0.3.X` versions include network debugging features and _do not_ compile on OpenBSD. The build CI build targets for `0.3.X` are Linux (x86_64 musl) and MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the main branch.
+The `0.3.X` versions include network debugging features and _do not_ compile on OpenBSD. The CI build targets for `0.3.X` are Linux (x86_64 musl) and MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the main branch.
