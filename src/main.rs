@@ -546,7 +546,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "tls_debug" => {
           if args.len() > 6 || args.len() < 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} tls_debug <url:port> <trusted_roots PEM> <true or false (client auth)> <optional client auth PEM>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} tls_debug <url:port> <trusted_roots PEM> <no_auth, auth> <if auth, then this is the client auth PEM>\"\n}}", args[0]);
             process::exit(1);
           }
           let target_arg = &args[2];
@@ -554,15 +554,15 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let auth_bool = &args[4];
 
           match auth_bool.as_str() {
-            "true" => {
+            "auth" => {
               let auth_path = &args[5];
               let _ = tls_debug::auth_debug(target_arg, roots_path, auth_path);
             },
-            "false" => {
+            "no_auth" => {
               let _ = tls_debug::debug(target_arg, roots_path);
             },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} tls_debug <url:port> <trusted_roots PEM> <true or false (client auth)> <optional client auth PEM\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} tls_debug <url:port> <trusted_roots PEM> <no_auth, auth> <if auth, then this is the client auth PEM\"\n}}", args[0]);
               process::exit(1);
             }
           }
