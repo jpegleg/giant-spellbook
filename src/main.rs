@@ -86,7 +86,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" => {
-          println!("{{\"Version\": \"0.2.2\"}}");
+          println!("{{\"Version\": \"0.2.3\"}}");
           process::exit(0)
         },
 
@@ -545,13 +545,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "brute" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} brute <caesar, xor> <target_file>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} brute <caesar, xor, xor_batch> <target_file>\"\n}}", args[0]);
             process::exit(1);
           }
           let cipher_type = &args[2];
           let file_path = &args[3];
 
           match cipher_type.as_str() {
+            "xor_batch" => {
+              let _ = analysis::xor_batch(file_path);
+            },
             "caesar" => {
               let _ = analysis::caesar_analysis(file_path);
             },
@@ -559,7 +562,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let _ = analysis::xor_analysis(file_path);
             },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} brute <caesar, xor> <target_file>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} brute <caesar, xor, xor_batch> <target_file>\"\n}}", args[0]);
               process::exit(1);
             }
           }
@@ -589,13 +592,17 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "disassemble" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} disassemble <arm64, x86_64> <target_file>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} disassemble <arm64, x86_64, ebpf> <target_file>\"\n}}", args[0]);
             process::exit(1);
           }
           let dis_type = &args[2];
           let file_path = &args[3];
 
           match dis_type.as_str() {
+            "ebpf" => {
+              let _ = disassemble::bpf_dis_to_string(file_path)?;
+              println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
+            },
             "arm64" => {
               let _ = disassemble::arm_dis_to_string(file_path)?;
               println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
@@ -605,7 +612,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
             },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} disassemble <arm64, x86_64> <target_file>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} disassemble <arm64, x86_64, ebpf> <target_file>\"\n}}", args[0]);
               process::exit(1);
             }
           }
@@ -647,11 +654,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "researcher" => {
           if args.len() < 3 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64> <input_file>\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64, read_ebpf> <input_file>\n}}", args[0]);
             process::exit(1);
           }
           if args.len() > 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64> <input_file>\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64, read_ebpf> <input_file>\n}}", args[0]);
             process::exit(1);
           }
 
@@ -668,8 +675,12 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let input = &args[3];
               let _ = researcher::arm_annotated_dump(input);
             },
+            "read_ebpf" => {
+              let input = &args[3];
+              let _ = researcher::ebpf_annotated_dump(input);
+            },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read>, read_arm64 <target_file>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64, read_bepf> <target_file>\"\n}}", args[0]);
               process::exit(1);
             }
           }
