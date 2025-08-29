@@ -315,6 +315,7 @@ This is a test message that has been encrypted! Oh snap!
 _Note that short messages that are only a few words may fail to decrypt with the "brute" functions.
 Also the functions may report decryption success when something vaguely like English is found._
 
+There is also 'xor_batch' subcommand for 'brute' that will create a directory for every byte and save the xor result of the input to `xor.out` in the corresponding directory.
 
 Get all hashes for a file:
 
@@ -400,6 +401,8 @@ _Note that the disassembly.txt output file can be rather large. Also the functio
 a previously existing disassembly.txt file in pwd would be overwritten._
 
 ARM64 disassembly is supported via the 'arm64' subcommand to 'disassemble'.
+
+eBPF disassembly is supported via 'ebpf' subcommand to 'disassemble'.
 
 Hunt for IoCs and potentially interesting bytes within a file:
 
@@ -599,7 +602,7 @@ The output is stored in a `results.log` that contains date and time in UTC, the 
 
 ## Researcher
 
-The 'researcher' option is an interactive hexdump with x86_64 (intel) or ARM64 disassembly. The hexdump has color highlighting to mark ELF, PE, and Mach-O magic, ASCII control characters, and more.
+The 'researcher' option is an interactive hexdump with x86_64 (intel), ARM64, or eBPF disassembly. The hexdump has color highlighting to mark ELF, PE, and Mach-O magic, ASCII control characters, and more.
 
 Use the 'help_map' subcommand to print the meanings of the colors and symbols and print out some tips for using this mode.
 The 'help_map' has commands and explanations for using 'researcher'. These commands include 'base64' and 'binary' which can
@@ -645,7 +648,7 @@ With 'seek', any pattern that is longer than 4096 bytes will be truncated to 409
 
 Use caution with sending binary inputs via 'commander' as the `results.log` will become binary as the STDIN that was piped is logged to the file..
 
-If the STDOUT or STDERR of with 'commander' "command" have binary, then an error message will be logged to the `results.log` as it uses lossy UTF-8 parsing for STDOUT and STDERR and will log the line number and a stream error about invalid UTF-8 if that occurs. Redirecting the output of the command to another file or log can be helpful if the output of the command might be binary.
+If the STDOUT or STDERR of with 'commander' "command" have binary, then an error message will be logged to the `results.log` as it uses lossy UTF-8 parsing for STDOUT and STDERR and will log the line number and a stream error about invalid UTF-8 if that occurs. Redirecting the output of the command to another file or log can be helpful if the output of the command might be binary, as to avoid the stream errors.
 
 ## Project promises
 
@@ -654,3 +657,11 @@ This project will never use AI-slop. All code is reviewed, tested, implemented b
 This project will never break backwards compatibility in releases regarding the signature validation or decryption.
 
 This project will be maintained as best as is reasonable.
+
+## Version use
+
+The `0.1.X` versions are not recommended but if only core functionality is desired, `0.1.9+` can be used. The `0.1.X` versions _do not_ get feature updates.
+
+The `0.2.X` versions _do not_ include network debugging features and do compile on OpenBSD. The `0.2.X` versions _do not_ get _network_ feature updates, but do get other feature updates.
+
+The `0.3.X` versions include network debugging features and _do not_ compile on OpenBSD. The build CI build targets for `0.3.X` are Linux (x86_64 musl) and MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the main branch.
