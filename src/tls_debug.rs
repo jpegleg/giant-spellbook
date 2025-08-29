@@ -68,7 +68,7 @@ impl<'a> Read for RecordingIo<'a> {
             let displ = enco.trim_end_matches('0');
             self.events.push(Event::new(
                 Side::Server,
-                format!("read {n} byte(s) from server; hex={displ}"),
+                format!("read {n} byte(s) from server <<- hex={displ}"),
             ));
         }
         Ok(n)
@@ -83,7 +83,7 @@ impl<'a> Write for RecordingIo<'a> {
             let displ = enco.trim_end_matches('0');
             self.events.push(Event::new(
                 Side::Client,
-                format!("wrote {n} byte(s) to server; hex={displ}"),
+                format!("wrote {n} byte(s) to server ->> hex={displ}"),
             ));
         }
         Ok(n)
