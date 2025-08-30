@@ -383,7 +383,7 @@ giant-spellbook parse certs mystery.file
 
 ```
 
-Capture detailed TLS inforamtion from a website or SSL/TLS endpoint. 
+Capture detailed TLS information from a website or SSL/TLS endpoint. 
 
 ```
 giant-spellbook tls_debug https://pq.cloudflareresearch.com:443 /etc/ssl/certs/ca-certificates.crt no_auth
