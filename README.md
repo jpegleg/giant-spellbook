@@ -8,6 +8,8 @@ Giant-spellbook can perform different types of crypanalysis and gather numerous 
 
 There are additional forensics and reverse engineering capabilities, including disassembly and searching for potentially interesting bytes and strings.
 
+The main version, currently 0.3.X, includes TLS debugging but does not support compiling for OpenBSD. The 0.2.X versions are still actively developed without the TLS debugging features, and do support OpenBSD. If you want to skip the 'tls_debug' feature, you can install with cargo install giant-spellbook@0.2.3 instead, or download release binaries and source code from the '0.2.X' branch on github. The 0.1.X versions are "core" functionality only and do not get new feature updates, only maintenance.
+
 The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that is required for decryption, the same mechanism used by enchantress and enchanter tools. The validation string that is generated is required for decryption with the tools, in addition to the password used.
 
 The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret key is written as ciphertext, encrypted with AES-256. The decrypted key is only stored in RAM during the original generation of the key and when the key is used for signing.
@@ -596,7 +598,7 @@ The output is stored in a `results.log` that contains date and time in UTC, the 
 
 ## Researcher
 
-The 'researcher' option is an interactive hexdump with x86_64 (intel) disassembly. The hexdump has color highlighting to mark ELF, PE, and Mach-O magic, ASCII control characters, and more.
+The 'researcher' option is an interactive hexdump with x86_64 (intel) disassembly. eBPF and AMR64 are supported in newer versions, but the 0.1.X branch is x86_64 only. The hexdump has color highlighting to mark ELF, PE, and Mach-O magic, ASCII control characters, and more.
 
 Use the 'help_map' subcommand to print the meanings of the colors and symbols and print out some tips for using this mode.
 The 'help_map' has commands and explanations for using 'researcher'. These commands include 'base64' and 'binary' which can
@@ -613,3 +615,21 @@ Use control + c to exit, or read to the end of the file by pressing the enter ke
 This 'researcher' option may not work well with all terminals/consoles and all platforms. I noted that some alpine linux consoles needed to run `reset` to get the display back after exiting the 'researcher'.
 
 Use a full color terminal emulator to get the full experience with the byte coloring. I can recommend [WezTerm](https://wezterm.org/).
+
+
+## Project promises
+
+This project will never use AI-slop. All code is reviewed, tested, implemented by a human that is academically trained in cryptography and information security. This repository and the crates.io repository is carefully managed and protected.
+
+This project will never break backwards compatibility in releases regarding the signature validation or decryption.
+
+This project will be maintained as best as is reasonable.
+
+## Version use
+
+The `0.1.X` versions are not recommended but if only core functionality is desired, `0.1.9+` can be used. The `0.1.X` versions _do not_ get feature updates.
+
+The `0.2.X` versions _do not_ include network debugging features and do compile on OpenBSD. The `0.2.X` versions _do not_ get _network_ feature updates, but do get other feature updates.
+
+The `0.3.X` versions include network debugging features and _do not_ compile on OpenBSD. The CI build targets for `0.3.X` are Linux (x86_64 musl) and MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the main branch.
+
