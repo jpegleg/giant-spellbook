@@ -684,11 +684,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "researcher" => {
           if args.len() < 3 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64> <input_file>\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64, read_ebpf> <input_file>\n}}", args[0]);
             process::exit(1);
           }
           if args.len() > 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64> <input_file>\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64, read_ebpf> <input_file>\n}}", args[0]);
             process::exit(1);
           }
 
@@ -710,7 +710,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let _ = researcher::ebpf_annotated_dump(input);
             },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read>, read_arm64 <target_file>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64, read_ebpf> <target_file>\"\n}}", args[0]);
               process::exit(1);
             }
           }
