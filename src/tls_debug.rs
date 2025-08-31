@@ -11,8 +11,7 @@ use rustls::{
     client::{ClientConfig, ClientConnection},
     RootCertStore,
 };
-use rustls::pki_types::CertificateDer;
-use rustls::pki_types::ServerName;
+use rustls::pki_types::{CertificateDer, ServerName, PrivateKeyDer};
 use base64::Engine;
 use x509_parser::extensions::{GeneralName, ParsedExtension};
 use x509_parser::prelude::*;
@@ -436,8 +435,8 @@ fn parse_host_port(input: &str) -> Result<(String, u16), Box<dyn Error>> {
     let s = if let Some(idx) = input.find("://") { &input[(idx + 3)..] } else { input };
     let s = s.split('/').next().unwrap_or(s);
     let mut parts = s.rsplitn(2, ':');
-    let port_str = parts.next().ok_or("Missing :port")?;
-    let host_part = parts.next().ok_or("Missing host before :port")?;
+    let port_str = parts.next().ok_or("Missing host:port")?;
+    let host_part = parts.next().ok_or("Missing host:port")?;
     let host = if host_part.starts_with('[') && host_part.ends_with(']') {
         host_part[1..host_part.len() - 1].to_string()
     } else {
@@ -447,15 +446,22 @@ fn parse_host_port(input: &str) -> Result<(String, u16), Box<dyn Error>> {
     Ok((host, port))
 }
 
+
 /// Load user supplied trusted roots.
 fn load_roots<P: AsRef<Path>>(pem_path: P) -> io::Result<RootCertStore> {
     let mut rd = BufReader::new(File::open(pem_path.as_ref())?);
-    let raw = rustls_pemfile::certs(&mut rd)?;
     let mut roots = RootCertStore::empty();
-    let (added, _skipped) = roots.add_parsable_certificates(
-        raw.into_iter().map(rustls::pki_types::CertificateDer::from),
-    );
-    if added == 0 {
+    let mut added_any = false;
+    for cert in rustls_pemfile::certs(&mut rd) {
+        let cert = cert?;
+        let (added, _skipped) =
+            roots.add_parsable_certificates(std::iter::once(CertificateDer::from(cert)));
+        if added > 0 {
+            added_any = true;
+        }
+    }
+
+    if !added_any {
         Err(io::Error::new(io::ErrorKind::InvalidData, "No valid roots in bundle"))
     } else {
         Ok(roots)
@@ -463,31 +469,32 @@ fn load_roots<P: AsRef<Path>>(pem_path: P) -> io::Result<RootCertStore> {
 }
 
 /// Load user supplied client auth PEM bundle for mTLS - optional.
-fn load_client_auth<P: AsRef<Path>>(pem_path: P) -> io::Result<(Vec<rustls::pki_types::CertificateDer<'static>>, rustls::pki_types::PrivateKeyDer<'static>)> {
-    use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs1KeyDer, PrivatePkcs8KeyDer, PrivateSec1KeyDer};
-
+fn load_client_auth<P: AsRef<Path>>(
+    pem_path: P,
+) -> io::Result<(Vec<CertificateDer<'static>>, PrivateKeyDer<'static>)> {
     let mut rd = BufReader::new(File::open(pem_path.as_ref())?);
-    let certs_bytes = rustls_pemfile::certs(&mut rd)?;
-    if certs_bytes.is_empty() {
+
+    let certs: Vec<CertificateDer<'static>> = rustls_pemfile::certs(&mut rd)
+        .map(|res| res.map(CertificateDer::from))
+        .collect::<Result<_, _>>()?;
+
+    if certs.is_empty() {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "No certs in client bundle"));
     }
-    let certs: Vec<CertificateDer<'static>> = certs_bytes.into_iter().map(CertificateDer::from).collect();
+
     let mut rd = BufReader::new(File::open(pem_path.as_ref())?);
-    if let Ok(mut v) = rustls_pemfile::pkcs8_private_keys(&mut rd) {
-        if let Some(k) = v.pop() {
-            return Ok((certs, PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(k))));
-        }
-    }
-    let mut rd = BufReader::new(File::open(pem_path.as_ref())?);
-    if let Ok(mut v) = rustls_pemfile::rsa_private_keys(&mut rd) {
-        if let Some(k) = v.pop() {
-            return Ok((certs, PrivateKeyDer::Pkcs1(PrivatePkcs1KeyDer::from(k))));
-        }
-    }
-    let mut rd = BufReader::new(File::open(pem_path.as_ref())?);
-    if let Ok(mut v) = rustls_pemfile::ec_private_keys(&mut rd) {
-        if let Some(k) = v.pop() {
-            return Ok((certs, PrivateKeyDer::Sec1(PrivateSec1KeyDer::from(k))));
+    for item in rustls_pemfile::read_all(&mut rd) {
+        match item {
+            Ok(rustls_pemfile::Item::Pkcs8Key(k)) => {
+                return Ok((certs, PrivateKeyDer::from(k)));
+            }
+            Ok(rustls_pemfile::Item::Pkcs1Key(k)) => {
+                return Ok((certs, PrivateKeyDer::from(k)));
+            }
+            Ok(rustls_pemfile::Item::Sec1Key(k)) => {
+                return Ok((certs, PrivateKeyDer::from(k)));
+            }
+            _ => continue,
         }
     }
 
