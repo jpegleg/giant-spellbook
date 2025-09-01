@@ -535,6 +535,15 @@ If we have a file that needs to be decoded but does have newlines, returns, spac
 giant-spellbook flatten_text ./sample_raw.txt
 ```
 
+Then we can use the 'decode' mode on it:
+
+```
+giant-spellbook decode base32_z ./sample_raw.txt
+{ "Result": "Z-base32 data decoded and written to file: ./sample_raw.txt" }
+```
+
+The 'encode' functions do not add any whitespace, so 'flatten_text' isn't required if we made the file with giant-spellbook 'encode'. 
+
 ### File type detections
 
 The file detections are separate from the "hunter" checks. The file detections are in "analyze", see the output "Type" as well as other supporting details in that JSON.
