@@ -43,9 +43,17 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 |------------|------------------------------------------------------|
 | encode     | base64                                               |
 | encode     | base58                                               |
+| encode     | base32 Crockford                                     |
+| encode     | base32 RFC-4648                                      |
+| encode     | base32 RFC-4648 hex                                  |
+| encode     | z-base32                                             |
 | encode     | hex                                                  |
 | decode     | base64                                               |
 | decode     | base58                                               |
+| decode     | base32 Crockford                                     |
+| decode     | base32 RFC-4648                                      |
+| decode     | base32 RFC-4648 hex                                  |
+| decode     | z-base32                                             |
 | decode     | hex                                                  |
 
 | operation     | action/algos                                                                       |
@@ -53,7 +61,8 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | metadata      | file data, byte distribution, SHA3 SHAKE256                                        |
 | bitflip       | bitwise NOT                                                                        |
 | analyze       | file data, Chi, Hamming, Shannon entropy, rolling entropy, XOR, periodicity, ECB   |
-| file_split    | split a file at a bit position to two new files                                    |
+| split_file    | split a file at a bit position to two new files                                    |
+| flatten_text  | remove spaces, tabs, newlines, and returns from a text file                        |
 | reverse_bytes | reverse the byte order of a file                                                   |
 | bruteforce    | XOR and Caesar English bruteforce decryption, and single byte XOR batch processing |
 | parse         | parse PEM and DER x509 certificates inside files                                   |
@@ -63,7 +72,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | commander     | run a command for each line in a file, supplying the line as STDIN to command      |
 | researcher    | interactive disassembly and hexdump of a file with colored byte highlighting       |
 | seek          | search for binary or strings from within a file and report byte positions          |
-| tls_debug     | capture detailed data from TLS handshakes including certificates and timing        |
+
 
 ## Installing
 
@@ -107,7 +116,7 @@ Run with no arguments to print all of the options:
 ```
 giant-spellbook
 {
-  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
+  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten_text, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
 }
 
 ```
@@ -560,6 +569,22 @@ giant-spellbook decode hex test2
 
 If the decode has no output and left a `.tmp` file in pwd, then the decoding failed.
 
+If we have a file that needs to be decoded but does have newlines, returns, spaces, or tabs, we can use the 'flatten_text' option to remove all whitespace from the file, overwriting the file.
+
+```
+giant-spellbook flatten_text ./sample_raw.txt
+```
+
+Then we can use the 'decode' mode on it:
+
+```
+giant-spellbook decode base32_z ./sample_raw.txt
+{ "Result": "Z-base32 data decoded and written to file: ./sample_raw.txt" }
+```
+
+The 'encode' functions do not add any whitespace, so 'flatten_text' isn't required if we made the file with giant-spellbook 'encode'.
+
+
 ### File type detections
 
 The file detections are separate from the "hunter" checks. The file detections are in "analyze", see the output "Type" as well as other supporting details in that JSON.
@@ -616,7 +641,7 @@ There are two features for bitflipping in giant-spellbook. The first one bitflip
 
 ## Encoding and decoding
 
-The tool can encode and decode files in place. Hex, base64, and base58 encoding options are available.
+The tool can encode and decode files in place. Hex, base64, base32, and base58 encoding options are available.
 
 If the decode has no output and left a `.tmp` file in pwd, then the decoding failed.
 
