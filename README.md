@@ -43,9 +43,17 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 |------------|------------------------------------------------------|
 | encode     | base64                                               |
 | encode     | base58                                               |
+| encode     | base32 Crockford                                     |
+| encode     | base32 RFC-4648                                      |
+| encode     | base32 RFC-4648 hex                                  |
+| encode     | base32 z                                             |
 | encode     | hex                                                  |
 | decode     | base64                                               |
 | decode     | base58                                               |
+| decode     | base32 Crockford                                     |
+| decode     | base32 RFC-4648                                      |
+| decode     | base32 RFC-4648 hex                                  |
+| decode     | base32 z                                             |
 | decode     | hex                                                  |
 
 | operation     | action/algos                                                                       |
@@ -576,7 +584,7 @@ There are two features for bitflipping in giant-spellbook. The first one bitflip
 
 ## Encoding and decoding
 
-The tool can encode and decode files in place. Hex, base64, and base58 encoding options are available.
+The tool can encode and decode files in place. Hex, base64, base32, and base58 encoding options are available.
 
 If the decode has no output and left a `.tmp` file in pwd, then the decoding failed.
 
