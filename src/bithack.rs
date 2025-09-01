@@ -1,9 +1,14 @@
 use std::error::Error;
 use std::cmp::min;
 use std::fs::{self, File, OpenOptions};
-use std::io::{self, Read, Seek, SeekFrom, Write, BufWriter};
+use std::io::{self, Read, Seek, SeekFrom, Write, BufWriter, BufReader};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
+use chrono::{SecondsFormat, Utc};
+
+#[path = "./utilities.rs"]
+mod utilities;
+use utilities::*;
 
 const CHUNK_SIZE: usize = 4096;
 const BUF_SIZE: usize = 8 * 1024 * 1024;
@@ -17,6 +22,158 @@ pub fn flatten(path: &str) -> Result<(), Box<dyn Error>> {
     let mut tmp_file = File::create(&tmp_path)?;
     tmp_file.write_all(cleaned.as_bytes())?;
     fs::rename(&tmp_path, &file_path)?;
+    Ok(())
+}
+
+pub fn shift(path: &str, direction: &str, count_str: &str) {
+    fn print_json(path: &str, result_msg: &str) {
+        let ts = Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true);
+        println!(
+            "{{\n  \"File\": \"{}\",\n  \"Date UTC\": \"{}\",\n  \"Result\": \"{}\"\n}}",
+            path, ts, result_msg.replace('"', "\\\"")
+        );
+    }
+
+    let count: usize = match count_str.parse() {
+        Ok(v) => v,
+        Err(_) => {
+            print_json(
+                path,
+                &format!("ERROR - Invalid shift count '{}'", count_str),
+            );
+            return;
+        }
+    };
+
+    let dir = direction.to_ascii_lowercase();
+    if dir != "left" && dir != "right" {
+        print_json(
+            path,
+            &format!("ERROR - Invalid direction '{}', expected 'left' or 'right'", direction),
+        );
+        return;
+    }
+
+    let data = match fs::read(path) {
+        Ok(b) => b,
+        Err(e) => {
+            print_json(path, &format!("ERROR - Failed to read file: {}", e));
+            return;
+        }
+    };
+
+    let len = data.len();
+
+    if len == 0 {
+        if count == 0 {
+            print_json(path, &format!("File shifted {} by {}", dir, count));
+        } else {
+            print_json(path, "ERROR - Byte position was past the end of the file");
+        }
+        return;
+    }
+
+    if count > len {
+        print_json(path, "ERROR - Byte position was past the end of the file");
+        return;
+    }
+
+    if count == 0 || count == len {
+        if let Err(e) = write_and_replace(path, &data) {
+            print_json(path, &format!("ERROR - {}", e));
+            return;
+        }
+        print_json(path, &format!("File shifted {} by {}", dir, count));
+        return;
+    }
+
+    let shifted = if dir == "left" {
+        let (head, tail) = data.split_at(count);
+        let mut out = Vec::with_capacity(len);
+        out.extend_from_slice(tail);
+        out.extend_from_slice(head);
+        out
+    } else {
+        let split = len - count;
+        let (head, tail) = data.split_at(split);
+        let mut out = Vec::with_capacity(len);
+        out.extend_from_slice(tail);
+        out.extend_from_slice(head);
+        out
+    };
+
+    if let Err(e) = write_and_replace(path, &shifted) {
+        print_json(path, &format!("ERROR - {}", e));
+        return;
+    }
+
+    print_json(path, &format!("File shifted {} by {}", dir, count));
+}
+
+pub fn xor_these(file1: &str, file2: &str) -> io::Result<()> {
+    let p1 = Path::new(file1);
+    let p2 = Path::new(file2);
+    let out_path = "./xor.out";
+
+    let len1 = fs::metadata(p1)?.len();
+    let len2 = fs::metadata(p2)?.len();
+
+    let now = chrono::DateTime::<Utc>::from(SystemTime::now())
+        .to_rfc3339_opts(SecondsFormat::Millis, true);
+
+    if len1 != len2 {
+        eprintln!(
+                "{{\n  \"File 1\": \"{}\",\n  \"File 1 length in bytes\": {},\n  \"File 2\": \"{}\",\n  \"File 2 length in bytes\": {},\n  \"Date_UTC\": \"{}\",\n  \"ERROR\": \"Files must be the same length\"\n}}",
+            json_escape_type1(file1),
+            len1,
+            json_escape_type1(file2),
+            len2,
+            now
+        );
+        return Ok(());
+    }
+
+    let f1 = File::open(p1)?;
+    let f2 = File::open(p2)?;
+    let mut r1 = BufReader::new(f1);
+    let mut r2 = BufReader::new(f2);
+
+    let out_file = File::create(out_path)?;
+    let mut w = BufWriter::new(out_file);
+
+    const BUF_SZ: usize = 64 * 1024;
+    let mut b1 = vec![0u8; BUF_SZ];
+    let mut b2 = vec![0u8; BUF_SZ];
+
+    loop {
+        let n1 = r1.read(&mut b1)?;
+        let n2 = r2.read(&mut b2)?;
+        if n1 == 0 && n2 == 0 {
+            break;
+        }
+        if n1 != n2 {
+            eprintln!(
+                "{{\n \"File 1\": \"{}\",\n  \"File 1 length in bytes\": {},\n  \"File 2\": \"{}\",\n  \"File 2 length in bytes\": {},\n  \"Date_UTC\": \"{}\",\n  \"ERROR\": \"Files must be the same length\"\n}}",
+                json_escape_type1(file1), len1, json_escape_type1(file2), len2, now
+            );
+            return Ok(());
+        }
+
+        for i in 0..n1 {
+            b1[i] ^= b2[i];
+        }
+        w.write_all(&b1[..n1])?;
+    }
+    w.flush()?;
+
+    println!(
+        "{{\n  \"File 1\": \"{}\",\n  \"File 2\": \"{}\",\n  \"Output\": \"{}\",\n  \"Date_UTC\": \"{}\",\n  \"Result\": \"Files XOR'd\"\n}}",
+        json_escape_type1(file1),
+        json_escape_type1(file2),
+        json_escape_type1(out_path),
+        now
+    );
+
     Ok(())
 }
 
