@@ -78,7 +78,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten_text, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -723,6 +723,17 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           Ok(())
         },
 
+        "flatten_text" => {
+          if args.len() != 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} flatten_text <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
+
+          let _ = bithack::flatten(file_path);
+          Ok(())
+        },
+        
         "byte_range" => {
           if args.len() != 6 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <hexdump, hex, s_hex> <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
@@ -961,7 +972,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten_text, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
