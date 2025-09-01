@@ -278,7 +278,7 @@ pub fn z_encode_file(file_path: &str) -> io::Result<()> {
     let mut output_file = File::create(&temp_file_path)?;
     base32_z_encode(&mut input_file, &mut output_file)?;
     std::fs::rename(&temp_file_path, file_path)?;
-    println!("{{ \"Result\": \"Data encoded with Z base32 and written to file: {}\" }}", file_path);
+    println!("{{ \"Result\": \"Data encoded with z-base32 and written to file: {}\" }}", file_path);
     Ok(())
 }
 
@@ -288,7 +288,7 @@ pub fn z_decode_file(file_path: &str) -> io::Result<()> {
     let mut output_file = File::create(&temp_file_path)?;
     base32_z_decode(&mut input_file, &mut output_file)?;
     std::fs::rename(&temp_file_path, file_path)?;
-    println!("{{ \"Result\": \"Z hex base32 data decoded and written to file: {}\" }}", file_path);
+    println!("{{ \"Result\": \"Z-base32 data decoded and written to file: {}\" }}", file_path);
     Ok(())
 }
 
