@@ -46,14 +46,14 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | encode     | base32 Crockford                                     |
 | encode     | base32 RFC-4648                                      |
 | encode     | base32 RFC-4648 hex                                  |
-| encode     | base32 z                                             |
+| encode     | z-base32                                             |
 | encode     | hex                                                  |
 | decode     | base64                                               |
 | decode     | base58                                               |
 | decode     | base32 Crockford                                     |
 | decode     | base32 RFC-4648                                      |
 | decode     | base32 RFC-4648 hex                                  |
-| decode     | base32 z                                             |
+| decode     | z-base32                                             |
 | decode     | hex                                                  |
 
 | operation     | action/algos                                                                       |
