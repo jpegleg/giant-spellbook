@@ -10,6 +10,8 @@ use chrono::{SecondsFormat, Utc};
 use rustls::{
     client::{ClientConfig, ClientConnection},
     RootCertStore,
+    Connection,
+    ConnectionTrafficSecrets
 };
 use rustls::pki_types::{CertificateDer, ServerName, PrivateKeyDer};
 use base64::Engine;
@@ -93,6 +95,7 @@ impl<'a> Write for RecordingIo<'a> {
     }
 }
 
+
 /// Function for debugging with mTLS.
 pub fn auth_debug(target_arg: &str, roots_path: &str, client_auth_path: &str) {
     if let Err(e) = auth_run(target_arg, roots_path, client_auth_path) {
@@ -103,6 +106,20 @@ pub fn auth_debug(target_arg: &str, roots_path: &str, client_auth_path: &str) {
 /// Function for debugging with regular TLS.
 pub fn debug(target_arg: &str, roots_path: &str) {
     if let Err(e) = run(target_arg, roots_path) {
+        eprintln!("{} ERROR: {e}", Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true));
+    }
+}
+
+/// Function for debugging with regular TLS with secrets extraction.
+pub fn extract_debug(target_arg: &str, roots_path: &str) {
+    if let Err(e) = extract_run(target_arg, roots_path) {
+        eprintln!("{} ERROR: {e}", Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true));
+    }
+}
+
+/// Function for debugging mTLS with secrets extraction.
+pub fn extract_auth_debug(target_arg: &str, roots_path: &str, client_auth_path: &str) {
+    if let Err(e) = extract_auth_run(target_arg, roots_path, client_auth_path) {
         eprintln!("{} ERROR: {e}", Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true));
     }
 }
@@ -428,6 +445,385 @@ fn auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) -> Resul
     Ok(())
 }
 
+/// Like run but also extract secrets from protected memory.
+fn extract_run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>> {
+    let (host, port) = parse_host_port(&target_arg)?;
+    let addr_str = format!("{host}:{port}");
+    let sock_addr = addr_str
+        .to_socket_addrs()?
+        .next()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
+
+    let root_store = load_roots(&roots_path)?;
+    let mut base = ClientConfig::builder().with_root_certificates(root_store)
+                                          .with_no_client_auth();
+    base.enable_secret_extraction = true;
+    let config = Arc::new(base);
+
+    let mut events: Vec<Event> = Vec::new();
+    events.push(Event::new(Side::Info, format!("Starting TLS handshake run against {addr_str}")));
+    events.push(Event::new(Side::Client, format!("Resolving & connecting to {sock_addr}")));
+
+    let mut tcp = TcpStream::connect_timeout(&sock_addr, Duration::from_secs(10))?;
+    tcp.set_read_timeout(Some(Duration::from_secs(20)))?;
+    tcp.set_write_timeout(Some(Duration::from_secs(20)))?;
+    events.push(Event::new(Side::Client, "TCP connected"));
+
+    let server_name: ServerName<'static> = host.clone().try_into()
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "Invalid SNI name"))?;
+    let mut conn = ClientConnection::new(config.clone(), server_name.clone())?;
+
+    let mut recorder = RecordingIo {
+        inner: &mut tcp,
+        events: &mut events
+    };
+    let mut flight = 0usize;
+
+    while conn.is_handshaking() {
+        let (rd, wr) = match conn.complete_io(&mut recorder) {
+            Ok(v) => v,
+            Err(e) if e.kind() == io::ErrorKind::WouldBlock => (0, 0),
+            Err(e) => {
+                recorder.log(Side::Error, format!("I/O during handshake failed: {e}"));
+                break;
+            }
+        };
+        if wr > 0 {
+            flight += 1;
+            recorder.log(Side::Client, format!("Handshake flight #{flight} (TLS wrote {wr} byte(s))"));
+        }
+        if rd > 0 {
+            recorder.log(Side::Server, format!("Received {rd} byte(s) during handshake"));
+        }
+        if rd == 0 && wr == 0 {
+            std::thread::sleep(Duration::from_millis(10));
+        }
+    }
+
+    drop(recorder);
+
+    if let Some(kx) = conn.negotiated_key_exchange_group() {
+        let named = kx.name();
+        let iana: u16 = named.into();
+        let fips = if kx.fips() { " (FIPS impl)" } else { "" };
+        events.push(Event::new(
+            Side::Info,
+            format!("Key agreement group: {:?} (IANA 0x{:04x}){}", named, iana, fips),
+        ));
+    } else {
+        events.push(Event::new(Side::Info, "Key agreement group: <none/unknown>"));
+    }
+
+    let mut cert_pem_path = None::<PathBuf>;
+    if !conn.is_handshaking() {
+        events.push(Event::new(Side::Info, "TLS handshake completed"));
+        if let Some(v) = conn.protocol_version() {
+            events.push(Event::new(Side::Info, format!("Negotiated TLS version: {:?}", v)));
+        } else {
+            events.push(Event::new(Side::Info, "Negotiated TLS version: <unknown>"));
+        }
+        if let Some(cs) = conn.negotiated_cipher_suite() {
+            events.push(Event::new(Side::Info, format!("Cipher suite: {:?}", cs.suite())));
+        } else {
+            events.push(Event::new(Side::Info, "Cipher suite: <unknown>"));
+        }
+        if let Some(proto) = conn.alpn_protocol() {
+            let printable = String::from_utf8_lossy(proto).to_string();
+            events.push(Event::new(Side::Info, format!("ALPN protocol: {printable}")));
+        } else {
+            events.push(Event::new(Side::Info, "ALPN protocol: (none)"));
+        }
+
+        if let Some(chain) = conn.peer_certificates() {
+            events.push(Event::new(Side::Info, format!("Server sent {} certificate(s)", chain.len())));
+            let fname = artifact_filename("server-certs", &host, "pem");
+            let pem_path = PathBuf::from(&fname);
+            save_cert_chain_as_pem(&pem_path, &chain)?;
+            cert_pem_path = Some(pem_path.clone());
+            events.push(Event::new(Side::Info, format!("Saved server cert chain bundle: ./{}", pem_path.display())));
+
+            for (idx, cert) in chain.iter().enumerate() {
+                match summarize_cert(cert) {
+                    Ok(summary) => events.push(Event::new(Side::Info, format!("cert[{idx}]: {summary}"))),
+                    Err(e) => events.push(Event::new(Side::Error, format!("cert[{idx}]: Failed to parse: {e}"))),
+                }
+            }
+        } else {
+            events.push(Event::new(Side::Info, "No peer certificate chain available"));
+        }
+
+        let conn_enum: Connection = conn.into();
+        match conn_enum.dangerous_extract_secrets() {
+            Ok(secrets) => {
+                // tx
+                let (tx_seq, tx) = secrets.tx;
+                log_secrets(&mut events, "tx", tx_seq, tx);
+                // rx
+                let (rx_seq, rx) = secrets.rx;
+                log_secrets(&mut events, "rx", rx_seq, rx);
+            }
+            Err(e) => {
+                events.push(Event::new(
+                    Side::Error,
+                    format!("Failed to extract TLS traffic secrets: {e}"),
+                ));
+            }
+        }
+        events.sort_by_key(|e| e.t);
+        let mut log_text = String::new();
+        for e in &events {
+            log_text.push_str(&e.fmt());
+            log_text.push('\n');
+        }
+
+        let log_name = artifact_filename("tls-handshake", &host, "log");
+        fs::write(&log_name, &log_text)?;
+        print!("{log_text}");
+
+        let cert_path_text = cert_pem_path
+            .as_ref()
+            .map(|p| format!(", server certs: ./{}", p.display()))
+            .unwrap_or_default();
+
+        println!(
+            "{} INFO: Run complete. Artifacts saved: log: ./{}{}",
+            chrono::DateTime::<Utc>::from(SystemTime::now()).to_rfc3339_opts(SecondsFormat::Millis, true),
+            log_name,
+            cert_path_text
+        );
+    } else {
+        events.sort_by_key(|e| e.t);
+        let mut log_text = String::new();
+        for e in &events {
+            log_text.push_str(&e.fmt());
+            log_text.push('\n');
+        }
+        let log_name = artifact_filename("tls-handshake", &host, "log");
+        fs::write(&log_name, &log_text)?;
+        print!("{log_text}");
+        println!(
+            "{} ERROR: Run finished with errors before handshake completion. Artifacts saved: log: ./{}",
+            chrono::DateTime::<Utc>::from(SystemTime::now()).to_rfc3339_opts(SecondsFormat::Millis, true),
+            log_name
+        );
+    }
+
+    Ok(())
+}
+
+/// Like extract_run but for mTLS.
+fn extract_auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) -> Result<(), Box<dyn Error>> {
+    let (host, port) = parse_host_port(&target_arg)?;
+    let addr_str = format!("{host}:{port}");
+    let sock_addr = addr_str
+        .to_socket_addrs()?
+        .next()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
+
+    let root_store = load_roots(&roots_path)?;
+    let base = ClientConfig::builder().with_root_certificates(root_store);
+    let mut base = {
+        let (certs, key) = load_client_auth(&client_auth_path)?;
+        base.with_client_auth_cert(certs, key)?
+    };
+
+    base.enable_secret_extraction = true;
+    let config = Arc::new(base);
+
+    let mut events: Vec<Event> = Vec::new();
+    events.push(Event::new(Side::Info, format!("Starting TLS handshake run against {addr_str}")));
+    events.push(Event::new(Side::Client, format!("Resolving & connecting to {sock_addr}")));
+
+    let mut tcp = TcpStream::connect_timeout(&sock_addr, Duration::from_secs(10))?;
+    tcp.set_read_timeout(Some(Duration::from_secs(20)))?;
+    tcp.set_write_timeout(Some(Duration::from_secs(20)))?;
+    events.push(Event::new(Side::Client, "TCP connected"));
+
+    let server_name: ServerName<'static> = host.clone().try_into()
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "Invalid SNI name"))?;
+    let mut conn = ClientConnection::new(config.clone(), server_name.clone())?;
+
+    let mut recorder = RecordingIo {
+        inner: &mut tcp,
+        events: &mut events
+    };
+    let mut flight = 0usize;
+
+    while conn.is_handshaking() {
+        let (rd, wr) = match conn.complete_io(&mut recorder) {
+            Ok(v) => v,
+            Err(e) if e.kind() == io::ErrorKind::WouldBlock => (0, 0),
+            Err(e) => {
+                recorder.log(Side::Error, format!("I/O during handshake failed: {e}"));
+                break;
+            }
+        };
+        if wr > 0 {
+            flight += 1;
+            recorder.log(Side::Client, format!("Handshake flight #{flight} (TLS wrote {wr} byte(s))"));
+        }
+        if rd > 0 {
+            recorder.log(Side::Server, format!("Received {rd} byte(s) during handshake"));
+        }
+        if rd == 0 && wr == 0 {
+            std::thread::sleep(Duration::from_millis(10));
+        }
+    }
+
+    drop(recorder);
+
+    if let Some(kx) = conn.negotiated_key_exchange_group() {
+        let named = kx.name();
+        let iana: u16 = named.into();
+        let fips = if kx.fips() { " (FIPS impl)" } else { "" };
+        events.push(Event::new(
+            Side::Info,
+            format!("Key agreement group: {:?} (IANA 0x{:04x}){}", named, iana, fips),
+        ));
+    } else {
+        events.push(Event::new(Side::Info, "Key agreement group: <none/unknown>"));
+    }
+
+    let mut cert_pem_path = None::<PathBuf>;
+    if !conn.is_handshaking() {
+        events.push(Event::new(Side::Info, "TLS handshake completed"));
+        if let Some(v) = conn.protocol_version() {
+            events.push(Event::new(Side::Info, format!("Negotiated TLS version: {:?}", v)));
+        } else {
+            events.push(Event::new(Side::Info, "Negotiated TLS version: <unknown>"));
+        }
+        if let Some(cs) = conn.negotiated_cipher_suite() {
+            events.push(Event::new(Side::Info, format!("Cipher suite: {:?}", cs.suite())));
+        } else {
+            events.push(Event::new(Side::Info, "Cipher suite: <unknown>"));
+        }
+        if let Some(proto) = conn.alpn_protocol() {
+            let printable = String::from_utf8_lossy(proto).to_string();
+            events.push(Event::new(Side::Info, format!("ALPN protocol: {printable}")));
+        } else {
+            events.push(Event::new(Side::Info, "ALPN protocol: (none)"));
+        }
+
+        if let Some(chain) = conn.peer_certificates() {
+            events.push(Event::new(Side::Info, format!("Server sent {} certificate(s)", chain.len())));
+            let fname = artifact_filename("server-certs", &host, "pem");
+            let pem_path = PathBuf::from(&fname);
+            save_cert_chain_as_pem(&pem_path, &chain)?;
+            cert_pem_path = Some(pem_path.clone());
+            events.push(Event::new(Side::Info, format!("Saved server cert chain bundle: ./{}", pem_path.display())));
+
+            for (idx, cert) in chain.iter().enumerate() {
+                match summarize_cert(cert) {
+                    Ok(summary) => events.push(Event::new(Side::Info, format!("cert[{idx}]: {summary}"))),
+                    Err(e) => events.push(Event::new(Side::Error, format!("cert[{idx}]: Failed to parse: {e}"))),
+                }
+            }
+        } else {
+            events.push(Event::new(Side::Info, "No peer certificate chain available"));
+        }
+
+        let conn_enum: Connection = conn.into();
+        match conn_enum.dangerous_extract_secrets() {
+            Ok(secrets) => {
+                let (tx_seq, tx) = secrets.tx;
+                log_secrets(&mut events, "tx", tx_seq, tx);
+                let (rx_seq, rx) = secrets.rx;
+                log_secrets(&mut events, "rx", rx_seq, rx);
+            }
+            Err(e) => {
+                events.push(Event::new(
+                    Side::Error,
+                    format!("Failed to extract TLS traffic secrets: {e}"),
+                ));
+            }
+        }
+        events.sort_by_key(|e| e.t);
+        let mut log_text = String::new();
+        for e in &events {
+            log_text.push_str(&e.fmt());
+            log_text.push('\n');
+        }
+
+        let log_name = artifact_filename("tls-handshake", &host, "log");
+        fs::write(&log_name, &log_text)?;
+        print!("{log_text}");
+
+        let cert_path_text = cert_pem_path
+            .as_ref()
+            .map(|p| format!(", server certs: ./{}", p.display()))
+            .unwrap_or_default();
+
+        println!(
+            "{} INFO: Run complete. Artifacts saved: log: ./{}{}",
+            chrono::DateTime::<Utc>::from(SystemTime::now()).to_rfc3339_opts(SecondsFormat::Millis, true),
+            log_name,
+            cert_path_text
+        );
+    } else {
+        events.sort_by_key(|e| e.t);
+        let mut log_text = String::new();
+        for e in &events {
+            log_text.push_str(&e.fmt());
+            log_text.push('\n');
+        }
+        let log_name = artifact_filename("tls-handshake", &host, "log");
+        fs::write(&log_name, &log_text)?;
+        print!("{log_text}");
+        println!(
+            "{} ERROR: Run finished with errors before handshake completion. Artifacts saved: log: ./{}",
+            chrono::DateTime::<Utc>::from(SystemTime::now()).to_rfc3339_opts(SecondsFormat::Millis, true),
+            log_name
+        );
+    }
+
+    Ok(())
+}
+
+fn log_secrets(events: &mut Vec<Event>, dir: &str, seq: u64, cts: ConnectionTrafficSecrets) {
+    fn hex(bytes: &[u8]) -> String {
+        let mut out = String::with_capacity(bytes.len() * 2);
+        for b in bytes {
+            use core::fmt::Write as _;
+            let _ = write!(out, "{:02x}", b);
+        }
+        out
+    }
+
+    match cts {
+        ConnectionTrafficSecrets::Aes128Gcm { key, iv } => {
+            events.push(Event::new(
+                Side::Info,
+                format!(
+                    "secrets[{dir}]: suite=AES_128_GCM, seq={seq}, key={}, iv={}",
+                    hex(key.as_ref()),
+                    hex(iv.as_ref())
+                ),
+            ));
+        }
+        ConnectionTrafficSecrets::Aes256Gcm { key, iv } => {
+            events.push(Event::new(
+                Side::Info,
+                format!(
+                    "secrets[{dir}]: suite=AES_256_GCM, seq={seq}, key={}, iv={}",
+                    hex(key.as_ref()),
+                    hex(iv.as_ref())
+                ),
+            ));
+        }
+        ConnectionTrafficSecrets::Chacha20Poly1305 { key, iv } => {
+            events.push(Event::new(
+                Side::Info,
+                format!(
+                    "secrets[{dir}]: suite=CHACHA20_POLY1305, seq={seq}, key={}, iv={}",
+                    hex(key.as_ref()),
+                    hex(iv.as_ref())
+                ),
+            ));
+        }
+       _ => ()
+    }
+}
+
 /// A port is required for the target.
 fn parse_host_port(input: &str) -> Result<(String, u16), Box<dyn Error>> {
     let s = if let Some(idx) = input.find("://") { &input[(idx + 3)..] } else { input };
@@ -443,7 +839,6 @@ fn parse_host_port(input: &str) -> Result<(String, u16), Box<dyn Error>> {
     let port: u16 = port_str.parse()?;
     Ok((host, port))
 }
-
 
 /// Load user supplied trusted roots.
 fn load_roots<P: AsRef<Path>>(pem_path: P) -> io::Result<RootCertStore> {
