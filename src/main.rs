@@ -79,16 +79,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten_text, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
     let first_layer = &args[1];
 
     match first_layer.as_str() {
-        "-v" => {
+        "-v" | "--version" => {
           println!("{{\"Version\": \"0.3.3\"}}");
-          process::exit(0)
+          Ok(())
         },
 
         "sign" => {
@@ -478,10 +478,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           Ok(())
         },
-
+        
         "encode" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex> <target_file>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <target_file>\"\n}}", args[0]);
             process::exit(1);
           }
 
@@ -497,18 +497,30 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             "hex" => {
               let _ = encoding::hex_encode_file(input_file);
             },
+            "base32_crockford" => {
+              let _ = encoding::crockford_encode_file(input_file);
+            },
+            "base32_z" => {
+              let _ = encoding::z_encode_file(input_file);
+            },
+            "base32_rfc4648" => {
+              let _ = encoding::rfc4648_encode_file(input_file);
+            },
+            "base32_rfc4648hex" => {
+              let _ = encoding::rfc4648hex_encode_file(input_file);
+            },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex> <file_to_encode>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <file_to_encode>\"\n}}", args[0]);
               process::exit(1);
             }
           }
 
           Ok(())
         },
-
+        
         "decode" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex> <target_file>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <target_file>\"\n}}", args[0]);
             process::exit(1);
           }
 
@@ -524,8 +536,20 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             "hex" => {
               let _ = encoding::hex_decode_file(input_file);
             },
+            "base32_crockford" => {
+              let _ = encoding::crockford_decode_file(input_file);
+            },
+            "base32_z" => {
+              let _ = encoding::z_decode_file(input_file);
+            },
+            "base32_rfc4648" => {
+              let _ = encoding::rfc4648_decode_file(input_file);
+            },
+            "base32_rfc4648hex" => {
+              let _ = encoding::rfc4648hex_decode_file(input_file);
+            },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex> <file_to_decode>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex base32_crockford base32_rf4648 base32_rf4648hex base32_z> <file_to_decode>\"\n}}", args[0]);
               process::exit(1);
             }
           }
@@ -740,7 +764,18 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let _ = bithack::reverse_file_bytes(file_path);
           Ok(())
         },
+        
+        "flatten_text" => {
+          if args.len() != 3 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} flatten_text <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_path = &args[2];
 
+          let _ = bithack::flatten(file_path);
+          Ok(())
+        },
+        
         "byte_range" => {
           if args.len() != 6 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <hexdump, hex, s_hex> <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
@@ -879,6 +914,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           Ok(())
         },
+        
         "metadata" => {
           if args.len() != 3 {
             eprintln!("{{\n  \"ERROR\": \"Usage: metadata <target_file>\"}}");
@@ -979,7 +1015,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten_text, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
