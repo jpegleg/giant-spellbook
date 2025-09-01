@@ -8,6 +8,18 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const CHUNK_SIZE: usize = 4096;
 const BUF_SIZE: usize = 8 * 1024 * 1024;
 
+pub fn flatten(path: &str) -> Result<(), Box<dyn Error>> {
+    let file_path = Path::new(path);
+    let tmp_path = file_path.with_extension("tmp");
+    let mut contents = String::new();
+    File::open(&file_path)?.read_to_string(&mut contents)?;
+    let cleaned: String = contents.chars().filter(|c| !c.is_whitespace()).collect();
+    let mut tmp_file = File::create(&tmp_path)?;
+    tmp_file.write_all(cleaned.as_bytes())?;
+    fs::rename(&tmp_path, &file_path)?;
+    Ok(())
+}
+
 pub fn precise_bitflip(path: &str, bit_pos_str: &str) -> Result<(), Box<dyn Error>> {
     let bit_pos: u64 = bit_pos_str.parse()?;
     flip_bit_in_file(path, bit_pos)
