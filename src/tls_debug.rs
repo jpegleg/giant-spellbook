@@ -97,7 +97,6 @@ impl<'a> Write for RecordingIo<'a> {
 pub fn auth_debug(target_arg: &str, roots_path: &str, client_auth_path: &str) {
     if let Err(e) = auth_run(target_arg, roots_path, client_auth_path) {
         eprintln!("{} ERROR: {e}", Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true));
-        std::process::exit(1);
     }
 }
 
@@ -105,7 +104,6 @@ pub fn auth_debug(target_arg: &str, roots_path: &str, client_auth_path: &str) {
 pub fn debug(target_arg: &str, roots_path: &str) {
     if let Err(e) = run(target_arg, roots_path) {
         eprintln!("{} ERROR: {e}", Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true));
-        std::process::exit(1);
     }
 }
 
