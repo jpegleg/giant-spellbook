@@ -74,7 +74,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | seek          | search for binary or strings from within a file and report byte positions          |
 | shift         | shift the bytes of a file by a give position to the left or right                  |
 | xor_these     | bitwise XOR two files of the same lenth together, output to xor.out                |
-| rng           | generate files of a give byte length from system entropy source                    |
+| rng           | generate files of a given byte length from system entropy source                   |
 
 ## Installing
 
