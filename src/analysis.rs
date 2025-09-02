@@ -7,6 +7,10 @@ use std::fmt::Write;
 use zerocopy::IntoBytes;
 use chrono::Utc;
 
+#[path = "./utilities.rs"]
+mod utilities;
+use utilities::json_escape_type1;
+
 const KEY_CURRENT: &[u8] = b"current version ";
 const KEY_COMPAT:  &[u8] = b"compatibility version ";
 const MUSL_KEY_CURRENT: &[u8] = b"ld-musl-";
@@ -46,7 +50,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     if data.is_empty() {
         return Ok(format!(
             "{{\n  \"file\": \"{}\",\n  \"size\": 0,\n  \"empty\": true\n}}\n",
-            json_escape(&p.display().to_string())
+            json_escape_type1(&p.display().to_string())
         ));
     }
 
@@ -272,7 +276,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     let mut out = String::new();
 
     writeln!(&mut out, "{{")?;
-    writeln!(&mut out, "  \"File\": \"{}\",", json_escape(&p.display().to_string()))?;
+    writeln!(&mut out, "  \"File\": \"{}\",", json_escape_type1(&p.display().to_string()))?;
     writeln!(&mut out, "  \"Report time\": \"{chronox}\",",)?;
     writeln!(&mut out, "  \"Size\": {},", data.len())?;
     writeln!(&mut out, "  \"Type\": \"{}\",", magic)?;
@@ -537,22 +541,6 @@ pub fn xor_analysis(file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn json_escape(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 8);
-    for ch in s.chars() {
-        match ch {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c.is_control() => out.push_str(&format!("\\u{:04X}", c as u32)),
-            c => out.push(c),
-        }
-    }
-    out
-}
-
 fn bool_to_json(b: bool) -> &'static str {
     if b { "true" } else { "false" }
 }
@@ -578,7 +566,7 @@ fn json_str_array(items: &[String]) -> String {
         let mut s = String::from("[");
         for (i, it) in items.iter().enumerate() {
             if i > 0 { s.push(','); }
-            s.push('"'); s.push_str(&json_escape(it)); s.push('"');
+            s.push('"'); s.push_str(&json_escape_type1(it)); s.push('"');
         }
         s.push(']'); s
     }
