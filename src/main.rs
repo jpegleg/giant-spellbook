@@ -78,7 +78,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten_text, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -300,13 +300,29 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         "generate" => {
-          if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} generate <private_key_path> <public_key_path>\"\n}}", args[0]);
+          if args.len() != 5 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} generate <dilithium5key, rng> (then for dilithium5key): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>\"\n}}", args[0]);
             process::exit(1);
           }
-          let key_path = &args[2];
-          let pub_path = &args[3];
-          keygen(key_path, pub_path)?;
+          let gentype = &args[2];
+          let arg1 = &args[3];
+          let arg2 = &args[4];
+
+          match gentype.as_str() {
+            "dilithium5key" => {
+              keygen(arg1, arg2)?;
+
+            },
+            "rng" => {
+              let rngsize = arg1.parse::<usize>()?;
+              let _ = bithack::gen_entropy(rngsize, arg2);
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} generate <dilithium5key, rng> (then for dilithium5key): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+
           Ok(())
         },
 
@@ -723,9 +739,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           Ok(())
         },
 
-        "flatten_text" => {
+        "flatten" => {
           if args.len() != 3 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} flatten_text <target_file>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} flatten <target_file>\"\n}}", args[0]);
             process::exit(1);
           }
           let file_path = &args[2];
@@ -997,7 +1013,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten_text, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
