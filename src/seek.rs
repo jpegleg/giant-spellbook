@@ -2,6 +2,10 @@ use std::fs::File;
 use std::io::{self, Read, BufRead, BufReader};
 use std::path::Path;
 
+#[path = "./utilities.rs"]
+mod utilities;
+use utilities::json_escape_type2;
+
 pub fn search_in_file(path: &str) -> io::Result<()> {
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin.lock());
@@ -21,7 +25,7 @@ pub fn search_in_file(path: &str) -> io::Result<()> {
     if line.is_empty() {
         println!(
             "{{\n  \"File\": \"{}\",\n  \"Input_pattern_hex_encoded\": \"\",\n  \"Positions\": []\n}}",
-            json_escape(path)
+            json_escape_type2(path)
         );
         return Ok(());
     }
@@ -41,7 +45,7 @@ pub fn search_in_file(path: &str) -> io::Result<()> {
     }
 
     let hex_pat = hex::encode(pat);
-    print!("{{\n  \"File\": \"{}\",\n  \"Input_pattern_hex_encoded\": \"", json_escape(path));
+    print!("{{\n  \"File\": \"{}\",\n  \"Input_pattern_hex_encoded\": \"", json_escape_type2(path));
     print!("{}", hex_pat);
     print!("\",\n  \"Positions\": [");
     for (idx, pos) in positions.iter().enumerate() {
@@ -53,25 +57,4 @@ pub fn search_in_file(path: &str) -> io::Result<()> {
     println!("]\n}}");
 
     Ok(())
-}
-
-fn json_escape(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 8);
-    for b in s.bytes() {
-        match b {
-            b'"' => out.push_str("\\\""),
-            b'\\' => out.push_str("\\\\"),
-            0x08 => out.push_str("\\b"),
-            0x0C => out.push_str("\\f"),
-            b'\n' => out.push_str("\\n"),
-            b'\r' => out.push_str("\\r"),
-            b'\t' => out.push_str("\\t"),
-            0x00..=0x1F => {
-                use std::fmt::Write;
-                let _ = write!(out, "\\u{:04X}", b);
-            }
-            _ => out.push(b as char),
-        }
-    }
-    out
 }
