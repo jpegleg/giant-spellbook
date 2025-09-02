@@ -301,7 +301,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "generate" => {
           if args.len() != 5 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} generate <dilithium5key, rng> (then for dilithium5key): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} generate <dilithium5key, rng> (then for 'dilithium5key'): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>\"\n}}", args[0]);
             process::exit(1);
           }
           let gentype = &args[2];
@@ -318,7 +318,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let _ = bithack::gen_entropy(rngsize, arg2);
             },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} generate <dilithium5key, rng> (then for dilithium5key): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} generate <dilithium5key, rng> (then for 'dilithium5key'): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>\"\n}}", args[0]);
               process::exit(1);
             }
           }
