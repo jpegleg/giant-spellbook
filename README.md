@@ -18,12 +18,12 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 
 | operation  | cipher/algos                                         | upstream     |
 |------------|------------------------------------------------------|--------------|
-| encryption | AES-256 CTR, SHA3 SHAKE256, BASE64, Argon2id         | enchantress  |
-| encryption | AES-256 GCM, SHA3 SHAKE256, BASE64, Argon2id         | enchantress  |
-| encryption | XChaCha20Poly1305, SHA3 SHAKE256, BASE64, Argon2id   | enchanter    |
-| decryption | AES-256 CTR, SHA3 SHAKE256, BASE64, Argon2id         | enchantress  |
-| decryption | AES-256 GCM, SHA3 SHAKE256, BASE64, Argon2id         | enchantress  |
-| decryption | XChaCha20Poly1305, SHA3 SHAKE256, BASE64, Argon2id   | enchanter    |
+| encryption | AES-256 CTR, SHA3 SHAKE256, base64, Argon2id         | enchantress  |
+| encryption | AES-256 GCM, SHA3 SHAKE256, base64, Argon2id         | enchantress  |
+| encryption | XChaCha20Poly1305, SHA3 SHAKE256, base64, Argon2id   | enchanter    |
+| decryption | AES-256 CTR, SHA3 SHAKE256, base64, Argon2id         | enchantress  |
+| decryption | AES-256 GCM, SHA3 SHAKE256, base64, Argon2id         | enchantress  |
+| decryption | XChaCha20Poly1305, SHA3 SHAKE256, base64, Argon2id   | enchanter    |
 | signing    | Dilithium5-AES, AES-256 CTR, Argon2id                | wormsign     |
 | key gen    | Dilithium5-AES, AES-256 CTR, Argon2id                | wormsign     |
 | verifying  | Dilithium5-AES                                       | wormsign     |
