@@ -19,7 +19,11 @@ pub fn gen_entropy(entropy_size: usize, file_path: &str) -> Result<(), Box<dyn E
     let mut entropy_file = File::create(file_path)?;
 
     while actual_size < entropy_size {
-      wormsign::randombytes(&mut init_seed, entropy_size);
+      if entropy_size > CHUNK_SIZE {
+        wormsign::randombytes(&mut init_seed, CHUNK_SIZE);
+      } else {
+        wormsign::randombytes(&mut init_seed, entropy_size);
+      }
       entropy_file.write_all(&init_seed)?;
       actual_size = trim_file(file_path)?.try_into().unwrap();
     }
