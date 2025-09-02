@@ -78,7 +78,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten_text, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten_text, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -733,7 +733,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let _ = bithack::flatten(file_path);
           Ok(())
         },
-        
+
         "byte_range" => {
           if args.len() != 6 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} byte_range <hexdump, hex, s_hex> <target_file> <starting_byte> <ending_byte> \"\n}}", args[0]);
@@ -806,6 +806,31 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let file_path = &args[3];
 
           let _ = bithack::splitter(file_path, position);
+          Ok(())
+        },
+
+        "shift" => {
+          if args.len() != 5 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} shift <left right> <byte count> <file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let direction = &args[2];
+          let shiftcount = &args[3];
+          let file = &args[4];
+
+          let _ = bithack::shift(file, direction, shiftcount);
+          Ok(())
+        },
+
+        "xor_these" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} xor_these  <file1> <file2>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file1 = &args[2];
+          let file2 = &args[3];
+
+          let _ = bithack::xor_these(file1, file2);
           Ok(())
         },
 
@@ -972,7 +997,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten_text, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten_text, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
