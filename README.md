@@ -547,7 +547,7 @@ giant-spellbook decode base32_z ./sample_raw.txt
 
 The 'encode' functions do not add any whitespace, so 'flatten' isn't required if we made the file with giant-spellbook 'encode'. 
 
-Generating a random file of a given lenth:
+Generating a random file of a given length:
 
 ```
 giant-spellbook generate rng 4096 ./random4096_$(date +%Y%m%d%H%M%S).bin
