@@ -62,7 +62,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | bitflip       | bitwise NOT                                                                        |
 | analyze       | file data, Chi, Hamming, Shannon entropy, rolling entropy, XOR, periodicity, ECB   |
 | split_file    | split a file at a bit position to two new files                                    |
-| flatten_text  | remove spaces, tabs, newlines, and returns from a text file                        |
+| flatten       | remove spaces, tabs, newlines, and returns from a text file                        |
 | reverse_bytes | reverse the byte order of a file                                                   |
 | bruteforce    | XOR and Caesar English bruteforce decryption, and single byte XOR batch processing |
 | parse         | parse PEM and DER x509 certificates inside files                                   |
@@ -118,7 +118,7 @@ Run with no arguments to print all of the options:
 ```
 giant-spellbook
 {
-  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten_text, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
+  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
 }
 
 ```
