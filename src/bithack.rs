@@ -13,6 +13,20 @@ use utilities::*;
 const CHUNK_SIZE: usize = 4096;
 const BUF_SIZE: usize = 8 * 1024 * 1024;
 
+pub fn gen_entropy(entropy_size: usize, file_path: &str) -> Result<(), Box<dyn Error>> {
+    let mut init_seed = [0u8; CHUNK_SIZE];
+    let mut actual_size = 0usize;
+    let mut entropy_file = File::create(file_path)?;
+
+    while actual_size < entropy_size {
+      wormsign::randombytes(&mut init_seed, entropy_size);
+      entropy_file.write_all(&init_seed)?;
+      actual_size = trim_file(file_path)?.try_into().unwrap();
+    }
+
+    Ok(())
+}
+
 pub fn flatten(path: &str) -> Result<(), Box<dyn Error>> {
     let file_path = Path::new(path);
     let tmp_path = file_path.with_extension("tmp");
