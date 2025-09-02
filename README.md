@@ -118,7 +118,7 @@ Run with no arguments to print all of the options:
 ```
 giant-spellbook
 {
-  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
+  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, tls_debug, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
 }
 
 ```
