@@ -62,7 +62,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | bitflip       | bitwise NOT                                                                        |
 | analyze       | file data, Chi, Hamming, Shannon entropy, rolling entropy, XOR, periodicity, ECB   |
 | split_file    | split a file at a bit position to two new files                                    |
-| flatten_text  | remove spaces, tabs, newlines, and returns from a text file                        |
+| flatten       | remove spaces, tabs, newlines, and returns from a text file                        |
 | reverse_bytes | reverse the byte order of a file                                                   |
 | bruteforce    | XOR and Caesar English bruteforce decryption, and single byte XOR batch processing |
 | parse         | parse PEM and DER x509 certificates inside files                                   |
@@ -72,6 +72,9 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | commander     | run a command for each line in a file, supplying the line as STDIN to command      |
 | researcher    | interactive disassembly and hexdump of a file with colored byte highlighting       |
 | seek          | search for binary or strings from within a file and report byte positions          |
+| shift         | shift the bytes of a file by a give position to the left or right                  |
+| xor_these     | bitwise XOR two files of the same lenth together, output to xor.out                |
+| rng           | generate files of a give byte length from system entropy source                    |
 
 ## Installing
 
@@ -125,14 +128,14 @@ Use the first argument (option) by itself to print the help information for the 
 ```
 giant-spellbook generate
 {
-  "ERROR": "Usage: giant-spellbook generate <private_key_path> <public_key_path>"
+  "ERROR": "Usage: target/release/giant-spellbook generate <dilithium5key, rng> (then for dilithium5key): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>"
 }
 ```
 
 Generating a Dilithium5-AES encrypted secret key and public key:
 
 ```
-giant-spellbook generate example.key example.pub
+giant-spellbook generate dilithium5key example.key example.pub
 Enter key password then press enter (will not be displayed):
 
 ```
@@ -544,6 +547,12 @@ giant-spellbook decode base32_z ./sample_raw.txt
 
 The 'encode' functions do not add any whitespace, so 'flatten_text' isn't required if we made the file with giant-spellbook 'encode'. 
 
+Generating a random file of a given lenth:
+
+```
+giant-spellbook generate rng 4096 ./random4096_$(date +%Y%m%d%H%M%S).bin
+```
+
 ### File type detections
 
 The file detections are separate from the "hunter" checks. The file detections are in "analyze", see the output "Type" as well as other supporting details in that JSON.
@@ -586,7 +595,7 @@ File type detections include:
 File type detections are not perfect and should be taken as a data point or best guess rather than a conclusion.
 
 
-## Bitflipping and slicing
+## Bitflipping, slicing, shifting, XORing
 
 There are two features for bitflipping in giant-spellbook. The first one bitflips the whole file and the second one flips a specific bit at a position.
 
@@ -597,6 +606,10 @@ There are two features for bitflipping in giant-spellbook. The first one bitflip
 "split_file" splits the file into two files at the given position, creating new files with __first and __second extensions
 
 "reverse_bytes" reverses all of the bytes of the file, overwriting the file
+
+"shift" moves the position of the bytes to the left or the right - moving to the right means bytes from the end to go the start, and moving to the left means bytes from the start go to the end
+
+"xor_these" takes two files of the same length and performs a bitwise XOR of them, output to a new file `xor.out`
 
 ## Encoding and decoding
 
