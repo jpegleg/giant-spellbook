@@ -72,7 +72,9 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | commander     | run a command for each line in a file, supplying the line as STDIN to command      |
 | researcher    | interactive disassembly and hexdump of a file with colored byte highlighting       |
 | seek          | search for binary or strings from within a file and report byte positions          |
-
+| shift         | shift the bytes of a file by a give position to the left or right                  |
+| xor_these     | bitwise XOR two files of the same lenth together, output to xor.out                |
+| rng           | generate files of a given byte length from system entropy source                   |
 
 ## Installing
 
@@ -124,16 +126,15 @@ giant-spellbook
 Use the first argument (option) by itself to print the help information for the subcommands (additional arguments):
 
 ```
-giant-spellbook generate
 {
-  "ERROR": "Usage: giant-spellbook generate <private_key_path> <public_key_path>"
+  "ERROR": "Usage: target/release/giant-spellbook generate <dilithium5key, rng> (then for 'dilithium5key'): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>"
 }
 ```
 
 Generating a Dilithium5-AES encrypted secret key and public key:
 
 ```
-giant-spellbook generate example.key example.pub
+giant-spellbook generate dilithium5key example.key example.pub
 Enter key password then press enter (will not be displayed):
 
 ```
@@ -569,10 +570,10 @@ giant-spellbook decode hex test2
 
 If the decode has no output and left a `.tmp` file in pwd, then the decoding failed.
 
-If we have a file that needs to be decoded but does have newlines, returns, spaces, or tabs, we can use the 'flatten_text' option to remove all whitespace from the file, overwriting the file.
+If we have a file that needs to be decoded but does have newlines, returns, spaces, or tabs, we can use the 'flatten' option to remove all whitespace from the file, overwriting the file.
 
 ```
-giant-spellbook flatten_text ./sample_raw.txt
+giant-spellbook flatten ./sample_raw.txt
 ```
 
 Then we can use the 'decode' mode on it:
@@ -582,8 +583,13 @@ giant-spellbook decode base32_z ./sample_raw.txt
 { "Result": "Z-base32 data decoded and written to file: ./sample_raw.txt" }
 ```
 
-The 'encode' functions do not add any whitespace, so 'flatten_text' isn't required if we made the file with giant-spellbook 'encode'.
+The 'encode' functions do not add any whitespace, so 'flatten' isn't required if we made the file with giant-spellbook 'encode'.
 
+Generating a random file of a given lenth:
+
+```
+giant-spellbook generate rng 4096 ./random4096_$(date +%Y%m%d%H%M%S).bin
+```
 
 ### File type detections
 
@@ -638,6 +644,11 @@ There are two features for bitflipping in giant-spellbook. The first one bitflip
 "split_file" splits the file into two files at the given position, creating new files with __first and __second extensions
 
 "reverse_bytes" reverses all of the bytes of the file, overwriting the file
+
+"shift" moves the position of the bytes to the left or the right - moving to the right means bytes from the end to go the start, and moving to the left means bytes from the start go to the end
+
+"xor_these" takes two files of the same length and performs a bitwise XOR of them, output to a new file `xor.out`
+
 
 ## Encoding and decoding
 
