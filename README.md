@@ -128,7 +128,7 @@ Use the first argument (option) by itself to print the help information for the 
 ```
 giant-spellbook generate
 {
-  "ERROR": "Usage: target/release/giant-spellbook generate <dilithium5key, rng> (then for dilithium5key): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>"
+  "ERROR": "Usage: target/release/giant-spellbook generate <dilithium5key, rng> (then for 'dilithium5key'): <private_key_path> <public_key_path> (or if 'rng'): <size_in_bytes> <file_path>"
 }
 ```
 
