@@ -118,7 +118,7 @@ Run with no arguments to print all of the options:
 ```
 giant-spellbook
 {
-  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, flatten_text, metadata, hash, derive_key> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
+  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
 }
 
 ```
@@ -532,10 +532,10 @@ giant-spellbook decode hex test2
 
 If the decode has no output and left a `.tmp` file in pwd, then the decoding failed.
 
-If we have a file that needs to be decoded but does have newlines, returns, spaces, or tabs, we can use the 'flatten_text' option to remove all whitespace from the file, overwriting the file.
+If we have a file that needs to be decoded but does have newlines, returns, spaces, or tabs, we can use the 'flatten' option to remove all whitespace from the file, overwriting the file.
 
 ```
-giant-spellbook flatten_text ./sample_raw.txt
+giant-spellbook flatten ./sample_raw.txt
 ```
 
 Then we can use the 'decode' mode on it:
@@ -545,7 +545,7 @@ giant-spellbook decode base32_z ./sample_raw.txt
 { "Result": "Z-base32 data decoded and written to file: ./sample_raw.txt" }
 ```
 
-The 'encode' functions do not add any whitespace, so 'flatten_text' isn't required if we made the file with giant-spellbook 'encode'. 
+The 'encode' functions do not add any whitespace, so 'flatten' isn't required if we made the file with giant-spellbook 'encode'. 
 
 Generating a random file of a given lenth:
 
