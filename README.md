@@ -2,7 +2,7 @@
 
 # giant-spellbook
 
-This tool is a "multi-tool" of cryptographic operations and binary/file analysis capabilities. It is useful for regular cryptographic operations like hashing files for checksums, encrypting files, creating and verifying Dilithium5-AES signatures. It uses the highest standards for cryptographic operations with the strongest encryption methods, signing, and hashing.
+This tool is a "multi-tool" of cryptographic operations and binary/file analysis capabilities. It is useful for regular cryptographic operations like hashing files for checksums, encrypting files, creating and verifying Dilithium5-AES signatures. It uses the highest standards for cryptographic operations with the strongest encryption methods, signing, and hashing. All encryption code comes from upstream libraries in RustCrypto, leveraging the work of the best available industry standard cryptography.
 
 Giant-spellbook can perform different types of cryptanalysis and gather numerous statistics on files and binaries as well as perform low level operations on them such as bitflipping and slicing.
 
@@ -10,7 +10,7 @@ There are additional forensics and reverse engineering capabilities, including d
 
 The main version, currently 0.3.X, includes TLS debugging but does not support compiling for OpenBSD. The 0.2.X versions are still actively developed without the TLS debugging features, and do support OpenBSD. If you want to skip the 'tls_debug' feature, you can install with `cargo install giant-spellbook@0.2.X` where X is the latest minor version instead, or download release binaries and source code from the '0.2.X' branch on github. The 0.1.X versions are "core" functionality only and do not get new feature updates, only maintenance.
 
-The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that is required for decryption, the same mechanism used by enchantress and enchanter tools. The validation string that is generated is required for decryption with the tools, in addition to the password used.
+The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that helps to identify tampering, the same mechanism used by enchantress and enchanter tools. The validation string that is generated is required with the tools, in addition to the password used.
 
 The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret key is written as ciphertext, encrypted with AES-256. The decrypted key is only stored in RAM during the original generation of the key and when the key is used for signing.
 
@@ -47,6 +47,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | encode     | base32 RFC-4648                                      |
 | encode     | base32 RFC-4648 hex                                  |
 | encode     | z-base32                                             |
+| encode     | URL encode                                           |
 | encode     | hex                                                  |
 | decode     | base64                                               |
 | decode     | base58                                               |
@@ -55,6 +56,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | decode     | base32 RFC-4648 hex                                  |
 | decode     | z-base32                                             |
 | decode     | hex                                                  |
+| encode     | URL decode                                           |
 
 | operation     | action/algos                                                                       |
 |---------------|------------------------------------------------------------------------------------|
