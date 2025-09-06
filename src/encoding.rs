@@ -347,3 +347,12 @@ pub fn hex_decode_file(file_path: &str) -> io::Result<()> {
     println!("{{ \"Result\": \"Hex data decoded and written to file: {}\" }}", file_path);
     Ok(())
 }
+
+pub fn url_encode_string(input: &str) -> String {
+    let out = urlencoding::encode(input);
+    format!("{:?}", out)
+}
+
+pub fn url_decode_string(input: &str) -> String {
+    urlencoding::decode(input).unwrap().to_string()
+}
