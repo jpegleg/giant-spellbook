@@ -56,7 +56,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | decode     | base32 RFC-4648 hex                                  |
 | decode     | z-base32                                             |
 | decode     | hex                                                  |
-| encode     | URL decode                                           |
+| decode     | URL decode                                           |
 
 | operation     | action/algos                                                                       |
 |---------------|------------------------------------------------------------------------------------|
