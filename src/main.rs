@@ -86,7 +86,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" | "--version" => {
-          println!("{{\"Version\": \"0.2.7\"}}");
+          println!("{{\"Version\": \"0.2.8\"}}");
           Ok(())
         },
 
@@ -496,13 +496,17 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "encode" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <target_file>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <target_file> OR <url_encode> <string>\"\n}}", args[0]);
             process::exit(1);
           }
 
           let entype = &args[2];
           let input_file = &args[3];
           match entype.as_str() {
+            "url_encode" => {
+              let out = encoding::url_encode_string(input_file);
+              println!("{out}");
+            },
             "base64" => {
               let _ = encoding::base64_encode_file(input_file);
             },
@@ -525,7 +529,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let _ = encoding::rfc4648hex_encode_file(input_file);
             },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <file_to_encode>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} encode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <file_to_encode> OR <url_encode> <string>\"\n}}", args[0]);
               process::exit(1);
             }
           }
@@ -535,13 +539,17 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "decode" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <target_file>\"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <target_file> OR <url_decode> <string>\"\n}}", args[0]);
             process::exit(1);
           }
 
           let entype = &args[2];
           let input_file = &args[3];
           match entype.as_str() {
+            "url_decode" => {
+              let out = encoding::url_decode_string(input_file);
+              println!("{out}");
+            },
             "base64" => {
               let _ = encoding::base64_decode_file(input_file);
             },
@@ -564,7 +572,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let _ = encoding::rfc4648hex_decode_file(input_file);
             },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex base32_crockford base32_rf4648 base32_rf4648hex base32_z> <file_to_decode>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex base32_crockford base32_rf4648 base32_rf4648hex base32_z> <file_to_decode> OR <url_decode> <string>\"\n}}", args[0]);
               process::exit(1);
             }
           }
