@@ -15,19 +15,17 @@ const BUF_SIZE: usize = 8 * 1024 * 1024;
 
 pub fn gen_entropy(entropy_size: usize, file_path: &str) -> Result<(), Box<dyn Error>> {
     let mut init_seed = [0u8; CHUNK_SIZE];
-    let mut actual_size = 0usize;
     let mut entropy_file = File::create(file_path)?;
-
-    while actual_size < entropy_size {
+    while entropy_size > entropy_file.metadata().unwrap.len().try_into().unwrap() {
       if entropy_size > CHUNK_SIZE {
         wormsign::randombytes(&mut init_seed, CHUNK_SIZE);
+        entropy_file.write_all(&init_seed)?;
       } else {
         wormsign::randombytes(&mut init_seed, entropy_size);
+        entropy_file.write_all(&init_seed)?;
       }
-      entropy_file.write_all(&init_seed)?;
-      actual_size = trim_file(file_path)?.try_into().unwrap();
     }
-
+    entropy_file.set_len(entropy_size.try_into().unwrap())?;
     Ok(())
 }
 
