@@ -621,6 +621,8 @@ If the decode has no output and left a `.tmp` file in pwd, then the decoding fai
 
 If decoding is successful, JSON will be printed. If decoding fails, check the file for invalid data and try again or use another approach.
 
+There is also URL encoding and decoding that does not operate on files, but a supplied string as a command line argument. The output for URL encoding and decoding is only the result, not JSON.
+
 ## Commander
 
 The 'commander' option enables command execution iteration with detailed logging. There are many potential uses for this, including cryptanalysis and batch processing.
