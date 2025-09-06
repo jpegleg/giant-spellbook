@@ -431,7 +431,7 @@ RusTLS is very correct, but that also makes it less useful for further probing o
 
 If the last argument to 'tls_debug' is 'no_auth' regular TLS will be used. If that argument is 'auth', then an additional argument of a path to a PEM bundle for client auth and mTLS is used. The mTLS with RusTLS is perhaps overly picky, again, so there will likely be another function and library added to expand mTLS testing as well.
 
-There is also 'extract_no_auth' and 'extract_auth' for 'tls_debug', which extract TLS secrets (currently secret keys and IVs) and expose them in the log.
+There is also 'extract_no_auth' and 'extract_auth' for 'tls_debug', which prints the TLS secrets from the debug session (currently secret keys and IVs) and expose them in the log.
 
 
 Disassemble a file (x86_64):
