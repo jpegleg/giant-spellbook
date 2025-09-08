@@ -140,9 +140,9 @@ pub fn xor_these(file1: &str, file2: &str) -> io::Result<()> {
     if len1 != len2 {
         eprintln!(
                 "{{\n  \"File 1\": \"{}\",\n  \"File 1 length in bytes\": {},\n  \"File 2\": \"{}\",\n  \"File 2 length in bytes\": {},\n  \"Date_UTC\": \"{}\",\n  \"ERROR\": \"Files must be the same length\"\n}}",
-            json_escape_type1(file1),
+            json_escape(file1),
             len1,
-            json_escape_type1(file2),
+            json_escape(file2),
             len2,
             now
         );
@@ -170,7 +170,7 @@ pub fn xor_these(file1: &str, file2: &str) -> io::Result<()> {
         if n1 != n2 {
             eprintln!(
                 "{{\n \"File 1\": \"{}\",\n  \"File 1 length in bytes\": {},\n  \"File 2\": \"{}\",\n  \"File 2 length in bytes\": {},\n  \"Date_UTC\": \"{}\",\n  \"ERROR\": \"Files must be the same length\"\n}}",
-                json_escape_type1(file1), len1, json_escape_type1(file2), len2, now
+                json_escape(file1), len1, json_escape(file2), len2, now
             );
             return Ok(());
         }
@@ -184,9 +184,9 @@ pub fn xor_these(file1: &str, file2: &str) -> io::Result<()> {
 
     println!(
         "{{\n  \"File 1\": \"{}\",\n  \"File 2\": \"{}\",\n  \"Output\": \"{}\",\n  \"Date_UTC\": \"{}\",\n  \"Result\": \"Files XOR'd\"\n}}",
-        json_escape_type1(file1),
-        json_escape_type1(file2),
-        json_escape_type1(out_path),
+        json_escape(file1),
+        json_escape(file2),
+        json_escape(out_path),
         now
     );
 
