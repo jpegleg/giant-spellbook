@@ -4,7 +4,7 @@ use std::path::Path;
 
 #[path = "./utilities.rs"]
 mod utilities;
-use utilities::json_escape_type2;
+use utilities::json_escape;
 
 pub fn search_in_file(path: &str) -> io::Result<()> {
     let stdin = io::stdin();
@@ -25,7 +25,7 @@ pub fn search_in_file(path: &str) -> io::Result<()> {
     if line.is_empty() {
         println!(
             "{{\n  \"File\": \"{}\",\n  \"Input_pattern_hex_encoded\": \"\",\n  \"Positions\": []\n}}",
-            json_escape_type2(path)
+            json_escape(path)
         );
         return Ok(());
     }
@@ -45,7 +45,7 @@ pub fn search_in_file(path: &str) -> io::Result<()> {
     }
 
     let hex_pat = hex::encode(pat);
-    print!("{{\n  \"File\": \"{}\",\n  \"Input_pattern_hex_encoded\": \"", json_escape_type2(path));
+    print!("{{\n  \"File\": \"{}\",\n  \"Input_pattern_hex_encoded\": \"", json_escape(path));
     print!("{}", hex_pat);
     print!("\",\n  \"Positions\": [");
     for (idx, pos) in positions.iter().enumerate() {
