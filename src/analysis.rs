@@ -9,7 +9,7 @@ use chrono::Utc;
 
 #[path = "./utilities.rs"]
 mod utilities;
-use utilities::json_escape_type1;
+use utilities::json_escape;
 
 const KEY_CURRENT: &[u8] = b"current version ";
 const KEY_COMPAT:  &[u8] = b"compatibility version ";
@@ -50,7 +50,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     if data.is_empty() {
         return Ok(format!(
             "{{\n  \"file\": \"{}\",\n  \"size\": 0,\n  \"empty\": true\n}}\n",
-            json_escape_type1(&p.display().to_string())
+            json_escape(&p.display().to_string())
         ));
     }
 
@@ -276,7 +276,7 @@ pub fn cryptanalyze_file(path: &str) -> Result<String, Box<dyn std::error::Error
     let mut out = String::new();
 
     writeln!(&mut out, "{{")?;
-    writeln!(&mut out, "  \"File\": \"{}\",", json_escape_type1(&p.display().to_string()))?;
+    writeln!(&mut out, "  \"File\": \"{}\",", json_escape(&p.display().to_string()))?;
     writeln!(&mut out, "  \"Report time\": \"{chronox}\",",)?;
     writeln!(&mut out, "  \"Size\": {},", data.len())?;
     writeln!(&mut out, "  \"Type\": \"{}\",", magic)?;
@@ -566,7 +566,7 @@ fn json_str_array(items: &[String]) -> String {
         let mut s = String::from("[");
         for (i, it) in items.iter().enumerate() {
             if i > 0 { s.push(','); }
-            s.push('"'); s.push_str(&json_escape_type1(it)); s.push('"');
+            s.push('"'); s.push_str(&json_escape(it)); s.push('"');
         }
         s.push(']'); s
     }
