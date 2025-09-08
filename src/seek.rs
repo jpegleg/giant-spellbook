@@ -2,6 +2,10 @@ use std::fs::File;
 use std::io::{self, Read, BufRead, BufReader};
 use std::path::Path;
 
+#[path = "./utilities.rs"]
+mod utilities;
+use utilities::json_escape;
+
 pub fn search_in_file(path: &str) -> io::Result<()> {
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin.lock());
@@ -53,25 +57,4 @@ pub fn search_in_file(path: &str) -> io::Result<()> {
     println!("]\n}}");
 
     Ok(())
-}
-
-fn json_escape(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 8);
-    for b in s.bytes() {
-        match b {
-            b'"' => out.push_str("\\\""),
-            b'\\' => out.push_str("\\\\"),
-            0x08 => out.push_str("\\b"),
-            0x0C => out.push_str("\\f"),
-            b'\n' => out.push_str("\\n"),
-            b'\r' => out.push_str("\\r"),
-            b'\t' => out.push_str("\\t"),
-            0x00..=0x1F => {
-                use std::fmt::Write;
-                let _ = write!(out, "\\u{:04X}", b);
-            }
-            _ => out.push(b as char),
-        }
-    }
-    out
 }
