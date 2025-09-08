@@ -235,7 +235,20 @@ impl Interesting {
             ("net_view", Pattern::Str("net view /domain")),
             ("net_use", Pattern::Str("net use \\\\")),
             ("at_or_schtasks_exec", Pattern::Str("schtasks /run /tn")),
-
+            ("aws_config_access", Pattern::Str(".aws/config")),
+            ("windows_aws_config_access", Pattern::Str("\\.aws\\")),
+            ("aws_credential_access", Pattern::Str(".aws/credentials")),
+            ("azure_config_access", Pattern::Str(".azure/config")),
+            ("azure_dir_access", Pattern::Str("/.azure/")),
+            ("azure_service_secret_access", Pattern::Str("service_principal_entries.json")),
+            ("azure_token_cache_access", Pattern::Str("msal_token_cache.json")),
+            ("windows_azure_config_access", Pattern::Str("\\.azure\\")),
+            ("google_cloud_access", Pattern::Str("/.config/gcloud")),
+            ("windows_gcloud_config_access", Pattern::Str("\\gcloud\\")),
+            ("ssh_dir_access", Pattern::Str("/.ssh/")),
+            ("kube_dir_access", Pattern::Str("/.kube/")),
+            ("windows_kube_dir_access", Pattern::Str("\\.kube\\")),
+            
             // ---- Persistence (Windows) ----
             ("schtasks_create", Pattern::Str("schtasks /create")),
             ("run_key_hkcu", Pattern::Str("HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run")),
