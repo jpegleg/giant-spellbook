@@ -464,7 +464,7 @@ Hunt for IoCs and potentially interesting bytes within a file:
 giant-spellbook hunter /usr/local/bin/kubectl
 {
   "File": "/usr/local/bin/kubectl",
-  "Report time": "2025-08-16 02:37:54.280406353 UTC",
+  "Report time": "2025-09-08 20:14:18.194438574 UTC",
   "Matched patterns": [
     {
       "Pattern name": "pe_magic",
@@ -509,6 +509,18 @@ giant-spellbook hunter /usr/local/bin/kubectl
     {
       "Pattern name": "passwd_access",
       "Byte offset": [28196715]
+    },
+    {
+      "Pattern name": "ssh_dir_access",
+      "Byte offset": [29854439, 29855118, 29976548, 29977236, 30105622, 30106316, 30236938, 30237598, 30376619, 30377279]
+    },
+    {
+      "Pattern name": "kube_dir_access",
+      "Byte offset": [28988841, 29182720, 29310379, 29310670, 29323045, 29323143, 29661987, 29662104, 29798246, 29798348, 29799159, 29799261, 29915972, 29916074, 29916935, 29917037, 30044446, 30044548, 30045380, 30045482, 30178273, 30178375, 30179145, 30179243, 30316341, 30316443, 30317236, 30317338, 30423797, 30423895, 30496897, 30496995, 30576821, 30576919, 30649921, 30650019, 30747199, 30747316, 30748674, 30748791, 30944991, 30945108, 30946466, 30946583]
+    },
+    {
+      "Pattern name": "windows_kube_dir_access",
+      "Byte offset": [29324031, 29324086, 29663105, 29663169]
     }
   ]
 }
