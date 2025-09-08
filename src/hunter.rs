@@ -278,6 +278,8 @@ impl Interesting {
             ("wget_http", Pattern::Str("wget http://")),
             ("curl_https", Pattern::Str("curl http://")),
             ("wget_https", Pattern::Str("wget http://")),
+            ("curl_use", Pattern::Str("/bin/curl ")),
+            ("wget_use", Pattern::Str("/bin/wget ")),
             ("invoke_web_request", Pattern::Str("Invoke-WebRequest")),
             ("mshta_exec", Pattern::Str("mshta ")),
             ("rundll32_js", Pattern::Str("rundll32.exe javascript:")),
@@ -304,6 +306,9 @@ impl Interesting {
             ("net_stop_backup_exec", Pattern::Str("net stop \"Backup Exec\"")),
             ("sc_stop_vss", Pattern::Str("sc stop VSS")),
             ("taskkill_backup", Pattern::Str("taskkill /F /IM backup*")),
+            ("pkill_use", Pattern::Str("pkill ")),
+            ("kill_9_use", Pattern::Str("kill -9 ")),
+            ("systemctl_stop_use", Pattern::Str("systemctl stop ")),
 
             // ---- Discovery & lateral movement ----
             ("nltest_domain", Pattern::Str("nltest /dclist:")),
