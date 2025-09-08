@@ -9,6 +9,9 @@ use x509_parser::extensions::{
 use x509_parser::pem::Pem;
 use x509_parser::prelude::*;
 
+#[path = "./utilities.rs"]
+mod utilities;
+use utilities::json_escape;
 
 /// Extract all PEM and DER format x509 certificates from an input file.
 pub fn describe_certs(path: &str) -> Result<String, Box<dyn std::error::Error>> {
@@ -389,27 +392,6 @@ fn chunk_hex(hexstr: &str) -> String {
     out
 }
 
-fn json_escape(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 8);
-    for ch in s.chars() {
-        match ch {
-            '\"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\u{08}' => out.push_str("\\b"),
-            '\u{0C}' => out.push_str("\\f"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c < '\u{20}' => {
-                use std::fmt::Write;
-                let _ = write!(out, "\\u{:04X}", c as u32);
-            }
-            c => out.push(c),
-        }
-    }
-    out
-}
-
 fn q(s: &str) -> String {
     format!("\"{}\"", json_escape(s))
 }
@@ -462,15 +444,19 @@ fn json_array_strs(items: &[String], indent_lv: usize) -> String {
 fn prop_str(indent_lv: usize, key: &str, val: &str) -> String {
     format!("{}{}: {}", indent(indent_lv), q(key), q(val))
 }
+
 fn prop_num(indent_lv: usize, key: &str, val: i64) -> String {
     format!("{}{}: {}", indent(indent_lv), q(key), val)
 }
+
 fn prop_bool(indent_lv: usize, key: &str, val: bool) -> String {
     format!("{}{}: {}", indent(indent_lv), q(key), if val { "true" } else { "false" })
 }
+
 fn prop_obj(indent_lv: usize, key: &str, obj_json: &str) -> String {
     format!("{}{}: {}", indent(indent_lv), q(key), obj_json)
 }
+
 fn prop_array(indent_lv: usize, key: &str, arr_json: &str) -> String {
     format!("{}{}: {}", indent(indent_lv), q(key), arr_json)
 }
