@@ -20,24 +20,7 @@ pub fn write_and_replace(path: &str, bytes: &[u8]) -> io::Result<()> {
 }
 
 #[allow(dead_code)]
-pub fn json_escape_type1(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 8);
-    for ch in s.chars() {
-        match ch {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c.is_control() => out.push_str(&format!("\\u{:04X}", c as u32)),
-            c => out.push(c),
-        }
-    }
-    out
-}
-
-#[allow(dead_code)]
-pub fn json_escape_type2(s: &str) -> String {
+pub fn json_escape(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
     for b in s.bytes() {
         match b {
@@ -53,28 +36,6 @@ pub fn json_escape_type2(s: &str) -> String {
                 let _ = write!(out, "\\u{:04X}", b);
             }
             _ => out.push(b as char),
-        }
-    }
-    out
-}
-
-#[allow(dead_code)]
-pub fn json_escape_type3(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 8);
-    for ch in s.chars() {
-        match ch {
-            '\"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\u{08}' => out.push_str("\\b"),
-            '\u{0C}' => out.push_str("\\f"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c < '\u{20}' => {
-                use std::fmt::Write;
-                let _ = write!(out, "\\u{:04X}", c as u32);
-            }
-            c => out.push(c),
         }
     }
     out
