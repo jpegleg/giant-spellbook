@@ -11,7 +11,7 @@ use x509_parser::prelude::*;
 
 #[path = "./utilities.rs"]
 mod utilities;
-use utilities::json_escape_type3;
+use utilities::json_escape;
 
 /// Extract all PEM and DER format x509 certificates from an input file.
 pub fn describe_certs(path: &str) -> Result<String, Box<dyn std::error::Error>> {
@@ -393,7 +393,7 @@ fn chunk_hex(hexstr: &str) -> String {
 }
 
 fn q(s: &str) -> String {
-    format!("\"{}\"", json_escape_type3(s))
+    format!("\"{}\"", json_escape(s))
 }
 
 fn indent(n: usize) -> String {
