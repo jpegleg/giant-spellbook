@@ -3,23 +3,6 @@ use std::io::{self, Write};
 use std::path::Path;
 
 #[allow(dead_code)]
-pub fn write_and_replace(path: &str, bytes: &[u8]) -> io::Result<()> {
-    let p = Path::new(path);
-    let tmp_name = format!("{}.tmp", path);
-    let mut f = File::create(&tmp_name)?;
-    f.write_all(bytes)?;
-    f.sync_all()?;
-
-    match fs::rename(&tmp_name, &p) {
-        Ok(()) => Ok(()),
-        Err(_) => {
-            let _ = fs::remove_file(&tmp_name);
-            Ok(())
-        }
-    }
-}
-
-#[allow(dead_code)]
 pub fn json_escape(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
     for b in s.bytes() {
