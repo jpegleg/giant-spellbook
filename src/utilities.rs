@@ -1,7 +1,3 @@
-use std::fs::{self, File};
-use std::io::{self, Write};
-use std::path::Path;
-
 #[allow(dead_code)]
 pub fn json_escape(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
