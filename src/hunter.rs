@@ -6,6 +6,10 @@ use std::fmt::Write as _;
 mod cve;
 use cve::*;
 
+#[path = "./utilities.rs"]
+mod utilities;
+use utilities::json_escape;
+
 const PE_MAGIC: &[u8] = b"PE\0\0";
 const ELF_MAGIC: &[u8] = b"\x7FELF";
 const MACHO_MAGIC_32: &[u8] = &[0xFE, 0xED, 0xFA, 0xCE];
@@ -190,7 +194,7 @@ impl Interesting {
             // Fortinet FortiOS path traversal
             ("exploiting_CVEs_fortinet_traversal_fgt_lang", Pattern::Bytes(cve_bytes::CVE_2018_13379_FGT_LANG)),
         ]);
-        
+
         // --- Binary: file format / packers (often used to pack malware) ---
         v.extend([
             ("pe_magic", Pattern::Bytes(PE_MAGIC)),
@@ -378,25 +382,6 @@ fn find_all_positions(haystack: &[u8], needle: &[u8]) -> Vec<usize> {
     positions
 }
 
-fn escape_json(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 8);
-    for ch in s.chars() {
-        match ch {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c <= '\u{1F}' => {
-                use std::fmt::Write as _;
-                let _ = write!(out, "\\u{:04X}", c as u32);
-            }
-            c => out.push(c),
-        }
-    }
-    out
-}
-
 pub fn search_patterns(
     file_path: &str,
     patterns: &[(&'static str, Pattern)],
@@ -418,10 +403,10 @@ pub fn search_patterns(
     let mut json = String::new();
     json.push_str("{\n");
     json.push_str("  \"File\": \"");
-    json.push_str(&escape_json(file_path));
+    json.push_str(&json_escape(file_path));
     json.push_str("\",\n");
     json.push_str("  \"Report time\": \"");
-    json.push_str(&escape_json(&chronox));
+    json.push_str(&json_escape(&chronox));
     json.push_str("\",\n");
     json.push_str("  \"Matched patterns\": ");
     if matches.is_empty() {
@@ -434,7 +419,7 @@ pub fn search_patterns(
     for (i, (name, offsets)) in matches.iter().enumerate() {
         json.push_str("    {\n");
         json.push_str("      \"Pattern name\": \"");
-        json.push_str(&escape_json(name));
+        json.push_str(&json_escape(name));
         json.push_str("\",\n");
         json.push_str("      \"Byte offset\": [");
 
