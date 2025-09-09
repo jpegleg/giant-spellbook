@@ -923,12 +923,52 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "hash" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> \"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
             process::exit(1);
           }
           let hash = &args[2];
           let input = &args[3];
           match hash.as_str() {
+            "attest_mbr" => {
+              match input.as_str() {
+                  "linux" => {
+                    let mbr = true;
+                    let _ = hashfunctions::attest_linux(mbr);
+                  },
+                  "alpine" => {
+                    let mbr = true;
+                    let _ = hashfunctions::attest_alpine_lts(mbr);
+                  },
+                  "macos" => {
+                    let mbr = true;
+                    let _ = hashfunctions::attest_macos(mbr);
+                  },
+
+                  _ => {
+                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest_mbr <linux, alpine, macos>\"\n}}");
+                  }
+              }
+            },
+            "attest" => {
+              match input.as_str() {
+                  "linux" => {
+                    let mbr = false;
+                    let _ = hashfunctions::attest_linux(mbr);
+                  },
+                  "alpine" => {
+                    let mbr = false;
+                    let _ = hashfunctions::attest_alpine_lts(mbr);
+                  },
+                  "macos" => {
+                    let mbr = false;
+                    let _ = hashfunctions::attest_macos(mbr);
+                  },
+
+                  _ => {
+                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest <linux, alpine, macos>\"\n}}");
+                  }
+              }
+            },
             "all" => hashfunctions::file_all(input)?,
             "sha256" => {
               let _ = hashfunctions::sha256(input);
@@ -956,7 +996,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             },
 
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> \"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
               process::exit(1);
             }
           }
