@@ -192,12 +192,13 @@ pub fn shake256_32(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
-
+  let mut mbr_chk = vec![0; BLOCK];
   if mode == true {
     let mut mbr = File::open("/dev/sda")?;
     mbr.seek(SeekFrom::Start(0))?;
     let mut buf = vec![0; BLOCK];
     mbr.read_exact(&mut buf)?;
+    mbr_chk = buf.to_vec();
     data.extend(buf);
   };
 
@@ -290,6 +291,9 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
   println!("  \"MBR checked\": \"{mode}\",");
+  if mode == true {
+      println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
+  };
   println!("  \"Checked components\": [\n    {{ \"/vmlinuz\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/crontab\": \"{crontab_chk:x}\" }},\n    {{ \"/etc/machine-id\": \"{machine_chk:x}\" }},\n    {{ \"/etc/mtab\": \"{disk1_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk2_chk:x}\" }}\n  ],");
 
   println!("  \"BLAKE2B-512 Linux System Attestation\": \"{:x}\"", blake2b512);
@@ -299,12 +303,14 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
-
+  let mut mbr_chk = vec![0; BLOCK];
   if mode == true {
     let mut mbr = File::open("/dev/sda")?;
     mbr.seek(SeekFrom::Start(0))?;
     let mut buf = vec![0; BLOCK];
     mbr.read_exact(&mut buf)?;
+    mbr_chk = buf.to_vec();
+
     data.extend(buf);
   };
 
@@ -381,6 +387,9 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
   println!("  \"MBR checked\": \"{mode}\",");
+  if mode == true {
+      println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
+  };
   println!("  \"Checked components\": [\n    {{ \"/boot/vmlinuz-tls\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/mtab\": \"{disk1_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk2_chk:x}\" }}\n  ],");
 
   println!("  \"BLAKE2B-512 Alpine LTS Linux System Attestation\": \"{:x}\"", blake2b512);
@@ -390,11 +399,13 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
+  let mut mbr_chk = vec![0; BLOCK];
   if mode == true {
     let mut mbr = File::open("/dev/rdisk0")?;
     mbr.seek(SeekFrom::Start(0))?;
     let mut buf = vec![0; BLOCK];
     mbr.read_exact(&mut buf)?;
+    mbr_chk = buf.to_vec();
     data.extend(buf);
   };
 
@@ -464,6 +475,9 @@ pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
   println!("  \"MBR checked\": \"{mode}\",");
+  if mode == true {
+      println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
+  };
   println!("  \"Checked components\": [\n    {{ \"/System/Library/Kernels/kernel\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/Library/Preferences/SystemConfiguration/preferences.plist\": \"{machine_chk:x}\" }}\n  ],");
   println!("  \"BLAKE2B-512 MacOS System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
