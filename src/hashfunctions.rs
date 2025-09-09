@@ -401,7 +401,7 @@ pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
   let mut mbr_chk = vec![0; BLOCK];
   if mode == true {
-    let mut mbr = File::open("/dev/rdisk0")?;
+    let mut mbr = File::open("/dev/disk0")?;
     mbr.seek(SeekFrom::Start(0))?;
     let mut buf = vec![0; BLOCK];
     mbr.read_exact(&mut buf)?;
