@@ -12,6 +12,8 @@ extern crate digest;
 extern crate sha2;
 extern crate sha3;
 
+const BLOCK: usize = 512;
+
 pub fn file_all(input: &String) -> Result<(), Box<dyn std::error::Error>> {
   let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
