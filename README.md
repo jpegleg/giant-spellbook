@@ -77,6 +77,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | shift         | shift the bytes of a file by a given position to the left or right                 |
 | xor_these     | bitwise XOR two files of the same length together, output to xor.out               |
 | rng           | generate files of a given byte length from system entropy source                   |
+| attest        | BLAKE2 system attestation for MacOS, Linux, and Alpine Linux                       |
 
 ## Installing
 
@@ -363,6 +364,29 @@ giant-spellbook hash blake3 sample.file
 }
 
 ```
+
+We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, and MacOS systems:
+
+```
+giant-spellbook hash attest_mbr alpine
+{
+  "System": "Linux version 6.12.44-0-lts (buildozer@build-3-21-x86_64) (gcc (Alpine 14.2.0) 14.2.0, GNU ld (GNU Binutils) 2.43.1) #1-Alpine SMP PREEMPT_DYNAMIC 2025-08-29 08:09:32\n",
+  "Time": "2025-09-09 01:27:26.387561421 UTC",
+  "MBR checked": "true",
+  "Checked components": [
+    { "/boot/vmlinuz-tls": "d616e5fe8ec489ec3509b2050e40bce1efe1a4a13494ed01011e63fc4b65a9bd53e042cdaaa9655783c2ee92c8c14cf06bd2463d4da0943f32ad0542286070a3" },
+    { "/etc/passwd": "695462dbcbaaf7c636cd56a607eaefbba6478dba782db764fa045a8cc14a69ee705f2c50d66ce68a306bed7b20c4da9848177095c082d0220e5a9e2c5c78ec2d" },
+    { "/etc/hosts": "62dfefec7e656d0d20657ce95f0b320513726492ac626fe7f9b337f3672ed57a585ffe26c7669b1f1fa42e28a1aef6bfb07e84b1ca0489298c9210d9ad9115db" },
+    { "/etc/resolv.conf": "35f4e0da9c59c6e7f76e47a81565abf4e0db744b57d9c7b839c13cc6a60ee3d5ebe99d4913993047efe30a519a0bc513a4a042cc6a656347d6a9678fccf525a5" },
+    { "/etc/profile": "ab85c7a9865ed2cb292dad3c2a5ea127010c4d5231f5bc9c62b0819b2346a0c9ffd4ebb21d41cb07e2ff21f28b750c7e99c1ac8510e716f7708a48658f7b933d" },
+    { "/etc/mtab": "16b254078c070568102891bd6a2ecf00397ff949023ddd2711f0aef706d84e8382469019ff2e0b5a32c6a74a59ad583f72efef9a7b13c57bda7be6e644c97782" },
+    { "/etc/fstab": "9dd04962f943a4d4ba4acc5f0adf615afb9c3928074abee1e0e75c29966e5badb8f10a0c6f678dab6a19f6cfa1449651e92015bf1ddc3830164a4f3daacd3ec6" }
+  ],
+  "BLAKE2B-512 Alpine LTS Linux System Attestation": "c8f86f7efa5c4a2252c7ea2432db58a78198eeb02deedf310f43d7e468a61111a2e95ddf0e1e914620433f4f6560fb96729dcbf4f5ba9a7f829ea4d70fdd6096"
+}
+
+```
+_Note that attesting the MBR typically requires superuser access. Attestations can be done without checking the MBR with 'attest' instead of 'attest_mbr'._
 
 Parse all DER and PEM format certificates from a file:
 
