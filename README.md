@@ -390,7 +390,8 @@ giant-spellbook hash attest_mbr alpine
 _Note that attesting the MBR typically requires superuser access. Attestations can be done without checking the MBR with 'attest' instead of 'attest_mbr'._
 
 If a checked file is not present, the 'attest' and 'attest_mbr' functions will have no output. For MacOS the MBR is checked from `/dev/disk0`, while on linux it is checked from `/dev/sda`.
-If the system doesn't use `/dev/sda` (some don't), then the MBR can't be attested with this 'attest_mbr' function and will need to be checked using another technique.
+If `/dev/sda` is not found for Alpine Linux, we also look for `/dev/vda`.
+If the system doesn't use the target disk names (some don't), then the MBR can't be attested with this 'attest_mbr' function and will need to be checked using another technique.
 
 The hash of the MBR is not printed, but the actual byte array of the first sector is, and the final BLAKE2B-512 includes that data in the hash along with all the other component hashes as input. 
 The final BLAKE2B-512 will change if any of the components change (including the MBR if using 'attest_mbr'). While this attestation is not comprehensive, it is useful baseline data,
