@@ -12,6 +12,10 @@ extern crate digest;
 extern crate sha2;
 extern crate sha3;
 
+#[path = "./utilities.rs"]
+mod utilities;
+use utilities::json_escape;
+
 const BLOCK: usize = 512;
 
 pub fn file_all(input: &String) -> Result<(), Box<dyn std::error::Error>> {
