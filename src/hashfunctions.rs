@@ -6,6 +6,7 @@ use chrono::Utc;
 use zeroize::Zeroize;
 use std::io::{self, Read, Seek, SeekFrom};
 use std::process::Command;
+use std::path::Path;
 use std::fs::File;
 extern crate blake2;
 extern crate digest;
@@ -193,6 +194,7 @@ pub fn shake256_32(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
   let mut mbr_chk = vec![0; BLOCK];
+  
   if mode == true {
     let mut mbr = File::open("/dev/sda")?;
     mbr.seek(SeekFrom::Start(0))?;
@@ -304,8 +306,14 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
 pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
   let mut mbr_chk = vec![0; BLOCK];
+  let mut mbr: File;
+
   if mode == true {
-    let mut mbr = File::open("/dev/sda")?;
+    if Path::new("/dev/sda").exists() {
+      mbr = File::open("/dev/sda")?;
+    } else {
+      mbr = File::open("/dev/vda")?;
+    }
     mbr.seek(SeekFrom::Start(0))?;
     let mut buf = vec![0; BLOCK];
     mbr.read_exact(&mut buf)?;
@@ -400,6 +408,7 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
 pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
   let mut mbr_chk = vec![0; BLOCK];
+  
   if mode == true {
     let mut mbr = File::open("/dev/disk0")?;
     mbr.seek(SeekFrom::Start(0))?;
