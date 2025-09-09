@@ -210,8 +210,6 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut machine_data = Vec::new();
   let mut disk1_data = Vec::new();
   let mut disk2_data = Vec::new();
-  let mut iptablesv4_data = Vec::new();
-  let mut iptablesv6_data = Vec::new();
 
   let mut system_name = Vec::new();
 
@@ -269,21 +267,7 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut machine_hasher, &machine_data);
   let machine_chk = machine_hasher.finalize();
 
-  let mut iptables_v4 = File::open("/etc/iptables/rules.v4").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/iptables/rules.v4: {e}")))?;
-  iptables_v4.read_to_end(&mut iptablesv4_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/iptables/rules.v4: {e}")))?;
-  let mut v4_hasher = Blake2b512::new();
-  Update::update(&mut v4_hasher, &iptablesv4_data);
-  let iptablesv4_chk = v4_hasher.finalize();
-
-  let mut iptables_v6 = File::open("/etc/iptables/rules.v6").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/iptables/rules.v6: {e}")))?;
-  iptables_v6.read_to_end(&mut iptablesv6_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/iptables/rules.v6: {e}")))?;
-  let mut v6_hasher = Blake2b512::new();
-  Update::update(&mut v6_hasher, &iptablesv6_data);
-  let iptablesv6_chk = v6_hasher.finalize();
-
   let mut hasher = Blake2b512::new();
-  data.extend(iptablesv6_chk);
-  data.extend(iptablesv4_chk);
   data.extend(machine_chk);
   data.extend(disk2_chk);
   data.extend(disk1_chk);
@@ -306,7 +290,8 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
   println!("  \"MBR checked\": \"{mode}\",");
-  println!("  \"Checked components\": [\n    {{ \"/vmlinuz\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/crontab\": \"{crontab_chk:x}\" }},\n    {{ \"/etc/machine-id\": \"{machine_chk:x}\" }},\n    {{ \"/etc/iptables/rules.v4\": \"{iptablesv4_chk:x}\" }},\n    {{ \"/etc/iptables/rules.v6\": \"{iptablesv6_chk:x}\" }},\n    {{ \"/etc/mtab\": \"{disk1_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk2_chk:x}\" }}\n  ],");
+  println!("  \"Checked components\": [\n    {{ \"/vmlinuz\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/crontab\": \"{crontab_chk:x}\" }},\n    {{ \"/etc/machine-id\": \"{machine_chk:x}\" }},\n    {{ \"/etc/mtab\": \"{disk1_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk2_chk:x}\" }}\n  ],");
+
   println!("  \"BLAKE2B-512 Linux System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
   Ok(())
@@ -397,6 +382,7 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   println!("  \"Time\": \"{chronox}\",");
   println!("  \"MBR checked\": \"{mode}\",");
   println!("  \"Checked components\": [\n    {{ \"/boot/vmlinuz-tls\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/mtab\": \"{disk1_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk2_chk:x}\" }}\n  ],");
+
   println!("  \"BLAKE2B-512 Alpine LTS Linux System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
   Ok(())
