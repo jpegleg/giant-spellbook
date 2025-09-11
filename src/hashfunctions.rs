@@ -211,8 +211,7 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut profile_data = Vec::new();
   let mut crontab_data = Vec::new();
   let mut machine_data = Vec::new();
-  let mut disk1_data = Vec::new();
-  let mut disk2_data = Vec::new();
+  let mut disk_data = Vec::new();
 
   let mut system_name = Vec::new();
 
@@ -252,17 +251,11 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut cron_hasher, &crontab_data);
   let crontab_chk = cron_hasher.finalize();
 
-  let mut disk_file1 = File::open("/etc/mtab").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/mtab: {e}")))?;
-  disk_file1.read_to_end(&mut disk1_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/mtab: {e}")))?;
-  let mut disk1_hasher = Blake2b512::new();
-  Update::update(&mut disk1_hasher, &disk1_data);
-  let disk1_chk = disk1_hasher.finalize();
-
-  let mut disk_file2 = File::open("/etc/fstab").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/fstab: {e}")))?;
-  disk_file2.read_to_end(&mut disk2_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/fstab: {e}")))?;
-  let mut disk2_hasher = Blake2b512::new();
-  Update::update(&mut disk2_hasher, &disk2_data);
-  let disk2_chk = disk2_hasher.finalize();
+  let mut disk_file = File::open("/etc/fstab").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/fstab: {e}")))?;
+  disk_file.read_to_end(&mut disk_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/fstab: {e}")))?;
+  let mut disk_hasher = Blake2b512::new();
+  Update::update(&mut disk_hasher, &disk_data);
+  let disk_chk = disk_hasher.finalize();
 
   let mut machine_file = File::open("/etc/machine-id").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/machine-id: {e}")))?;
   machine_file.read_to_end(&mut machine_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/machine-id: {e}")))?;
@@ -272,8 +265,7 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
 
   let mut hasher = Blake2b512::new();
   data.extend(machine_chk);
-  data.extend(disk2_chk);
-  data.extend(disk1_chk);
+  data.extend(disk_chk);
   data.extend(profile_chk);
   data.extend(resolv_chk);
   data.extend(hosts_chk);
@@ -282,7 +274,10 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
 
   Update::update(&mut hasher, &data);
   let blake2b512 = hasher.finalize();
-
+  
+  let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /etc/hostname: {e}")))?;
+  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /etc/hostname: {e}")))?;
+ 
   let mut sysname = File::open("/proc/version").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /proc/version: {e}")))?;
   sysname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /proc/version: {e}")))?;
 
@@ -296,7 +291,7 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
       println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
   };
-  println!("  \"Checked components\": [\n    {{ \"/vmlinuz\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/crontab\": \"{crontab_chk:x}\" }},\n    {{ \"/etc/machine-id\": \"{machine_chk:x}\" }},\n    {{ \"/etc/mtab\": \"{disk1_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk2_chk:x}\" }}\n  ],");
+  println!("  \"Checked components\": [\n    {{ \"/vmlinuz\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/crontab\": \"{crontab_chk:x}\" }},\n    {{ \"/etc/machine-id\": \"{machine_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk_chk:x}\" }}\n  ],");
 
   println!("  \"BLAKE2B-512 Linux System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
@@ -327,8 +322,7 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut hosts_data = Vec::new();
   let mut resolv_data = Vec::new();
   let mut profile_data = Vec::new();
-  let mut disk1_data = Vec::new();
-  let mut disk2_data = Vec::new();
+  let mut disk_data = Vec::new();
 
   let mut system_name = Vec::new();
 
@@ -362,21 +356,14 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut profile_hasher, &profile_data);
   let profile_chk = profile_hasher.finalize();
 
-  let mut disk_file1 = File::open("/etc/mtab").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/mtab: {e}")))?;
-  disk_file1.read_to_end(&mut disk1_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/mtab: {e}")))?;
-  let mut disk1_hasher = Blake2b512::new();
-  Update::update(&mut disk1_hasher, &disk1_data);
-  let disk1_chk = disk1_hasher.finalize();
-
-  let mut disk_file2 = File::open("/etc/fstab").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/fstab: {e}")))?;
-  disk_file2.read_to_end(&mut disk2_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/fstab: {e}")))?;
-  let mut disk2_hasher = Blake2b512::new();
-  Update::update(&mut disk2_hasher, &disk2_data);
-  let disk2_chk = disk2_hasher.finalize();
+  let mut disk_file = File::open("/etc/fstab").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/fstab: {e}")))?;
+  disk_file.read_to_end(&mut disk2_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/fstab: {e}")))?;
+  let mut disk_hasher = Blake2b512::new();
+  Update::update(&mut disk_hasher, &disk_data);
+  let disk_chk = disk_hasher.finalize();
 
   let mut hasher = Blake2b512::new();
-  data.extend(disk2_chk);
-  data.extend(disk1_chk);
+  data.extend(disk_chk);
   data.extend(profile_chk);
   data.extend(resolv_chk);
   data.extend(hosts_chk);
@@ -385,6 +372,9 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut hasher, &data);
   let blake2b512 = hasher.finalize();
 
+  let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /etc/hostname: {e}")))?;
+  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /etc/hostname: {e}")))?;
+  
   let mut sysname = File::open("/proc/version").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /proc/version: {e}")))?;
   sysname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /proc/version: {e}")))?;
 
@@ -398,7 +388,7 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
       println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
   };
-  println!("  \"Checked components\": [\n    {{ \"/boot/vmlinuz-lts\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/mtab\": \"{disk1_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk2_chk:x}\" }}\n  ],");
+  println!("  \"Checked components\": [\n    {{ \"/boot/vmlinuz-lts\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk_chk:x}\" }}\n  ],");
 
   println!("  \"BLAKE2B-512 Alpine LTS Linux System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
