@@ -357,7 +357,7 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let profile_chk = profile_hasher.finalize();
 
   let mut disk_file = File::open("/etc/fstab").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/fstab: {e}")))?;
-  disk_file.read_to_end(&mut disk2_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/fstab: {e}")))?;
+  disk_file.read_to_end(&mut disk_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/fstab: {e}")))?;
   let mut disk_hasher = Blake2b512::new();
   Update::update(&mut disk_hasher, &disk_data);
   let disk_chk = disk_hasher.finalize();
