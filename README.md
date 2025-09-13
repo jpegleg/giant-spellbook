@@ -365,25 +365,25 @@ giant-spellbook hash blake3 sample.file
 
 ```
 
-We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, and MacOS systems:
+We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, and MacOS systems (OpenBSD attestation coming soon for the 0.2.X branch):
 
 ```
 giant-spellbook hash attest_mbr alpine
 {
-  "System": "Linux version 6.12.44-0-lts (buildozer@build-3-21-x86_64) (gcc (Alpine 14.2.0) 14.2.0, GNU ld (GNU Binutils) 2.43.1) #1-Alpine SMP PREEMPT_DYNAMIC 2025-08-29 08:09:32\n",
-  "Time": "2025-09-09 02:21:48.904967338 UTC",
+  "System": "firfather1\nLinux version 6.6.94-0-lts (buildozer@build-3-20-x86_64) (gcc (Alpine 13.2.1_git20240309) 13.2.1 20240309, GNU ld (GNU Binutils) 2.42) #1-Alpine SMP PREEMPT_DYNAMIC 2025-06-23 15:38:39\n",
+  "Time": "2025-09-13 19:34:31.390010161 UTC",
   "MBR checked": "true",
-  "MBR first sector (512 bytes)": "[51, 192, 250, 142, 216, 142, 208, 188, 0, 124, 137, 230, 6, 87, 142, 192, 251, 252, 191, 0, 6, 185, 0, 1, 243, 165, 234, 31, 6, 0, 0, 82, 82, 180, 65, 187, 170, 85, 49, 201, 48, 246, 249, 205, 19, 114, 19, 129, 251, 85, 170, 117, 13, 209, 233, 115, 9, 102, 199, 6, 141, 6, 180, 66, 235, 21, 90, 180, 8, 205, 19, 131, 225, 63, 81, 15, 182, 198, 64, 247, 225, 82, 80, 102, 49, 192, 102, 153, 232, 102, 0, 232, 53, 1, 77, 105, 115, 115, 105, 110, 103, 32, 111, 112, 101, 114, 97, 116, 105, 110, 103, 32, 115, 121, 115, 116, 101, 109, 46, 13, 10, 102, 96, 102, 49, 210, 187, 0, 124, 102, 82, 102, 80, 6, 83, 106, 1, 106, 16, 137, 230, 102, 247, 54, 244, 123, 192, 228, 6, 136, 225, 136, 197, 146, 246, 54, 248, 123, 136, 198, 8, 225, 65, 184, 1, 2, 138, 22, 250, 123, 205, 19, 141, 100, 16, 102, 97, 195, 232, 196, 255, 190, 190, 125, 191, 190, 7, 185, 32, 0, 243, 165, 195, 102, 96, 137, 229, 187, 190, 7, 185, 4, 0, 49, 192, 83, 81, 246, 7, 128, 116, 3, 64, 137, 222, 131, 195, 16, 226, 243, 72, 116, 91, 121, 57, 89, 91, 138, 71, 4, 60, 15, 116, 6, 36, 127, 60, 5, 117, 34, 102, 139, 71, 8, 102, 139, 86,20, 102, 1, 208, 102, 33, 210, 117, 3, 102, 137, 194, 232, 172, 255, 114, 3, 232, 182, 255, 102, 139, 70, 28, 232, 160, 255, 131, 195, 16, 226, 204, 102, 97, 195, 232, 118, 0, 77, 117, 108, 116, 105, 112, 108, 101, 32, 97, 99, 116, 105, 118, 101, 32, 112, 97, 114, 116, 105, 116, 105, 111, 110, 115, 46, 13, 10, 102, 139, 68, 8, 102, 3, 70, 28, 102, 137, 68, 8, 232, 48, 255, 114, 39, 102, 129, 62, 0, 124, 88, 70, 83, 66, 117, 9, 102, 131, 192, 4, 232, 28, 255, 114, 19, 129, 62, 254, 125, 85, 170, 15, 133, 242, 254, 188, 250, 123, 90, 95, 7, 250, 255, 228, 232, 30, 0, 79, 112, 101, 114, 97, 116, 105, 110, 103, 32, 115, 121, 115, 116, 101, 109, 32, 108, 111, 97, 100, 32, 101, 114, 114, 111, 114, 46, 13, 10, 94, 172, 180, 14, 138, 62, 98, 4, 179, 7, 205, 16, 60, 10, 117, 241, 205, 24, 244, 235, 253, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62, 24, 69, 104, 0, 0, 128, 32, 33, 0, 131, 94, 56, 38, 0, 8, 0, 0, 0, 96, 9, 0, 0, 94, 57, 38, 130, 162, 78, 20, 0, 104, 9, 0, 0, 104, 58, 0, 0, 162, 79, 20, 131, 254, 255, 255, 0, 208, 67, 0, 0, 48, 124, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 85, 170]",
+  "MBR first sector (512 bytes)": "[51, 192, 250, 142, 216, 142, 208, 188, 0, 124, 137, 230, 6, 87, 142, 192, 251, 252, 191, 0, 6, 185, 0, 1, 243, 165, 234, 31, 6, 0, 0, 82, 82, 180, 65, 187, 170, 85, 49, 201, 48, 246, 249, 205, 19, 114, 19, 129, 251, 85, 170, 117, 13, 209, 233, 115, 9, 102, 199, 6, 141, 6, 180, 66, 235, 21, 90, 180, 8, 205, 19, 131, 225, 63, 81, 15, 182, 198, 64, 247, 225, 82, 80, 102, 49, 192, 102, 153, 232, 102, 0, 232, 53, 1, 77, 105, 115, 115, 105, 110, 103, 32, 111, 112, 101, 114, 97, 116, 105, 110, 103, 32, 115, 121, 115, 116, 101, 109, 46, 13, 10, 102, 96, 102, 49, 210, 187, 0, 124, 102, 82, 102, 80, 6, 83, 106, 1, 106, 16, 137, 230, 102, 247, 54, 244, 123, 192, 228, 6, 136, 225, 136, 197, 146, 246, 54, 248, 123, 136, 198, 8, 225, 65, 184, 1, 2, 138, 22, 250, 123, 205, 19, 141, 100, 16, 102, 97, 195, 232, 196, 255, 190, 190, 125, 191, 190, 7, 185, 32, 0, 243, 165, 195, 102, 96, 137, 229, 187, 190, 7, 185, 4, 0, 49, 192, 83, 81, 246, 7, 128, 116, 3, 64, 137, 222, 131, 195, 16, 226, 243, 72, 116, 91, 121, 57, 89, 91, 138, 71, 4, 60, 15, 116, 6, 36, 127, 60, 5, 117, 34, 102, 139, 71, 8, 102, 139, 86,20, 102, 1, 208, 102, 33, 210, 117, 3, 102, 137, 194, 232, 172, 255, 114, 3, 232, 182, 255, 102, 139, 70, 28, 232, 160, 255, 131, 195, 16, 226, 204, 102, 97, 195, 232, 118, 0, 77, 117, 108, 116, 105, 112, 108, 101, 32, 97, 99, 116, 105, 118, 101, 32, 112, 97, 114, 116, 105, 116, 105, 111, 110, 115, 46, 13, 10, 102, 139, 68, 8, 102, 3, 70, 28, 102, 137, 68, 8, 232, 48, 255, 114, 39, 102, 129, 62, 0, 124, 88, 70, 83, 66, 117, 9, 102, 131, 192, 4, 232, 28, 255, 114, 19, 129, 62, 254, 125, 85, 170, 15, 133, 242, 254, 188, 250, 123, 90, 95, 7, 250, 255, 228, 232, 30, 0, 79, 112, 101, 114, 97, 116, 105, 110, 103, 32, 115, 121, 115, 116, 101, 109, 32, 108, 111, 97, 100, 32, 101, 114, 114, 111, 114, 46, 13, 10, 94, 172, 180, 14, 138, 62, 98, 4, 179, 7, 205, 16, 60, 10, 117, 241, 205, 24, 244, 235, 253, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56, 235, 105, 120, 0, 0, 128, 0, 33, 2, 131, 8, 184, 99, 0, 8, 0, 0, 0, 96, 9, 0, 0, 8, 185, 99, 142, 15, 255, 255, 0, 104, 9, 0, 0, 152, 54, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 85, 170]",
   "Checked components": [
-    { "/boot/vmlinuz-lts": "d616e5fe8ec489ec3509b2050e40bce1efe1a4a13494ed01011e63fc4b65a9bd53e042cdaaa9655783c2ee92c8c14cf06bd2463d4da0943f32ad0542286070a3" },
-    { "/etc/passwd": "695462dbcbaaf7c636cd56a607eaefbba6478dba782db764fa045a8cc14a69ee705f2c50d66ce68a306bed7b20c4da9848177095c082d0220e5a9e2c5c78ec2d" },
-    { "/etc/hosts": "62dfefec7e656d0d20657ce95f0b320513726492ac626fe7f9b337f3672ed57a585ffe26c7669b1f1fa42e28a1aef6bfb07e84b1ca0489298c9210d9ad9115db" },
-    { "/etc/resolv.conf": "35f4e0da9c59c6e7f76e47a81565abf4e0db744b57d9c7b839c13cc6a60ee3d5ebe99d4913993047efe30a519a0bc513a4a042cc6a656347d6a9678fccf525a5" },
+    { "/boot/vmlinuz-lts": "bb46623bfd7b54110c367169736d771ecc159aa3df5f485e6adae24db3f5687fd8219365015b109386f051c710cb1c4b0d8655bbbe841acbc74e79d87a7cce5d" },
+    { "/etc/passwd": "6f756583b43c71601b15bcf09074fc580848875ed1738166211e4fb5698b656b8fe0fcc4174e2bc13906acff3a5900883964c74691c65c3f7c5d5c48d3b116d8" },
+    { "/etc/hosts": "9538b233ea28fa911603d01b2405f22b2fccda49ccbdf92176c860e5831e62a0cd19f4594ec8c1551de3b85d06d802eb8361cdd244e456ae0038e0bf02e7d175" },
+    { "/etc/resolv.conf": "863322b5f877b4f3a5ac7bc94ca12efb2c31265ee4cf33a9c1e3620e8103095381273d7c1a3fbd8b03818b93e92b91e6794c6b1dfffcbe2e35d6b2c6d979ab72" },
+    { "firmware": "0c4244d8add8c51106f68563cd8dca8ade46b0a0c118de5b361b99b2ea0e64ba6076dc02ffa97eb6e8d6455b03410b969767bf560587a16575e07fa01efcc822" },
     { "/etc/profile": "ab85c7a9865ed2cb292dad3c2a5ea127010c4d5231f5bc9c62b0819b2346a0c9ffd4ebb21d41cb07e2ff21f28b750c7e99c1ac8510e716f7708a48658f7b933d" },
-    { "/etc/mtab": "6556f104f71cc65b9bb93d92b2ece38069ef4bb504475464048d7708591cf5b422ce2acd1c189f46a7da283b938dfb2b4be9ffdc381f09b8a8954e3c1cc1166a" },
-    { "/etc/fstab": "9dd04962f943a4d4ba4acc5f0adf615afb9c3928074abee1e0e75c29966e5badb8f10a0c6f678dab6a19f6cfa1449651e92015bf1ddc3830164a4f3daacd3ec6" }
+    { "/etc/fstab": "ec7e1c54da6fe8fb6143c08b0bf62f749448bf3642a2b26dc946db6f4f80ca2c902b3719992226c029388a75459e811c22a87910e036a5e147d061993749071d" }
   ],
-  "BLAKE2B-512 Alpine LTS Linux System Attestation": "707f4328a382c77e42f88a657d7c0015771367e1f3fd03c7fdfd691456ed3d3c2c76c0182021a2ae82b64e195469653eb7bb9c7c092d96e98ec5226deebf35ee"
+  "BLAKE2B-512 Alpine LTS Linux System Attestation": "f5b473605034cb399a8976df581f59003e27ce2015f482daf9c19c7de6a6da649c9ac5e5858d19ccdf5795921c7ebbf30fec4059a9c1259d597fb807f8d61889"
 }
 
 ```
@@ -396,6 +396,9 @@ If the system doesn't use the target disk names (some don't), then the MBR can't
 The hash of the MBR is not printed, but the actual byte array of the first sector is, and the final BLAKE2B-512 includes that data in the hash along with all the other component hashes as input. 
 The final BLAKE2B-512 will change if any of the components change (including the MBR if using 'attest_mbr'). While this attestation is not comprehensive, it is useful baseline data,
 and can be helpful when doing tasks like confirming maintenance done for the kernel, or doing forensic comparisons of hosts.
+
+The firmware is read recursively from the `/lib/firmware` and `/usr/lib/firmware` locations on linux, and from `/usr/standalone/firmware` and `/System/Library/CoreServices/Firmware Updates` on MacOS. OpenBSD will read firmware from `/etc/firmware`.
+_Note that MacOS has some firmware that is protected and cannot be read, so we aren't able to reach all of the firmware on MacOS._
 
 
 Parse all DER and PEM format certificates from a file:
