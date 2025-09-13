@@ -364,7 +364,7 @@ giant-spellbook hash blake3 sample.file
 
 ```
 
-We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, and MacOS systems (OpenBSD supporting coming soon for the 0.2.X branch):
+We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, and MacOS systems (OpenBSD support coming soon for the 0.2.X branch):
 
 ```
 giant-spellbook hash attest_mbr alpine
