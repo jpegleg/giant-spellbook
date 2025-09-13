@@ -69,7 +69,7 @@ pub fn walk_dir_hash() -> Vec<PathBuf> {
     }
 }
 
-#[allow(dead_code)].
+#[allow(dead_code)]
 fn hash_dir(dir: &Path, hasher: &mut Blake2b512) -> io::Result<()> {
     let mut entries = match read_dir(dir) {
         Ok(rd) => rd
@@ -85,7 +85,6 @@ fn hash_dir(dir: &Path, hasher: &mut Blake2b512) -> io::Result<()> {
 
     for entry in entries {
         let path = entry.path();
-.
         let meta = match entry.metadata() {
             Ok(m) => m,
             Err(e) => {
