@@ -1,6 +1,7 @@
-use std::fs::{self, File};
-use std::io::{self, Write};
-use std::path::Path;
+use std::fs::{self, File, read_dir};
+use std::io::{self, Write, Read};
+use std::path::{Path, PathBuf};
+use blake2::{Blake2b512, Digest};
 
 #[allow(dead_code)]
 pub fn write_and_replace(path: &str, bytes: &[u8]) -> io::Result<()> {
@@ -39,4 +40,108 @@ pub fn json_escape(s: &str) -> String {
         }
     }
     out
+}
+
+#[allow(dead_code)]
+pub fn walk_dir_hash() -> Vec<PathBuf> {
+    #[cfg(target_os = "linux")]
+    {
+        return vec![
+            PathBuf::from("/lib/firmware/updates"),
+            PathBuf::from("/lib/firmware"),
+            PathBuf::from("/usr/lib/firmware"),
+        ];
+    }
+    #[cfg(target_os = "openbsd")]
+    {
+        return vec![PathBuf::from("/etc/firmware")];
+    }
+    #[cfg(target_os = "macos")]
+    {
+        return vec![
+            PathBuf::from("/usr/standalone/firmware"),
+            PathBuf::from("/System/Library/CoreServices/Firmware Updates"),
+        ];
+    }
+    #[allow(unreachable_code)]
+    {
+        Vec::new()
+    }
+}
+
+#[allow(dead_code)].
+fn hash_dir(dir: &Path, hasher: &mut Blake2b512) -> io::Result<()> {
+    let mut entries = match read_dir(dir) {
+        Ok(rd) => rd
+            .filter_map(|res| res.ok())
+            .collect::<Vec<std::fs::DirEntry>>(),
+        Err(e) => {
+            eprintln!("ERROR: cannot read dir {}: {}", dir.display(), e);
+            return Ok(());
+        }
+    };
+
+    entries.sort_by_key(|e| e.file_name());
+
+    for entry in entries {
+        let path = entry.path();
+.
+        let meta = match entry.metadata() {
+            Ok(m) => m,
+            Err(e) => {
+                eprintln!("ERROR: cannot stat {}: {}", path.display(), e);
+                continue;
+            }
+        };
+
+        if meta.file_type().is_symlink() {
+            continue;
+        } else if meta.is_dir() {
+            hash_dir(&path, hasher)?;
+        } else if meta.is_file() {
+            let mut file = match File::open(&path) {
+                Ok(f) => f,
+                Err(e) => {
+                    eprintln!("ERROR: cannot open {}: {}", path.display(), e);
+                    continue;
+                }
+            };
+            let mut buf = [0u8; 64 * 1024];
+            loop {
+                match file.read(&mut buf) {
+                    Ok(0) => break,
+                    Ok(n) => {
+                        hasher.update(&buf[..n]);
+                    }
+                    Err(e) => {
+                        eprintln!("ERROR: error reading {}: {}", path.display(), e);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+#[allow(dead_code)]
+pub fn firmware_hash() -> io::Result<[u8; 64]> {
+    let mut hasher = Blake2b512::new();
+
+    for dir in walk_dir_hash() {
+        if dir.exists() {
+            hash_dir(&dir, &mut hasher)?;
+        }
+    }
+
+    let digest = hasher.finalize();
+    let mut out = [0u8; 64];
+    out.copy_from_slice(&digest[..]);
+    Ok(out)
+}
+
+#[allow(dead_code)]
+pub fn firmware_hex() -> io::Result<String> {
+    let bytes = firmware_hash()?;
+    Ok(bytes.iter().map(|b| format!("{:02x}", b)).collect())
 }
