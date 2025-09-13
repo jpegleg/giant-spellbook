@@ -488,7 +488,7 @@ pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
       println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
   };
-  println!("  \"Checked components\": [\n    {{ \"/System/Library/Kernels/kernel\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n     {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/Library/Preferences/SystemConfiguration/preferences.plist\": \"{machine_chk:x}\" }}\n  ],");
+  println!("  \"Checked components\": [\n    {{ \"/System/Library/Kernels/kernel\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/Library/Preferences/SystemConfiguration/preferences.plist\": \"{machine_chk:x}\" }}\n  ],");
   println!("  \"BLAKE2B-512 MacOS System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
   Ok(())
