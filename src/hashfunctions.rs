@@ -16,6 +16,7 @@ extern crate sha3;
 #[path = "./utilities.rs"]
 mod utilities;
 use utilities::json_escape;
+use utilities::firmware_hex;
 
 const BLOCK: usize = 512;
 
@@ -194,7 +195,7 @@ pub fn shake256_32(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
   let mut mbr_chk = vec![0; BLOCK];
-  
+
   if mode == true {
     let mut mbr = File::open("/dev/sda")?;
     mbr.seek(SeekFrom::Start(0))?;
@@ -263,21 +264,24 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut machine_hasher, &machine_data);
   let machine_chk = machine_hasher.finalize();
 
+  let firmware_chk = firmware_hex().unwrap();
+
   let mut hasher = Blake2b512::new();
   data.extend(machine_chk);
   data.extend(disk_chk);
   data.extend(profile_chk);
   data.extend(resolv_chk);
+  data.extend(firmware_chk.bytes());
   data.extend(hosts_chk);
   data.extend(passwd_chk);
   data.extend(kernel_chk);
 
   Update::update(&mut hasher, &data);
   let blake2b512 = hasher.finalize();
-  
+
   let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /etc/hostname: {e}")))?;
   hostname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /etc/hostname: {e}")))?;
- 
+
   let mut sysname = File::open("/proc/version").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /proc/version: {e}")))?;
   sysname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /proc/version: {e}")))?;
 
@@ -291,7 +295,7 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
       println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
   };
-  println!("  \"Checked components\": [\n    {{ \"/vmlinuz\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/crontab\": \"{crontab_chk:x}\" }},\n    {{ \"/etc/machine-id\": \"{machine_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk_chk:x}\" }}\n  ],");
+  println!("  \"Checked components\": [\n    {{ \"/vmlinuz\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/crontab\": \"{crontab_chk:x}\" }},\n    {{ \"/etc/machine-id\": \"{machine_chk:x}\" }},\n    {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/fstab\": \"{disk_chk:x}\" }}\n  ],");
 
   println!("  \"BLAKE2B-512 Linux System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
@@ -362,6 +366,8 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut disk_hasher, &disk_data);
   let disk_chk = disk_hasher.finalize();
 
+  let firmware_chk = firmware_hex().unwrap();
+
   let mut hasher = Blake2b512::new();
   data.extend(disk_chk);
   data.extend(profile_chk);
@@ -369,12 +375,13 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   data.extend(hosts_chk);
   data.extend(passwd_chk);
   data.extend(kernel_chk);
+  data.extend(firmware_chk.bytes());
   Update::update(&mut hasher, &data);
   let blake2b512 = hasher.finalize();
 
   let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /etc/hostname: {e}")))?;
   hostname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /etc/hostname: {e}")))?;
-  
+
   let mut sysname = File::open("/proc/version").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /proc/version: {e}")))?;
   sysname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /proc/version: {e}")))?;
 
@@ -388,7 +395,7 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
       println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
   };
-  println!("  \"Checked components\": [\n    {{ \"/boot/vmlinuz-lts\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk_chk:x}\" }}\n  ],");
+  println!("  \"Checked components\": [\n    {{ \"/boot/vmlinuz-lts\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"firmware\": \"{firmware_chk:?}\" }},\n   {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk_chk:x}\" }}\n  ],");
 
   println!("  \"BLAKE2B-512 Alpine LTS Linux System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
@@ -398,7 +405,7 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
 pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
   let mut mbr_chk = vec![0; BLOCK];
-  
+
   if mode == true {
     let mut mbr = File::open("/dev/disk0")?;
     mbr.seek(SeekFrom::Start(0))?;
@@ -452,6 +459,8 @@ pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut machine_hasher, &machine_data);
   let machine_chk = machine_hasher.finalize();
 
+  let firmware_chk = firmware_hex().unwrap();
+
   let mut hasher = Blake2b512::new();
   data.extend(machine_chk);
   data.extend(profile_chk);
@@ -459,6 +468,8 @@ pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   data.extend(hosts_chk);
   data.extend(passwd_chk);
   data.extend(kernel_chk);
+  data.extend(firmware_chk.bytes());
+
   Update::update(&mut hasher, &data);
   let blake2b512 = hasher.finalize();
 
@@ -477,7 +488,7 @@ pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
       println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
   };
-  println!("  \"Checked components\": [\n    {{ \"/System/Library/Kernels/kernel\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/Library/Preferences/SystemConfiguration/preferences.plist\": \"{machine_chk:x}\" }}\n  ],");
+  println!("  \"Checked components\": [\n    {{ \"/System/Library/Kernels/kernel\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n     {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/Library/Preferences/SystemConfiguration/preferences.plist\": \"{machine_chk:x}\" }}\n  ],");
   println!("  \"BLAKE2B-512 MacOS System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
   Ok(())
