@@ -213,7 +213,7 @@ pub fn blake3_hash(target: &str) -> io::Result<()> {
     let _ = recursive_hash(&path);
     let chronax: String = Utc::now().to_string();
     println!("    {{ \"Report end time\": \"{chronax}\" }}");
-    println!("  ]\n");
+    println!("  ]");
     println!("}}");
     Ok(())
 }
