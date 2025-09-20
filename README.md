@@ -387,7 +387,7 @@ giant-spellbook hash recursive /tmp/project/
 
 ```
 
-We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, OpenBSD (0.2.X only), and MacOS systems:
+We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, OpenBSD, and MacOS systems:
 
 ```
 giant-spellbook hash attest_mbr alpine
