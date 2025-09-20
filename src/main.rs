@@ -26,7 +26,9 @@ mod hashfunctions;
 mod commander;
 mod researcher;
 mod seek;
+mod utilities;
 
+use crate::utilities::blake3_hash;
 use crate::hunter::Interesting;
 
 /// Forces errors to JSON. This function is a wrapper for STDERR to JSON.
