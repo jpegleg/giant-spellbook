@@ -147,7 +147,6 @@ pub fn firmware_hex() -> io::Result<String> {
     Ok(bytes.iter().map(|b| format!("{:02x}", b)).collect())
 }
 
-
 #[allow(dead_code)]
 fn recursive_hash(dir: &Path) -> io::Result<()> {
     let mut entries = match read_dir(dir) {
@@ -204,13 +203,71 @@ fn recursive_hash(dir: &Path) -> io::Result<()> {
 }
 
 #[allow(dead_code)]
-pub fn blake3_hash(target: &str) -> io::Result<()> {
+fn recursive_hash_dateless(dir: &Path) -> io::Result<()> {
+    let mut entries = match read_dir(dir) {
+        Ok(rd) => rd
+            .filter_map(|res| res.ok())
+            .collect::<Vec<std::fs::DirEntry>>(),
+        Err(_) => {
+            return Ok(());
+        }
+    };
+
+    entries.sort_by_key(|e| e.file_name());
+
+    for entry in entries {
+        let path = entry.path();
+        let meta = match entry.metadata() {
+            Ok(m) => m,
+            Err(_) => {
+                continue;
+            }
+        };
+
+        if meta.file_type().is_symlink() {
+            continue;
+        } else if meta.is_dir() {
+            recursive_hash(&path)?;
+        } else if meta.is_file() {
+            let mut file = match File::open(&path) {
+                Ok(f) => f,
+                Err(_) => {
+                    continue;
+                }
+            };
+            let mut buf = [0u8; 64 * 1024];
+            let mut hasher = blake3::Hasher::new();
+            loop {
+                match file.read(&mut buf) {
+                    Ok(0) => break,
+                    Ok(n) => {
+                        hasher.update(&buf[..n]);
+                    }
+                    Err(_) => {
+                        break;
+                    }
+                }
+            }
+            let blake3 = hasher.finalize();
+            let stringpath = format!("{}", path.display());
+            println!("    {{ \"{}\": \"{}\" }},", json_escape(&stringpath), blake3);
+        }
+    }
+    Ok(())
+}
+
+[allow(dead_code)]
+pub fn blake3_hash(target: &str, date: bool) -> io::Result<()> {
     let chronox: String = Utc::now().to_string();
     println!("{{\n  \"Target\": \"{}\",", json_escape(target));
     println!("  \"Report start time\": \"{chronox}\",");
     println!("  \"BLAKE3 hash report\":  [");
     let path = PathBuf::from(&target);
-    let _ = recursive_hash(&path);
+    if date == true {
+        let _ = recursive_hash(&path);
+    } else {
+        let _ = recursive_hash_dateless(&path);
+    }
     let chronax: String = Utc::now().to_string();
     println!("    {{ \"Report end time\": \"{chronax}\" }}");
     println!("  ]");
