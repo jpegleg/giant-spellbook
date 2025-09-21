@@ -437,7 +437,7 @@ giant-spellbook diff report1.json report2.json
 >     { "Report end time": "2025-09-21 18:05:25.880034403 UTC" }
 ```
 
- We can use the same functions to compare binary files, although the printing may be not as useful. If any output is printed, there is a differing line, even if no characters could be printed.
+ We can use the same functions to compare binary files, although the printing may be not as useful. If any output is printed there is a differing line, even if no characters could be printed.
 
 ```
 giant-spellbook diff /tmp/rng.1 /tmp/rng.2
