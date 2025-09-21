@@ -227,7 +227,7 @@ fn recursive_hash_dateless(dir: &Path) -> io::Result<()> {
         if meta.file_type().is_symlink() {
             continue;
         } else if meta.is_dir() {
-            recursive_hash(&path)?;
+            recursive_hash_dateless(&path)?;
         } else if meta.is_file() {
             let mut file = match File::open(&path) {
                 Ok(f) => f,
