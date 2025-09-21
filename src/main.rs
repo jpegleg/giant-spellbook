@@ -925,7 +925,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "hash" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
             process::exit(1);
           }
           let hash = &args[2];
@@ -990,8 +990,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             "blake3" => {
               let _ = hashfunctions::blake3(input);
             },
+            "recursive_no_date" => {
+              let _ = blake3_hash(input, false);
+            },
             "recursive" => {
-              let _ = blake3_hash(input);
+              let _ = blake3_hash(input, true);
             },
             "blake2b512" => {
               let _ = hashfunctions::blake2b512(input);
@@ -1001,7 +1004,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             },
 
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
               process::exit(1);
             }
           }
