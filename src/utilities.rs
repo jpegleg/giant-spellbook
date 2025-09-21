@@ -195,7 +195,7 @@ fn recursive_hash(dir: &Path) -> io::Result<()> {
             let blake3 = hasher.finalize();
             let chronix: String = Utc::now().to_string();
             let stringpath = format!("{}", path.display());
-            println!("    {{ \"{}\": \"{}\", \"Report time\": \"{chronix}\" }},", json_escape(stringpath), blake3);
+            println!("    {{ \"{}\": \"{}\", \"Report time\": \"{chronix}\" }},", json_escape(&stringpath), blake3);
         }
     }
     Ok(())
