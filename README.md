@@ -364,7 +364,30 @@ giant-spellbook hash blake3 sample.file
 
 ```
 
-We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, and MacOS systems (OpenBSD support coming soon for the 0.2.X branch):
+
+We can create a recursive BLAKE3 hash report of a provided directory:
+
+```
+giant-spellbook hash recursive /tmp/project/
+{
+  "Target": "/tmp/project/",
+  "Report start time": "2025-09-20 23:37:48.430713448 UTC",
+  "BLAKE3 hash report":  [
+    { "/tmp/project/file1.txt": "ee6d6e040d29f982b7a3c232728cc85120ddfb66cdb2251cf5e138c0f76e9bec", "Report time": "2025-09-20 23:37:48.430909965 UTC" },
+    { "/tmp/project/file2.txt": "360dd61e30ee7870f72b741957ce509319f5fac8005a3776e9918fbafb2bdce9", "Report time": "2025-09-20 23:37:48.430938499 UTC" },
+    { "/tmp/project/file3.txt": "f35adbadca2bd56f69d74fcb51b12b3d229e98e8c7e1e6c9087106e34ed45706", "Report time": "2025-09-20 23:37:48.430960705 UTC" },
+    { "/tmp/project/file4.txt": "d45161efc5e6dfda99dfa7c61fad01b490607161d1ab489f51a4698c832ce143", "Report time": "2025-09-20 23:37:48.430980953 UTC" },
+    { "/tmp/project/more_things/1.bin": "cebd8842c67ac69c3f0d86f925e6c4ee26e932e59fa2b833317d2e7bc9cffe06", "Report time": "2025-09-20 23:37:48.431141303 UTC" },
+    { "/tmp/project/more_things/2.bin": "0e0ecfb3174827728d4ba272b06d86424f996776f6369d8bbc5966bd9441e985", "Report time": "2025-09-20 23:37:48.431172403 UTC" },
+    { "/tmp/project/more_things/3.bin": "fc163c079ca5c38841e653a93a2aaa93eb6fb7ddea7b8ab9ee4a1cb7ff3ea5c9", "Report time": "2025-09-20 23:37:48.431197904 UTC" },
+    { "/tmp/project/more_things/4.bin": "f6fc1278f88b1e046b6919c6568807f25cc83e34feb4e8fa587aa1e7b58d7515", "Report time": "2025-09-20 23:37:48.431224837 UTC" },
+    { "Report end time": "2025-09-20 23:37:48.431246185 UTC" }
+  ]
+}
+
+```
+
+We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, and MacOS systems (OpenBSD support is in 0.2.X):
 
 ```
 giant-spellbook hash attest_mbr alpine
