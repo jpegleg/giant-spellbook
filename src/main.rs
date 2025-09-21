@@ -27,6 +27,7 @@ mod commander;
 mod researcher;
 mod seek;
 mod tls_debug;
+mod diff;
 mod utilities;
 
 use crate::utilities::blake3_hash;
