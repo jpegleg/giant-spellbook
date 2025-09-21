@@ -256,7 +256,7 @@ fn recursive_hash_dateless(dir: &Path) -> io::Result<()> {
     Ok(())
 }
 
-[allow(dead_code)]
+#[allow(dead_code)]
 pub fn blake3_hash(target: &str, date: bool) -> io::Result<()> {
     let chronox: String = Utc::now().to_string();
     println!("{{\n  \"Target\": \"{}\",", json_escape(target));
