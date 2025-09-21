@@ -27,7 +27,9 @@ mod commander;
 mod researcher;
 mod seek;
 mod tls_debug;
+mod utilities;
 
+use crate::utilities::blake3_hash;
 use crate::hunter::Interesting;
 
 /// Forces errors to JSON. This function is a wrapper for STDERR to JSON.
@@ -87,7 +89,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" | "--version" => {
-          println!("{{\"Version\": \"0.3.7\"}}");
+          println!("{{\"Version\": \"0.3.8\"}}");
           Ok(())
         },
 
@@ -923,7 +925,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "hash" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
             process::exit(1);
           }
           let hash = &args[2];
@@ -988,6 +990,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             "blake3" => {
               let _ = hashfunctions::blake3(input);
             },
+            "recursive" => {
+              let _ = blake3_hash(input);
+            },
             "blake2b512" => {
               let _ = hashfunctions::blake2b512(input);
             },
@@ -996,7 +1001,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             },
 
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash> OR hash <attest, attest_mbr> <linux, alpine, macos> \"\n}}", args[0]);
               process::exit(1);
             }
           }
