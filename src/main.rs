@@ -81,7 +81,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff, diff_no_color> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -835,7 +835,19 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let _ = bithack::splitter(file_path, position);
           Ok(())
         },
+        
+        "diff_no_color" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} diff_no_color  <file_1> <file_2>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_1 = &args[2];
+          let file_2 = &args[3];
 
+          let _ = diff::colorless_file_diff(file_1, file_2);
+          Ok(())
+        }
+        
         "diff" => {
           if args.len() != 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} diff  <file_1> <file_2>\"\n}}", args[0]);
@@ -1091,7 +1103,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff, diff_no_color> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
