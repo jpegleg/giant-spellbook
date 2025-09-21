@@ -30,8 +30,8 @@ pub fn colorless_file_diff<P: AsRef<Path>>(a: P, b: P) -> io::Result<()> {
             continue;
         }
 
-        print_colorless_line(b"- ", &la)?;
-        print_colorless_line(b"+ ", &lb)?;
+        print_colorless_line(b"< ", &la)?;
+        print_colorless_line(b"> ", &lb)?;
     }
 
     Ok(())
@@ -61,8 +61,8 @@ pub fn file_diff<P: AsRef<Path>>(a: P, b: P) -> io::Result<()> {
             continue;
         }
 
-        print_colored_line(b"- ", &la, &lb)?;
-        print_colored_line(b"+ ", &lb, &la)?;
+        print_colored_line(b"< ", &la, &lb)?;
+        print_colored_line(b"> ", &lb, &la)?;
     }
 
     Ok(())
