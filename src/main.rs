@@ -26,6 +26,7 @@ mod hashfunctions;
 mod commander;
 mod researcher;
 mod seek;
+mod diff;
 mod utilities;
 
 use crate::utilities::blake3_hash;
@@ -80,7 +81,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -88,7 +89,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" | "--version" => {
-          println!("{{\"Version\": \"0.2.12\"}}");
+          println!("{{\"Version\": \"0.2.13\"}}");
           Ok(())
         },
 
@@ -835,6 +836,18 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           Ok(())
         },
 
+        "diff" => {
+          if args.len() != 4 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} diff  <file_1> <file_2>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let file_1 = &args[2];
+          let file_2 = &args[3];
+
+          let _ = diff::file_diff(file_1, file_2);
+          Ok(())
+        }
+        
         "shift" => {
           if args.len() != 5 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} shift <left right> <byte count> <file>\"\n}}", args[0]);
@@ -1078,7 +1091,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
