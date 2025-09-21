@@ -846,7 +846,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
           let _ = diff::colorless_file_diff(file_1, file_2);
           Ok(())
-        }
+        },
         
         "diff" => {
           if args.len() != 4 {
@@ -858,7 +858,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
           let _ = diff::file_diff(file_1, file_2);
           Ok(())
-        }
+        },
         
         "shift" => {
           if args.len() != 5 {
