@@ -78,6 +78,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | xor_these     | bitwise XOR two files of the same length together, output to xor.out               |
 | rng           | generate files of a given byte length from system entropy source                   |
 | attest        | BLAKE2 system attestation for MacOS, Linux, and Alpine Linux                       |
+| diff          | compare two files for differences, color highlighting and option for colorless     |
 
 ## Installing
 
@@ -421,6 +422,31 @@ and can be helpful when doing tasks like confirming maintenance done for the ker
 
 The firmware is read recursively from the `/lib/firmware` and `/usr/lib/firmware` locations on linux, and from `/usr/standalone/firmware` and `/System/Library/CoreServices/Firmware Updates` on MacOS. OpenBSD will read firmware from `/etc/firmware`.
 _Note that MacOS has some firmware that is protected and cannot be read, so we aren't able to reach all of the firmware on MacOS._
+
+We can compare our attestion or hash JSON reports with 'diff' and 'diff_no_color' functions. Even though this documentation doesn't show it, the 'diff' output highlights the changed bytes on each line:
+
+```
+giant-spellbook diff report1.json report2.json
+<   "Report start time": "2025-09-21 18:05:17.044768254 UTC",
+>   "Report start time": "2025-09-21 18:05:25.879434241 UTC",
+<     { "/tmp/date.out": "6b222ca629210426abe31e30ec116658d0ba157da788a564955518c68f99de24" },
+>     { "/tmp/date.out": "42c649822f8bc3d7b4c1d00e5333ebe3078a01a231c46651dc7a1226ab74da50" },
+<     { "Report end time": "2025-09-21 18:05:17.045187851 UTC" }
+>     { "Report end time": "2025-09-21 18:05:25.880034403 UTC" }
+```
+
+ We can use the same functions to compare binary files, although the printing may be not as useful. If any output is printed there is a differing line, even if no characters could be printed.
+
+```
+giant-spellbook diff /tmp/rng.1 /tmp/rng.2
+< ���&̨
+> ��bAa
+giant-spellbook diff /tmp/sample.1 /tmp/sample.2
+<
+>
+```
+
+_Note: if processing the diff data with a program, use the diff_no_color option instead._
 
 
 Parse all DER and PEM format certificates from a file:
