@@ -78,6 +78,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | xor_these     | bitwise XOR two files of the same length together, output to xor.out               |
 | rng           | generate files of a given byte length from system entropy source                   |
 | attest        | BLAKE2 system attestation for MacOS, Linux, Alpine Linux, and OpenBSD              |
+| diff          | compare two files for differences, color highlighting and option for colorless     |
 
 ## Installing
 
