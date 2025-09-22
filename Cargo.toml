@@ -1,6 +1,6 @@
 [package]
 name = "giant-spellbook"
-version = "0.3.9"
+version = "0.3.10"
 edition = "2024"
 authors = ["Keegan Bowen <carefuldata@protonmail.com>"]
 license = "MIT"
