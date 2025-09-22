@@ -425,30 +425,34 @@ OpenBSD kernel files are not included in the OpenBSD attestation because the use
 
 _Note that MacOS has some firmware that is protected and cannot be read, so we aren't able to reach all of the firmware on MacOS._
 
-We can compare our attestion or hash JSON reports with 'diff' and 'diff_no_color' functions. Even though this documentation doesn't show it, the 'diff' output highlights the changed bytes on each line:
+We can compare our attestion or hash JSON reports with 'diff' and 'diff_no_color' functions. Even though this documentation doesn't show it, the 'diff' output highlights the changed bytes on each line.
+
+The first number is the line number, then the second number range is the byte positions of the differing bytes. The '<' indiciates the first file and the '>' indicates the second file.
 
 ```
 giant-spellbook diff report1.json report2.json
-<   "Report start time": "2025-09-21 18:05:17.044768254 UTC",
->   "Report start time": "2025-09-21 18:05:25.879434241 UTC",
-<     { "/tmp/date.out": "6b222ca629210426abe31e30ec116658d0ba157da788a564955518c68f99de24" },
->     { "/tmp/date.out": "42c649822f8bc3d7b4c1d00e5333ebe3078a01a231c46651dc7a1226ab74da50" },
-<     { "Report end time": "2025-09-21 18:05:17.045187851 UTC" }
->     { "Report end time": "2025-09-21 18:05:25.880034403 UTC" }
+3, 63-74 <   "Report start time": "2025-09-22 03:59:35.737741550 UTC",
+3, 63-74 >   "Report start time": "2025-09-22 03:59:40.400694669 UTC",
+7, 327-390 <     { "/tmp/date.out": "c50ef3c2cb64cc4516c2b8fe43a90beefd9e24c11c9a82b5ca149b1114d4ec00" },
+7, 327-390 >     { "/tmp/date.out": "92bedc3b11caaca47dfdfeaa62b751f83e01cb523ef6d72b994f2aaa457cbcc1" },
+12, 805-816 <     { "Report end time": "2025-09-22 03:59:36.061550633 UTC" }
+12, 805-816 >     { "Report end time": "2025-09-22 03:59:40.401285492 UTC" }
 ```
 
- We can use the same functions to compare binary files, although the printing may be not as useful. If any output is printed there is a differing line, even if no characters could be printed.
+ We can use the same functions to compare binary as well as text files. Binary will be printed with escaped hex formating:
 
 ```
 giant-spellbook diff /tmp/rng.1 /tmp/rng.2
-< ���&̨
-> ��bAa
+1, 0-11 < \xF9\xAF\xA8\xF0\x89\xB7\xA3\x07\x84G\x05e
+1, 0-11 > 3/ ~A,\xFB\x96(\x8B\xF5\xA1
 giant-spellbook diff /tmp/sample.1 /tmp/sample.2
-<
->
+1, 2-10 < \x00\x00\x00bonkbonk
+1, 2-10 > \x00\x00\x08
+2, 12-21 < \x00\x00\x00 and so
+2, 4-13 >
 ```
 
-_Note: if processing the diff data with a program, use the diff_no_color option instead._
+_Note if processing the diff data with a program, use the diff_no_color option instead._
 
 
 Parse all DER and PEM format certificates from a file:
