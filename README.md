@@ -438,7 +438,7 @@ giant-spellbook diff report1.json report2.json
 12, 805-816 <     { "Report end time": "2025-09-22 03:59:36.061550633 UTC" }
 12, 805-816 >     { "Report end time": "2025-09-22 03:59:40.401285492 UTC" }
 ```
-_Note that newlines are not measured with this diff, extra newlines are not detected as a difference in the output._
+_Note that tailing newlines are not measured with this diff, extra newlines at the end of the file are not detected as a difference in the output._
 
  We can use the same functions to compare binary as well as text files. Binary will be printed with escaped hex formating:
 
