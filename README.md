@@ -453,7 +453,8 @@ giant-spellbook diff /tmp/sample.1 /tmp/sample.2
 2, 4-13 >
 ```
 
-_Note if processing the diff data with a program, use the diff_no_color option instead._
+
+If processing the diff data with a program, use the diff_no_color option instead to avoid processing terminal color sequences.
 
 
 Parse all DER and PEM format certificates from a file:
