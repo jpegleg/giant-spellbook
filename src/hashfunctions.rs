@@ -201,6 +201,8 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
     if Path::new("/dev/sda").exists() {
       mbr = File::open("/dev/sda")?;
+    } else if Path::new("/dev/nvme0n1").exists() {
+      mbr = File::open("/dev/nvme0n1")?;
     } else {
       mbr = File::open("/dev/vda")?;
     }
@@ -531,6 +533,8 @@ pub fn attest_rhel(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
     if Path::new("/dev/sda").exists() {
       mbr = File::open("/dev/sda")?;
+    } else if Path::new("/dev/nvme0n1").exists() {
+      mbr = File::open("/dev/nvme0n1")?;
     } else {
       mbr = File::open("/dev/vda")?;
     }
