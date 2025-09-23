@@ -77,7 +77,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | shift         | shift the bytes of a file by a given position to the left or right                 |
 | xor_these     | bitwise XOR two files of the same length together, output to xor.out               |
 | rng           | generate files of a given byte length from system entropy source                   |
-| attest        | BLAKE2 system attestation for MacOS, Linux, and Alpine Linux                       |
+| attest        | BLAKE2 system attestation for MacOS, Linux, RHEL-based, and Alpine Linux           |
 | diff          | compare two files for differences, color highlighting and option for colorless     |
 
 ## Installing
@@ -388,7 +388,7 @@ giant-spellbook hash recursive /tmp/project/
 
 ```
 
-We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, and MacOS systems (OpenBSD support is in 0.2.X):
+We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, RHEL-based Linux (Rocky, CentOS, RHEL, Fedora, etc), and MacOS systems (OpenBSD support is in 0.2.X):
 
 ```
 giant-spellbook hash attest_mbr alpine
@@ -412,8 +412,10 @@ giant-spellbook hash attest_mbr alpine
 ```
 _Note that attesting the MBR typically requires superuser access. Attestations can be done without checking the MBR with 'attest' instead of 'attest_mbr'._
 
+The reason RHEL needs to be treated separately with the 'rhel' option instead of 'linux' is that the kernel file location and naming is different. Debian and many distros will work with 'linux' attestation because they have a kernel file in /vmlinuz, while if the kernel path must be dynamically discovered, then 'rhel' mode is used.
+
 If a checked file is not present, the 'attest' and 'attest_mbr' functions will have no output. For MacOS the MBR is checked from `/dev/disk0`, while on linux it is checked from `/dev/sda`.
-If `/dev/sda` is not found for Alpine Linux, we also look for `/dev/vda`.
+If `/dev/sda` is not found for Alpine Linux, Linux, or RHEL, we also look for `/dev/vda`.
 If the system doesn't use the target disk names (some don't), then the MBR can't be attested with this 'attest_mbr' function and will need to be checked using another technique.
 
 The hash of the MBR is not printed, but the actual byte array of the first sector is, and the final BLAKE2B-512 includes that data in the hash along with all the other component hashes as input. 
