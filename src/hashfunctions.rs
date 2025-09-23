@@ -319,6 +319,8 @@ pub fn attest_alpine_lts(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
     if Path::new("/dev/sda").exists() {
       mbr = File::open("/dev/sda")?;
+    } else if Path::new("/dev/nvme0n1").exists() {
+      mbr = File::open("/dev/nvme0n1")?;
     } else {
       mbr = File::open("/dev/vda")?;
     }
