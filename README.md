@@ -77,7 +77,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | shift         | shift the bytes of a file by a given position to the left or right                 |
 | xor_these     | bitwise XOR two files of the same length together, output to xor.out               |
 | rng           | generate files of a given byte length from system entropy source                   |
-| attest        | BLAKE2 system attestation for MacOS, Linux, Alpine Linux, and OpenBSD              |
+| attest        | BLAKE2 system attestation for MacOS, Linux, Alpine Linux, RHEL-based, and OpenBSD  |
 | diff          | compare two files for differences, color highlighting and option for colorless     |
 
 ## Installing
@@ -388,7 +388,7 @@ giant-spellbook hash recursive /tmp/project/
 
 ```
 
-We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, OpenBSD, and MacOS systems:
+We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, RHEL-based Linux (Rocky, CentOS, RHEL, Fedora, etc), OpenBSD, and MacOS systems:
 
 ```
 giant-spellbook hash attest_mbr alpine
@@ -413,7 +413,7 @@ giant-spellbook hash attest_mbr alpine
 _Note that attesting the MBR typically requires superuser access. Attestations can be done without checking the MBR with 'attest' instead of 'attest_mbr'._
 
 If a checked file is not present, the 'attest' and 'attest_mbr' functions will have no output. For MacOS the MBR is checked from `/dev/disk0`, while on linux it is checked from `/dev/sda`.
-If `/dev/sda` is not found for Alpine Linux, we also look for `/dev/vda`.
+If `/dev/sda` is not found for Alpine Linux, Linux, or RHEL, we also look for `/dev/vda`.
 If the system doesn't use the target disk names (some don't), then the MBR can't be attested with this 'attest_mbr' function and will need to be checked using another technique.
 
 The hash of the MBR is not printed, but the actual byte array of the first sector is, and the final BLAKE2B-512 includes that data in the hash along with all the other component hashes as input. 
