@@ -195,7 +195,7 @@ pub fn shake256_32(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
   let mut mbr_chk = vec![0; BLOCK];
-  let mbr: File;
+  let mut mbr: File;
 
   if mode == true {
     if Path::new("/dev/sda").exists() {
