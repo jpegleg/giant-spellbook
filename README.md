@@ -416,8 +416,8 @@ _Note that attesting the MBR typically requires superuser access. Attestations c
 The reason RHEL needs to be treated separately with the 'rhel' option instead of 'linux' is that the kernel file location and naming is different. Debian and many distros will work with 'linux' attestation because they have a kernel file in /vmlinuz, while if the kernel path must be dynamically discovered, then 'rhel' mode is used. Alpine also has a different kernel file name and less files by default, so 'alpine' is used for attesting Alpine Linux to match those.
 
 If a checked file is not present, the 'attest' and 'attest_mbr' functions will have no output. For MacOS the MBR is checked from `/dev/disk0`, while on linux it is checked from `/dev/sda`.
-If `/dev/sda` is not found for Alpine Linux, Linux, or RHEL, we also look for `/dev/vda`.
-If the system doesn't use the target disk names (some don't), then the MBR can't be attested with this 'attest_mbr' function and will need to be checked using another technique.
+If `/dev/sda` is not found for Alpine Linux, Linux, or RHEL, we also look for `/dev/nvme0n1` and `/dev/vda`.
+If the system doesn't use the target disk names (it is possible, although those are the most common), then the MBR can't be attested with this 'attest_mbr' function and will need to be checked using another technique.
 
 The hash of the MBR is not printed, but the actual byte array of the first sector is, and the final BLAKE2B-512 includes that data in the hash along with all the other component hashes as input. 
 The final BLAKE2B-512 will change if any of the components change (including the MBR if using 'attest_mbr'). While this attestation is not comprehensive, it is useful baseline data,
