@@ -196,12 +196,18 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
   let mut mbr_chk = vec![0; BLOCK];
 
+
   if mode == true {
-    let mut mbr = File::open("/dev/sda")?;
+    if Path::new("/dev/sda").exists() {
+      mbr = File::open("/dev/sda")?;
+    } else {
+      mbr = File::open("/dev/vda")?;
+    }
     mbr.seek(SeekFrom::Start(0))?;
     let mut buf = vec![0; BLOCK];
     mbr.read_exact(&mut buf)?;
     mbr_chk = buf.to_vec();
+
     data.extend(buf);
   };
 
@@ -574,6 +580,128 @@ pub fn attest_openbsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   };
   println!("  \"Checked components\": [\n   {{  \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/ksh.kshrc\": \"{profile_chk:x}\" }},\n    {{ \"/etc/rc.conf\": \"{machine_chk:x}\" }}\n  ],");
   println!("  \"BLAKE2B-512 OpenBSD System Attestation\": \"{:x}\"", blake2b512);
+  println!("}}");
+  Ok(())
+}
+
+fn parse_boot_image<'a>(cmdline: &'a str) -> Option<&'a str> {
+    for tok in cmdline.split_whitespace() {
+        if let Some(rest) = tok.strip_prefix("BOOT_IMAGE=") {
+            return Some(rest.trim_matches('"'));
+        }
+    }
+    None
+}
+
+fn kernel_image_path() -> std::io::Result<PathBuf> {
+    let cmdline = fs::read_to_string("/proc/cmdline")?;
+    let boot_image = parse_boot_image(&cmdline)
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "BOOT_IMAGE not found"))?;
+
+    let file_name = Path::new(boot_image)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid BOOT_IMAGE"))?;
+
+    Ok(PathBuf::from("/boot").join(file_name))
+}
+
+pub fn attest_rhel(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
+  let mut data = Vec::new();
+  let mut mbr_chk = vec![0; BLOCK];
+  let mut mbr: File;
+
+  if mode == true {
+    if Path::new("/dev/sda").exists() {
+      mbr = File::open("/dev/sda")?;
+    } else {
+      mbr = File::open("/dev/vda")?;
+    }
+    mbr.seek(SeekFrom::Start(0))?;
+    let mut buf = vec![0; BLOCK];
+    mbr.read_exact(&mut buf)?;
+    mbr_chk = buf.to_vec();
+
+    data.extend(buf);
+  };
+
+  let mut kernel_data = Vec::new();
+  let mut passwd_data = Vec::new();
+  let mut hosts_data = Vec::new();
+  let mut resolv_data = Vec::new();
+  let mut profile_data = Vec::new();
+  let mut disk_data = Vec::new();
+  let mut system_name = Vec::new();
+
+  let kern_path = kernel_image_path()?.display().to_string();
+  let mut kernel_file = File::open(kern_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file for the kernel: {e}")))?;
+  kernel_file.read_to_end(&mut kernel_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read kernel file: {e}")))?;
+  let mut kernel_hasher = Blake2b512::new();
+  Update::update(&mut kernel_hasher, &kernel_data);
+  let kernel_chk = kernel_hasher.finalize();
+
+  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/passwd: {e}")))?;
+  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/passwd: {e}")))?;
+  let mut passwd_hasher = Blake2b512::new();
+  Update::update(&mut passwd_hasher, &passwd_data);
+  let passwd_chk = passwd_hasher.finalize();
+
+  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/hosts: {e}")))?;
+  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/hosts: {e}")))?;
+  let mut hosts_hasher = Blake2b512::new();
+  Update::update(&mut hosts_hasher, &hosts_data);
+  let hosts_chk = hosts_hasher.finalize();
+
+  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
+  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/resolv.conf: {e}")))?;
+  let mut resolv_hasher = Blake2b512::new();
+  Update::update(&mut resolv_hasher, &resolv_data);
+  let resolv_chk = resolv_hasher.finalize();
+
+  let mut profile_file = File::open("/etc/profile").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/profile: {e}")))?;
+  profile_file.read_to_end(&mut profile_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/profile: {e}")))?;
+  let mut profile_hasher = Blake2b512::new();
+  Update::update(&mut profile_hasher, &profile_data);
+  let profile_chk = profile_hasher.finalize();
+
+  let mut disk_file = File::open("/etc/fstab").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/fstab: {e}")))?;
+  disk_file.read_to_end(&mut disk_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/fstab: {e}")))?;
+  let mut disk_hasher = Blake2b512::new();
+  Update::update(&mut disk_hasher, &disk_data);
+  let disk_chk = disk_hasher.finalize();
+
+  let firmware_chk = firmware_hex().unwrap();
+
+  let mut hasher = Blake2b512::new();
+  data.extend(disk_chk);
+  data.extend(profile_chk);
+  data.extend(resolv_chk);
+  data.extend(hosts_chk);
+  data.extend(passwd_chk);
+  data.extend(kernel_chk);
+  data.extend(firmware_chk.bytes());
+  Update::update(&mut hasher, &data);
+  let blake2b512 = hasher.finalize();
+
+  let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /etc/hostname: {e}")))?;
+  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /etc/hostname: {e}")))?;
+
+  let mut sysname = File::open("/proc/version").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /proc/version: {e}")))?;
+  sysname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /proc/version: {e}")))?;
+
+  let name_str = String::from_utf8_lossy(&system_name);
+
+  println!("{{");
+  println!("  \"System\": \"{}\",", json_escape(&name_str));
+  let chronox: String = Utc::now().to_string();
+  println!("  \"Time\": \"{chronox}\",");
+  println!("  \"MBR checked\": \"{mode}\",");
+  if mode == true {
+      println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
+  };
+  println!("  \"Checked components\": [\n    {{ \"kernel\": \"{kernel_chk:x}\" }},\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/profile\": \"{profile_chk:x}\" }},\n    {{ \"/etc/fstab\": \"{disk_chk:x}\" }}\n  ],");
+
+  println!("  \"BLAKE2B-512 RHEL-based Linux System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
   Ok(())
 }
