@@ -413,7 +413,7 @@ giant-spellbook hash attest_mbr alpine
 _Note that attesting the MBR typically requires superuser access. Attestations can be done without checking the MBR with 'attest' instead of 'attest_mbr'._
 
 
-The reason RHEL needs to be treated separately with the 'rhel' option instead of 'linux' is that the kernel file location and naming is different. Debian and many distros will work with 'linux' attestation because they have a kernel file in /vmlinuz, while if the kernel path must be dynamically discovered, then 'rhel' mode is used. Alpine also has a different kernel file name and less files by default, so 'alpine' is used for attesting Alpine Linux to match those.
+The reason RHEL needs to be treated separately with the 'rhel' option instead of 'linux' is that the kernel file location and naming is different. Debian and many distros will work with 'linux' attestation because they have a kernel file symlink at /vmlinuz, while if the kernel path must be dynamically discovered, then 'rhel' mode is used. Alpine also has a different kernel file name and less files by default, so 'alpine' is used for attesting Alpine Linux to match those.
 
 If a checked file is not present, the 'attest' and 'attest_mbr' functions will have no output. For MacOS the MBR is checked from `/dev/disk0`, while on linux it is checked from `/dev/sda`.
 If `/dev/sda` is not found for Alpine Linux, Linux, or RHEL, we also look for `/dev/nvme0n1` and `/dev/vda`.
