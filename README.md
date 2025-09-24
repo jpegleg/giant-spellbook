@@ -412,7 +412,7 @@ giant-spellbook hash attest_mbr linux
 ```
 _Note that attesting the MBR typically requires superuser access. Attestations can be done without checking the MBR with 'attest' instead of 'attest_mbr'._
 
-If a checked file is not present, the 'attest' and 'attest_mbr' functions will have no output. For MacOS the MBR is checked from `/dev/disk0`, while on linux it is checked from `/dev/sda`.
+If a checked file is not present, the 'attest' and 'attest_mbr' functions will have no output. For MacOS the MBR is checked from `/dev/disk0`, while on Linux it is checked from `/dev/sda`.
 If `/dev/sda` is not found for Linux, we also look for `/dev/nvme0n1` and `/dev/vda`.
 If the system doesn't use the target disk names (it is possible, although those are the most common), then the MBR can't be attested with this 'attest_mbr' function and will need to be checked using another technique.
 
