@@ -77,7 +77,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | shift         | shift the bytes of a file by a given position to the left or right                 |
 | xor_these     | bitwise XOR two files of the same length together, output to xor.out               |
 | rng           | generate files of a given byte length from system entropy source                   |
-| attest        | BLAKE2 system attestation for MacOS, Linux, Alpine Linux, RHEL-based, and OpenBSD  |
+| attest        | BLAKE2 system attestation for MacOS, Linux, and OpenBSD                            |
 | diff          | compare two files for differences, color highlighting and option for colorless     |
 
 ## Installing
@@ -388,17 +388,17 @@ giant-spellbook hash recursive /tmp/project/
 
 ```
 
-We can make an attestation of the system, currently with support for GNU/Linux, Alpine Linux, RHEL-based Linux (Rocky, CentOS, RHEL, Fedora, etc), OpenBSD, and MacOS systems:
+We can make an attestation of the system, currently with support for Linux, OpenBSD, and MacOS systems:
 
 ```
-giant-spellbook hash attest_mbr alpine
+giant-spellbook hash attest_mbr linux
 {
   "System": "firfather1\nLinux version 6.6.94-0-lts (buildozer@build-3-20-x86_64) (gcc (Alpine 13.2.1_git20240309) 13.2.1 20240309, GNU ld (GNU Binutils) 2.42) #1-Alpine SMP PREEMPT_DYNAMIC 2025-06-23 15:38:39\n",
   "Time": "2025-09-13 19:34:31.390010161 UTC",
   "MBR checked": "true",
   "MBR first sector (512 bytes)": "[51, 192, 250, 142, 216, 142, 208, 188, 0, 124, 137, 230, 6, 87, 142, 192, 251, 252, 191, 0, 6, 185, 0, 1, 243, 165, 234, 31, 6, 0, 0, 82, 82, 180, 65, 187, 170, 85, 49, 201, 48, 246, 249, 205, 19, 114, 19, 129, 251, 85, 170, 117, 13, 209, 233, 115, 9, 102, 199, 6, 141, 6, 180, 66, 235, 21, 90, 180, 8, 205, 19, 131, 225, 63, 81, 15, 182, 198, 64, 247, 225, 82, 80, 102, 49, 192, 102, 153, 232, 102, 0, 232, 53, 1, 77, 105, 115, 115, 105, 110, 103, 32, 111, 112, 101, 114, 97, 116, 105, 110, 103, 32, 115, 121, 115, 116, 101, 109, 46, 13, 10, 102, 96, 102, 49, 210, 187, 0, 124, 102, 82, 102, 80, 6, 83, 106, 1, 106, 16, 137, 230, 102, 247, 54, 244, 123, 192, 228, 6, 136, 225, 136, 197, 146, 246, 54, 248, 123, 136, 198, 8, 225, 65, 184, 1, 2, 138, 22, 250, 123, 205, 19, 141, 100, 16, 102, 97, 195, 232, 196, 255, 190, 190, 125, 191, 190, 7, 185, 32, 0, 243, 165, 195, 102, 96, 137, 229, 187, 190, 7, 185, 4, 0, 49, 192, 83, 81, 246, 7, 128, 116, 3, 64, 137, 222, 131, 195, 16, 226, 243, 72, 116, 91, 121, 57, 89, 91, 138, 71, 4, 60, 15, 116, 6, 36, 127, 60, 5, 117, 34, 102, 139, 71, 8, 102, 139, 86,20, 102, 1, 208, 102, 33, 210, 117, 3, 102, 137, 194, 232, 172, 255, 114, 3, 232, 182, 255, 102, 139, 70, 28, 232, 160, 255, 131, 195, 16, 226, 204, 102, 97, 195, 232, 118, 0, 77, 117, 108, 116, 105, 112, 108, 101, 32, 97, 99, 116, 105, 118, 101, 32, 112, 97, 114, 116, 105, 116, 105, 111, 110, 115, 46, 13, 10, 102, 139, 68, 8, 102, 3, 70, 28, 102, 137, 68, 8, 232, 48, 255, 114, 39, 102, 129, 62, 0, 124, 88, 70, 83, 66, 117, 9, 102, 131, 192, 4, 232, 28, 255, 114, 19, 129, 62, 254, 125, 85, 170, 15, 133, 242, 254, 188, 250, 123, 90, 95, 7, 250, 255, 228, 232, 30, 0, 79, 112, 101, 114, 97, 116, 105, 110, 103, 32, 115, 121, 115, 116, 101, 109, 32, 108, 111, 97, 100, 32, 101, 114, 114, 111, 114, 46, 13, 10, 94, 172, 180, 14, 138, 62, 98, 4, 179, 7, 205, 16, 60, 10, 117, 241, 205, 24, 244, 235, 253, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56, 235, 105, 120, 0, 0, 128, 0, 33, 2, 131, 8, 184, 99, 0, 8, 0, 0, 0, 96, 9, 0, 0, 8, 185, 99, 142, 15, 255, 255, 0, 104, 9, 0, 0, 152, 54, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 85, 170]",
   "Checked components": [
-    { "/boot/vmlinuz-lts": "bb46623bfd7b54110c367169736d771ecc159aa3df5f485e6adae24db3f5687fd8219365015b109386f051c710cb1c4b0d8655bbbe841acbc74e79d87a7cce5d" },
+    { "kernel": "bb46623bfd7b54110c367169736d771ecc159aa3df5f485e6adae24db3f5687fd8219365015b109386f051c710cb1c4b0d8655bbbe841acbc74e79d87a7cce5d" },
     { "/etc/passwd": "6f756583b43c71601b15bcf09074fc580848875ed1738166211e4fb5698b656b8fe0fcc4174e2bc13906acff3a5900883964c74691c65c3f7c5d5c48d3b116d8" },
     { "/etc/hosts": "9538b233ea28fa911603d01b2405f22b2fccda49ccbdf92176c860e5831e62a0cd19f4594ec8c1551de3b85d06d802eb8361cdd244e456ae0038e0bf02e7d175" },
     { "/etc/resolv.conf": "863322b5f877b4f3a5ac7bc94ca12efb2c31265ee4cf33a9c1e3620e8103095381273d7c1a3fbd8b03818b93e92b91e6794c6b1dfffcbe2e35d6b2c6d979ab72" },
@@ -406,23 +406,21 @@ giant-spellbook hash attest_mbr alpine
     { "/etc/profile": "ab85c7a9865ed2cb292dad3c2a5ea127010c4d5231f5bc9c62b0819b2346a0c9ffd4ebb21d41cb07e2ff21f28b750c7e99c1ac8510e716f7708a48658f7b933d" },
     { "/etc/fstab": "ec7e1c54da6fe8fb6143c08b0bf62f749448bf3642a2b26dc946db6f4f80ca2c902b3719992226c029388a75459e811c22a87910e036a5e147d061993749071d" }
   ],
-  "BLAKE2B-512 Alpine LTS Linux System Attestation": "f5b473605034cb399a8976df581f59003e27ce2015f482daf9c19c7de6a6da649c9ac5e5858d19ccdf5795921c7ebbf30fec4059a9c1259d597fb807f8d61889"
+  "BLAKE2B-512 Linux System Attestation": "f5b473605034cb399a8976df581f59003e27ce2015f482daf9c19c7de6a6da649c9ac5e5858d19ccdf5795921c7ebbf30fec4059a9c1259d597fb807f8d61889"
 }
 
 ```
 _Note that attesting the MBR typically requires superuser access. Attestations can be done without checking the MBR with 'attest' instead of 'attest_mbr'._
 
-The reason RHEL needs to be treated separately with the 'rhel' option instead of 'linux' is that the kernel file location and naming is different. Debian and many distros will work with 'linux' attestation because they have a kernel file symlink at /vmlinuz, while if the kernel path must be dynamically discovered, then 'rhel' mode is used. Alpine also has a different kernel file name and less files by default, so 'alpine' is used for attesting Alpine Linux to match those.
-
 If a checked file is not present, the 'attest' and 'attest_mbr' functions will have no output. For MacOS the MBR is checked from `/dev/disk0`, while on linux it is checked from `/dev/sda`.
-If `/dev/sda` is not found for Alpine Linux, Linux, or RHEL, we also look for `/dev/nvme0n1` and `/dev/vda`.
+If `/dev/sda` is not found for Linux, we also look for `/dev/nvme0n1` and `/dev/vda`.
 If the system doesn't use the target disk names (it is possible, although those are the most common), then the MBR can't be attested with this 'attest_mbr' function and will need to be checked using another technique.
 
 The hash of the MBR is not printed, but the actual byte array of the first sector is, and the final BLAKE2B-512 includes that data in the hash along with all the other component hashes as input. 
 The final BLAKE2B-512 will change if any of the components change (including the MBR if using 'attest_mbr'). While this attestation is not comprehensive, it is useful baseline data,
 and can be helpful when doing tasks like confirming maintenance done for the kernel, or doing forensic comparisons of hosts.
 
-The firmware is read recursively from the `/lib/firmware` and `/usr/lib/firmware` locations on linux, and from `/usr/standalone/firmware` and `/System/Library/CoreServices/Firmware Updates` on MacOS. OpenBSD will read firmware from `/etc/firmware`.
+The firmware is read recursively from the `/lib/firmware` and `/usr/lib/firmware` locations on Linux, and from `/usr/standalone/firmware` and `/System/Library/CoreServices/Firmware Updates` on MacOS. OpenBSD will read firmware from `/etc/firmware`.
 OpenBSD kernel files are not included in the OpenBSD attestation because the used kernel file in OpenBSD changes with each boot.
 
 _Note that MacOS has some firmware that is protected and cannot be read, so we aren't able to reach all of the firmware on MacOS._
