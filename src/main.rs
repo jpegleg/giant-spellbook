@@ -950,7 +950,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "hash" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, alpine, rhel, macos> \"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, macos> \"\n}}", args[0]);
             process::exit(1);
           }
           let hash = &args[2];
@@ -962,21 +962,12 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                     let mbr = true;
                     let _ = hashfunctions::attest_linux(mbr);
                   },
-                  "alpine" => {
-                    let mbr = true;
-                    let _ = hashfunctions::attest_alpine_lts(mbr);
-                  },
-                  "rhel" => {
-                    let mbr = true;
-                    let _ = hashfunctions::attest_rhel(mbr);
-                  },
                   "macos" => {
                     let mbr = true;
                     let _ = hashfunctions::attest_macos(mbr);
                   },
-
                   _ => {
-                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest_mbr <linux, alpine, rhel, macos>\"\n}}");
+                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest_mbr <linux, macos>\"\n}}");
                   }
               }
             },
@@ -986,21 +977,12 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                     let mbr = false;
                     let _ = hashfunctions::attest_linux(mbr);
                   },
-                  "alpine" => {
-                    let mbr = false;
-                    let _ = hashfunctions::attest_alpine_lts(mbr);
-                  },
-                  "rhel" => {
-                    let mbr = false;
-                    let _ = hashfunctions::attest_rhel(mbr);
-                  },
                   "macos" => {
                     let mbr = false;
                     let _ = hashfunctions::attest_macos(mbr);
                   },
-
                   _ => {
-                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest <linux, alpine, rhel, macos>\"\n}}");
+                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest <linux, macos>\"\n}}");
                   }
               }
             },
@@ -1037,7 +1019,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             },
 
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, alpine, rhel, macos> \"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, macos> \"\n}}", args[0]);
               process::exit(1);
             }
           }
