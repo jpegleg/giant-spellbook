@@ -8,7 +8,7 @@ Giant-spellbook can perform different types of cryptanalysis and gather numerous
 
 There are additional forensics and reverse engineering capabilities, including disassembly and searching for potentially interesting bytes and strings.
 
-The main version, currently 0.3.X, includes TLS debugging but does not support compiling for OpenBSD. The 0.2.X versions are still actively developed without the TLS debugging features, and do support OpenBSD. If you want to skip the 'tls_debug' feature, you can install with `cargo install giant-spellbook@0.2.X` where X is the latest minor version instead, or download release binaries and source code from the '0.2.X' branch on github. The 0.1.X versions are "core" functionality only and do not get new feature updates, only maintenance.
+The main version, currently 0.3.X (soon to be 0.4.X), includes TLS debugging but does not support compiling for OpenBSD. The 0.2.X versions are still actively developed without the TLS debugging features, and do support OpenBSD. If you want to skip the 'tls_debug' feature, you can install with `cargo install giant-spellbook@0.2.X` where X is the latest minor version instead, or download release binaries and source code from the '0.2.X' branch on github. The 0.1.X versions are "core" functionality only and do not get new feature updates, only maintenance.
 
 The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that helps to identify tampering, the same mechanism used by enchantress and enchanter tools. The validation string that is generated is required with the tools, in addition to the password used.
 
@@ -812,4 +812,6 @@ The `0.1.X` versions are not recommended but if only core functionality is desir
 
 The `0.2.X` versions _do not_ include network debugging features and do compile on OpenBSD. The `0.2.X` versions _do not_ get _network_ feature updates, but do get other feature updates.
 
-The `0.3.X` versions include network debugging features and _do not_ compile on OpenBSD. The CI build targets for `0.3.X` are Linux (x86_64 musl) and MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the main branch.
+The `0.3.X` versions include RusTLS network debugging features and _do not_ compile on OpenBSD. Alpine compiling has also started to fail and support for Alpine is currently dropped for this branch. GNU/Linux compiling still works but the CI build target for `0.3.X` is currently only MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the `0.3.X` branch.
+
+The `0.4.X` versions (in progress) switch out RusTLS in the networking debugging to expand compile targets and legacy features for testing purposes. The `0.4.X` versions will get _all feature updates_ and will be in the main branch.
