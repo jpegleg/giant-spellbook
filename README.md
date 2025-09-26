@@ -853,4 +853,4 @@ The `0.2.X` versions _do not_ include network debugging features and do compile 
 
 The `0.3.X` versions include RusTLS network debugging features and _do not_ compile on OpenBSD. Alpine compiling has also started to fail and support for Alpine is currently dropped for this branch. GNU/Linux compiling still works but the CI build target for `0.3.X` is currently only MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the `0.3.X` branch.
 
-The `0.4.X` versions (in progress) switch out RusTLS in the networking debugging to expand compile targets and legacy features for testing purposes. The `0.4.X` versions will get _all feature updates_ and will be in the main branch.
+The `0.4.X` versions (in progress) switch out aws-lc-rs in the networking debugging to expand compile targets and legacy features for testing purposes. The `0.4.X` versions will get _all feature updates_ and will be in the main branch.
