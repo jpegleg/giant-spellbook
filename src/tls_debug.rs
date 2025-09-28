@@ -15,6 +15,7 @@ use rustls::{
 };
 use rustls::pki_types::{CertificateDer, ServerName, PrivateKeyDer};
 use base64::Engine;
+use rustls_openssl::default_provider;
 use x509_parser::extensions::{GeneralName, ParsedExtension};
 use x509_parser::prelude::*;
 use ::time::format_description::well_known::Rfc3339;
@@ -135,7 +136,8 @@ fn run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>> {
         .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
 
     let root_store = load_roots(&roots_path)?;
-    let builder = ClientConfig::builder().with_root_certificates(root_store);
+    let builder = ClientConfig::builder_with_provider(Arc::new(default_provider())).with_safe_default_protocol_versions()
+        .unwrap().with_root_certificates(root_store);
     let config = builder.with_no_client_auth();
     let config = Arc::new(config);
     let mut events: Vec<Event> = Vec::new();
@@ -293,7 +295,8 @@ fn auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) -> Resul
         .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
 
     let root_store = load_roots(&roots_path)?;
-    let builder = ClientConfig::builder().with_root_certificates(root_store);
+    let builder = ClientConfig::builder_with_provider(Arc::new(default_provider())).with_safe_default_protocol_versions()
+        .unwrap().with_root_certificates(root_store);
     let config = {
         let (certs, key) = load_client_auth(&client_auth_path)?;
         builder.with_client_auth_cert(certs, key)?
@@ -455,7 +458,8 @@ fn extract_run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>>
         .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
 
     let root_store = load_roots(&roots_path)?;
-    let mut base = ClientConfig::builder().with_root_certificates(root_store)
+    let mut base = ClientConfig::builder_with_provider(Arc::new(default_provider())).with_safe_default_protocol_versions()
+        .unwrap().with_root_certificates(root_store)
                                           .with_no_client_auth();
     base.enable_secret_extraction = true;
     let config = Arc::new(base);
@@ -621,7 +625,8 @@ fn extract_auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) 
         .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
 
     let root_store = load_roots(&roots_path)?;
-    let base = ClientConfig::builder().with_root_certificates(root_store);
+    let base = ClientConfig::builder_with_provider(Arc::new(default_provider())).with_safe_default_protocol_versions()
+        .unwrap().with_root_certificates(root_store);
     let mut base = {
         let (certs, key) = load_client_auth(&client_auth_path)?;
         base.with_client_auth_cert(certs, key)?
