@@ -8,7 +8,7 @@ Giant-spellbook can perform different types of cryptanalysis and gather numerous
 
 There are additional forensics and reverse engineering capabilities, including disassembly and searching for potentially interesting bytes and strings.
 
-The main version, 0.4.X, includes TLS debugging. The 0.3.X branch also has TLS debugging but with aws-lc-rs instead of openssl as the crypto provider, and compiles on fewer targets. The 0.2.X versions are still actively developed without the TLS debugging features. If you want to skip the 'tls_debug' feature, you can install with cargo install giant-spellbook@0.2.X where X is the latest minor version instead, or download release binaries and source code from the '0.2.X' branch on github. The 0.1.X versions are "core" functionality only and do not get new feature updates, only maintenance.
+The main version, `0.4.X`, includes TLS debugging. The `0.3.X` branch also has TLS debugging but with aws-lc-rs instead of openssl as the crypto provider, and compiles on fewer targets. The `0.2.X` versions are still actively developed without the TLS debugging features. If you want to skip the 'tls_debug' feature, you can install with `cargo install giant-spellbook@0.2.X` where X is the latest minor version instead, or download release binaries and source code from the `0.2.X` branch on github. The `0.1.X` versions are "core" functionality only and do not get new feature updates, only maintenance.
 
 The encryption mechanisms use Argon2id for key material generation from an interactive password. There is also a SHA3 integrity mechnism that helps to identify tampering, the same mechanism used by enchantress and enchanter tools. The validation string that is generated is required with the tools, in addition to the password used.
 
