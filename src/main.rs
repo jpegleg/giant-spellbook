@@ -203,7 +203,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               json_started
           );
           let mut kpubf = try_print_json!(
-              File::open(&pubpath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the public key: {}", e))),
+              File::open(pubpath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the public key: {}", e))),
               json_started
           );
           let mut pubbytes = Vec::new();
@@ -213,7 +213,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           );
           let keys: Keypair = Keypair::loadit(pubbytes, kbytes);
           let msg = &bytes;
-          let sig = keys.sign(&msg);
+          let sig = keys.sign(msg);
           let spath = Path::new(sig_path);
           let mut sigoutput = try_print_json!(
               File::create(spath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to create signature file {}: {}", sig_path, e))),
