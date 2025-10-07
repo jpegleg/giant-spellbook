@@ -745,7 +745,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let salt = &args[4];
               let bsalt = salt.clone().into_bytes();
               let binput = input.clone().into_bytes();
-              let _ = hashfunctions::argon2id(&binput, &bsalt);
+              hashfunctions::argon2id(&binput, &bsalt);
             },
             _ => {
               eprintln!("{{\n  \"ERROR\": \"Usage: {} derive_key <argon2id> <data_string> <salt_string> \"\n}}", args[0]);
