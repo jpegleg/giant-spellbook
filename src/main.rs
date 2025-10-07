@@ -688,7 +688,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             process::exit(1);
           }
           let file_path = &args[2];
-          seek::search_in_file(file_path);
+          let _ = seek::search_in_file(file_path);
           Ok(())
         },
 
@@ -720,15 +720,15 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             },
             "read" => {
               let input = &args[3];
-              researcher::annotated_dump(input);
+              let _ = researcher::annotated_dump(input);
             },
             "read_arm64" => {
               let input = &args[3];
-              researcher::arm_annotated_dump(input);
+              let _ = researcher::arm_annotated_dump(input);
             },
             "read_ebpf" => {
               let input = &args[3];
-              researcher::ebpf_annotated_dump(input);
+              let _ = researcher::ebpf_annotated_dump(input);
             },
             _ => {
               eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64, read_bepf> <target_file>\"\n}}", args[0]);
