@@ -592,7 +592,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             process::exit(1);
           }
           let file_path = &args[2];
-          let _ = disassemble::intel_dis_to_string(file_path)?;
+          disassemble::intel_dis_to_string(file_path)?;
           println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
           Ok(())
         },
@@ -615,7 +615,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           let commands = &args[2];
           let inputs = &args[3];
-          let _ = commander::run_iter(commands, inputs)?;
+          commander::run_iter(commands, inputs)?;
           Ok(())
         },
 
@@ -632,7 +632,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let otype = &args[2];
           match otype.as_str() {
             "help_map" => {
-              let _ = researcher::color_map();
+              researcher::color_map();
             },
             "read" => {
               let input = &args[3];
