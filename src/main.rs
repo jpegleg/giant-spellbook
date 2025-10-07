@@ -89,7 +89,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" | "--version" => {
-          println!("{{\"Version\": \"0.2.18\"}}");
+          println!("{{\"Version\": \"0.2.19\"}}");
           Ok(())
         },
 
@@ -207,7 +207,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               json_started
           );
           let mut kpubf = try_print_json!(
-              File::open(&pubpath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the public key: {}", e))),
+              File::open(pubpath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the public key: {}", e))),
               json_started
           );
           let mut pubbytes = Vec::new();
@@ -217,7 +217,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           );
           let keys: Keypair = Keypair::loadit(pubbytes, kbytes);
           let msg = &bytes;
-          let sig = keys.sign(&msg);
+          let sig = keys.sign(msg);
           let spath = Path::new(sig_path);
           let mut sigoutput = try_print_json!(
               File::create(spath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to create signature file {}: {}", sig_path, e))),
@@ -651,15 +651,15 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
           match dis_type.as_str() {
             "ebpf" => {
-              let _ = disassemble::bpf_dis_to_string(file_path)?;
+              disassemble::bpf_dis_to_string(file_path)?;
               println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
             },
             "arm64" => {
-              let _ = disassemble::arm_dis_to_string(file_path)?;
+              disassemble::arm_dis_to_string(file_path)?;
               println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
             },
             "x86_64" => {
-              let _ = disassemble::intel_dis_to_string(file_path)?;
+              disassemble::intel_dis_to_string(file_path)?;
               println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
             },
             _ => {
@@ -688,7 +688,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             process::exit(1);
           }
           let file_path = &args[2];
-          let _ = seek::search_in_file(file_path);
+          seek::search_in_file(file_path);
           Ok(())
         },
 
@@ -699,7 +699,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           let commands = &args[2];
           let inputs = &args[3];
-          let _ = commander::run_iter(commands, inputs)?;
+          commander::run_iter(commands, inputs)?;
           Ok(())
         },
 
@@ -716,19 +716,19 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let otype = &args[2];
           match otype.as_str() {
             "help_map" => {
-              let _ = researcher::color_map();
+              researcher::color_map();
             },
             "read" => {
               let input = &args[3];
-              let _ = researcher::annotated_dump(input);
+              researcher::annotated_dump(input);
             },
             "read_arm64" => {
               let input = &args[3];
-              let _ = researcher::arm_annotated_dump(input);
+              researcher::arm_annotated_dump(input);
             },
             "read_ebpf" => {
               let input = &args[3];
-              let _ = researcher::ebpf_annotated_dump(input);
+              researcher::ebpf_annotated_dump(input);
             },
             _ => {
               eprintln!("{{\n  \"ERROR\": \"Usage: {} researcher <help_map, read, read_arm64, read_bepf> <target_file>\"\n}}", args[0]);
@@ -897,7 +897,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let salt = &args[4];
               let bsalt = salt.clone().into_bytes();
               let binput = input.clone().into_bytes();
-              let _ = hashfunctions::argon2id(&binput, &bsalt);
+              hashfunctions::argon2id(&binput, &bsalt);
             },
             _ => {
               eprintln!("{{\n  \"ERROR\": \"Usage: {} derive_key <argon2id> <data_string> <salt_string> \"\n}}", args[0]);
@@ -919,15 +919,15 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               match input.as_str() {
                   "linux" => {
                     let mbr = true;
-                    let _ = hashfunctions::attest_linux(mbr);
+                    hashfunctions::attest_linux(mbr);
                   },
                   "macos" => {
                     let mbr = true;
-                    let _ = hashfunctions::attest_macos(mbr);
+                    hashfunctions::attest_macos(mbr);
                   },
                   "openbsd" => {
                     let mbr = true;
-                    let _ = hashfunctions::attest_openbsd(mbr);
+                    hashfunctions::attest_openbsd(mbr);
                   },
                   _ => {
                     eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest_mbr <linux, macos, openbsd>\"\n}}");
@@ -938,15 +938,15 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               match input.as_str() {
                   "linux" => {
                     let mbr = false;
-                    let _ = hashfunctions::attest_linux(mbr);
+                    hashfunctions::attest_linux(mbr);
                   },
                   "macos" => {
                     let mbr = false;
-                    let _ = hashfunctions::attest_macos(mbr);
+                    hashfunctions::attest_macos(mbr);
                   },
                   "openbsd" => {
                     let mbr = false;
-                    let _ = hashfunctions::attest_openbsd(mbr);
+                    hashfunctions::attest_openbsd(mbr);
                   },
                   _ => {
                     eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest <linux, macos, openbsd>\"\n}}");
