@@ -919,15 +919,15 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               match input.as_str() {
                   "linux" => {
                     let mbr = true;
-                    hashfunctions::attest_linux(mbr);
+                    let _ = hashfunctions::attest_linux(mbr);
                   },
                   "macos" => {
                     let mbr = true;
-                    hashfunctions::attest_macos(mbr);
+                    let _ = hashfunctions::attest_macos(mbr);
                   },
                   "openbsd" => {
                     let mbr = true;
-                    hashfunctions::attest_openbsd(mbr);
+                    let _ = hashfunctions::attest_openbsd(mbr);
                   },
                   _ => {
                     eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest_mbr <linux, macos, openbsd>\"\n}}");
@@ -938,15 +938,15 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               match input.as_str() {
                   "linux" => {
                     let mbr = false;
-                    hashfunctions::attest_linux(mbr);
+                    let _ = hashfunctions::attest_linux(mbr);
                   },
                   "macos" => {
                     let mbr = false;
-                    hashfunctions::attest_macos(mbr);
+                    let _ = hashfunctions::attest_macos(mbr);
                   },
                   "openbsd" => {
                     let mbr = false;
-                    hashfunctions::attest_openbsd(mbr);
+                    let _ = hashfunctions::attest_openbsd(mbr);
                   },
                   _ => {
                     eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest <linux, macos, openbsd>\"\n}}");
