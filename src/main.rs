@@ -208,7 +208,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               json_started
           );
           let mut kpubf = try_print_json!(
-              File::open(&pubpath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the public key: {}", e))),
+              File::open(pubpath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the public key: {}", e))),
               json_started
           );
           let mut pubbytes = Vec::new();
@@ -218,7 +218,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           );
           let keys: Keypair = Keypair::loadit(pubbytes, kbytes);
           let msg = &bytes;
-          let sig = keys.sign(&msg);
+          let sig = keys.sign(msg);
           let spath = Path::new(sig_path);
           let mut sigoutput = try_print_json!(
               File::create(spath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to create signature file {}: {}", sig_path, e))),
@@ -693,15 +693,15 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
           match dis_type.as_str() {
             "ebpf" => {
-              let _ = disassemble::bpf_dis_to_string(file_path)?;
+              disassemble::bpf_dis_to_string(file_path)?;
               println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
             },
             "arm64" => {
-              let _ = disassemble::arm_dis_to_string(file_path)?;
+              disassemble::arm_dis_to_string(file_path)?;
               println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
             },
             "x86_64" => {
-              let _ = disassemble::intel_dis_to_string(file_path)?;
+              disassemble::intel_dis_to_string(file_path)?;
               println!("{{\"Disassembly output\": \"./disassembly.txt\"}}");
             },
             _ => {
@@ -741,7 +741,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           let commands = &args[2];
           let inputs = &args[3];
-          let _ = commander::run_iter(commands, inputs)?;
+          commander::run_iter(commands, inputs)?;
           Ok(())
         },
 
@@ -758,7 +758,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let otype = &args[2];
           match otype.as_str() {
             "help_map" => {
-              let _ = researcher::color_map();
+              researcher::color_map();
             },
             "read" => {
               let input = &args[3];
@@ -938,7 +938,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let salt = &args[4];
               let bsalt = salt.clone().into_bytes();
               let binput = input.clone().into_bytes();
-              let _ = hashfunctions::argon2id(&binput, &bsalt);
+              hashfunctions::argon2id(&binput, &bsalt);
             },
             _ => {
               eprintln!("{{\n  \"ERROR\": \"Usage: {} derive_key <argon2id> <data_string> <salt_string> \"\n}}", args[0]);
