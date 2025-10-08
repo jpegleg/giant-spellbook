@@ -853,4 +853,4 @@ The `0.2.X` versions _do not_ include network debugging features and do compile 
 
 The `0.3.X` versions include RusTLS with aws-lc-rs crypto provider for network debugging features and _do not_ compile on OpenBSD. Alpine compiling has also started to fail and support for Alpine is currently dropped for this branch. GNU/Linux compiling still works but the CI build target for `0.3.X` is currently only MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the `0.3.X` branch.
 
-The `0.4.X` versions switch out aws-lc-rs in the network debugging with openssl to expand compile targets and legacy features for testing purposes. The `0.4.X` versions compile on MacOS, GNU/Linux, Alpine Linux, and OpenBSD. The `0.4.X` versions get all feature updates and are in the main branch.
+The `0.4.X` versions switch out aws-lc-rs in the network debugging with openssl to expand compile targets and legacy features for testing purposes. The `0.4.X` versions compile on MacOS, GNU/Linux, Alpine Linux, and OpenBSD. The `0.4.X` versions get all feature updates and are in the main branch. OpenBSD may need the package gmake to compile 0.4.X.
