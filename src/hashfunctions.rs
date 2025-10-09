@@ -362,7 +362,7 @@ pub fn attest_openbsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
       println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
   };
-  println!("  \"Checked components\": [\n   {{  \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/ksh.kshrc\": \"{profile_chk:x}\" }},\n    {{ \"/etc/rc.conf\": \"{machine_chk:x}\" }}\n  ],");
+  println!("  \"Checked components\": [\n    {{  \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/ksh.kshrc\": \"{profile_chk:x}\" }},\n    {{ \"/etc/rc.conf\": \"{machine_chk:x}\" }}\n  ],");
   println!("  \"BLAKE2B-512 OpenBSD System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
   Ok(())
