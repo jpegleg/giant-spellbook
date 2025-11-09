@@ -34,7 +34,7 @@ wormsign = "0.1.11"
 x509-parser = "0.18.0"
 der-parser = "10.0.0"
 capstone = "0.13.0"
-rustls = "0.23.34"
+rustls = "0.23.35"
 rustls-pemfile = "2.2.0"
 chrono = { version = "0.4.42", default-features = false, features = ["clock", "std"] }
 time = "0.3.44"
