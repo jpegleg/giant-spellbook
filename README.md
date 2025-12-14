@@ -423,7 +423,7 @@ and can be helpful when doing tasks like confirming maintenance done for the ker
 The firmware is read recursively from the `/lib/firmware` and `/usr/lib/firmware` locations on Linux, and from `/usr/standalone/firmware` and `/System/Library/CoreServices/Firmware Updates` on MacOS. OpenBSD will read firmware from `/etc/firmware`.
 OpenBSD kernel files are not included in the OpenBSD attestation because the used kernel file in OpenBSD changes with each boot.
 
-For the FreeBSD attestation we check firmware, kernel modules, and kernel in `/boot/kernel/` and `/boot/firmware`. The kernel is checked twice in the FreeBSD attestation because the kernel file is checked by itself, and picked up when recursively processing `/boot/kernel` which also measures all of the kernel modules.
+For the FreeBSD attestation we check firmware, kernel modules, and kernel in `/boot/kernel/` and `/boot/firmware`. The kernel is checked twice in the FreeBSD attestation because the kernel file is checked by itself, and picked up when recursively processing `/boot/kernel` which also measures the kernel modules.
 
 _Note that MacOS has some firmware that is protected and cannot be read, so we aren't able to reach all of the firmware on MacOS._
 
