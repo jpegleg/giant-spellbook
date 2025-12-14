@@ -1,7 +1,7 @@
 #[allow(dead_code)]
 pub mod cve_bytes {
     // ─────────────────────────────────────────────────────────────────────────────
-    // CVE-2025-44228 (Reac2Shell patterns)
+    // CVE-2025-55182 (React2Shell patterns)
     // Vulnerable version matches.
     // ─────────────────────────────────────────────────────────────────────────────
     pub const CVE_2025_55182_VERSION19_0_X: &[u8] = b"react-server-dom-webpack@19.0";
