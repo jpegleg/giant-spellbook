@@ -53,6 +53,13 @@ pub fn walk_dir_hash() -> Vec<PathBuf> {
             PathBuf::from("/usr/lib/firmware"),
         ];
     }
+    #[cfg(target_os = "freebsd")]
+    {
+        return vec![
+            PathBuf::from("/boot/firmware"),
+            PathBuf::from("/boot/kernel")
+        ];
+    }
     #[cfg(target_os = "openbsd")]
     {
         return vec![PathBuf::from("/etc/firmware")];
