@@ -284,6 +284,90 @@ pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Ok(())
 }
 
+pub fn attest_freebsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
+  let mut data = Vec::new();
+  let mut mbr_chk = vec![0; BLOCK];
+
+  if mode == true {
+    let mut mbr = File::open("/dev/da0")?;
+    mbr.seek(SeekFrom::Start(0))?;
+    let mut buf = vec![0; BLOCK];
+    mbr.read_exact(&mut buf)?;
+    mbr_chk = buf.to_vec();
+    data.extend(buf);
+  };
+
+  let mut passwd_data = Vec::new();
+  let mut hosts_data = Vec::new();
+  let mut resolv_data = Vec::new();
+  let mut machine_data = Vec::new();
+  let mut kernel_data = Vec::new();
+
+  let mut kernel_file = File::open("/boot/kernel/kernel").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("failed to open the input file /boot/kernel/kernel: {e}")))?;
+  kernel_file.read_to_end(&mut kernel_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /boot/kernel/kernel: {e}")))?;
+  let mut kernel_hasher = Blake2b512::new();
+  Update::update(&mut kernel_hasher, &kernel_data);
+  let kernel_chk = kernel_hasher.finalize();
+
+  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/passwd: {e}")))?;
+  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/passwd: {e}")))?;
+  let mut passwd_hasher = Blake2b512::new();
+  Update::update(&mut passwd_hasher, &passwd_data);
+  let passwd_chk = passwd_hasher.finalize();
+
+  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/hosts: {e}")))?;
+  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/hosts: {e}")))?;
+  let mut hosts_hasher = Blake2b512::new();
+  Update::update(&mut hosts_hasher, &hosts_data);
+  let hosts_chk = hosts_hasher.finalize();
+
+  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
+  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/resolv.conf: {e}")))?;
+  let mut resolv_hasher = Blake2b512::new();
+  Update::update(&mut resolv_hasher, &resolv_data);
+  let resolv_chk = resolv_hasher.finalize();
+
+  let mut machine_file = File::open("/etc/rc.conf").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/rc.conf: {e}")))?;
+  machine_file.read_to_end(&mut machine_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/rc.conf: {e}")))?;
+
+  let mut machine_hasher = Blake2b512::new();
+  Update::update(&mut machine_hasher, &machine_data);
+  let machine_chk = machine_hasher.finalize();
+
+  let firmware_chk = firmware_hex().unwrap();
+
+  let mut hasher = Blake2b512::new();
+  data.extend(machine_chk);
+  data.extend(resolv_chk);
+  data.extend(hosts_chk);
+  data.extend(passwd_chk);
+  data.extend(kernel_chk);
+  data.extend(firmware_chk.bytes());
+
+  Update::update(&mut hasher, &data);
+  let blake2b512 = hasher.finalize();
+
+  let mut system_name = Vec::new();
+
+  let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /etc/hostname: {e}")))?;
+  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /etc/hostname: {e}")))?;
+
+  let name_str = String::from_utf8_lossy(&system_name);
+
+  println!("{{");
+  println!("  \"System\": \"{}\",", json_escape(&name_str));
+  let chronox: String = Utc::now().to_string();
+  println!("  \"Time\": \"{chronox}\",");
+  println!("  \"MBR checked\": \"{mode}\",");
+  if mode == true {
+      println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
+  };
+  println!("  \"Checked components\": [\n    {{ \"/boot/kernel/kernel\": \"{kernel_chk:x}\",\n    \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"firmware and kernel modules\": \"{firmware_chk}\" }},\n    {{ \"/etc/rc.conf\": \"{machine_chk:x}\" }}\n  ],");
+  println!("  \"BLAKE2B-512 FreeBSD System Attestation\": \"{:x}\"", blake2b512);
+  println!("}}");
+  Ok(())
+}
+
 pub fn attest_openbsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut data = Vec::new();
   let mut mbr_chk = vec![0; BLOCK];
@@ -362,7 +446,7 @@ pub fn attest_openbsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   if mode == true {
       println!("  \"MBR first sector (512 bytes)\": \"{mbr_chk:?}\",");
   };
-  println!("  \"Checked components\": [\n    {{  \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/ksh.kshrc\": \"{profile_chk:x}\" }},\n    {{ \"/etc/rc.conf\": \"{machine_chk:x}\" }}\n  ],");
+  println!("  \"Checked components\": [\n    {{ \"/etc/passwd\": \"{passwd_chk:x}\" }},\n    {{ \"/etc/hosts\": \"{hosts_chk:x}\" }},\n    {{ \"/etc/resolv.conf\": \"{resolv_chk:x}\" }},\n    {{ \"firmware\": \"{firmware_chk}\" }},\n    {{ \"/etc/ksh.kshrc\": \"{profile_chk:x}\" }},\n    {{ \"/etc/rc.conf\": \"{machine_chk:x}\" }}\n  ],");
   println!("  \"BLAKE2B-512 OpenBSD System Attestation\": \"{:x}\"", blake2b512);
   println!("}}");
   Ok(())
