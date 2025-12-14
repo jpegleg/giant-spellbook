@@ -38,5 +38,5 @@ rustls = "0.23.35"
 rustls-pemfile = "2.2.0"
 chrono = { version = "0.4.42", default-features = false, features = ["clock", "std"] }
 time = "0.3.44"
-zerocopy = "0.8.27"
+zerocopy = "0.8.31"
 urlencoding = "2.1.3"
