@@ -1,6 +1,17 @@
 #[allow(dead_code)]
 pub mod cve_bytes {
     // ─────────────────────────────────────────────────────────────────────────────
+    // CVE-2025-55182 (React2Shell patterns)
+    // Vulnerable version matches.
+    // ─────────────────────────────────────────────────────────────────────────────
+    pub const CVE_2025_55182_VERSION19_0_X: &[u8] = b"react-server-dom-webpack@19.0";
+    pub const CVE_2025_55182_VERSION19_1_X: &[u8] = b"react-server-dom-webpack@19.1";
+    pub const CVE_2025_55182_VERSION19_2_0: &[u8] = b"react-server-dom-webpack@19.2.0";
+    // Potential exploit patterns - header string matches.
+    pub const CVE_2025_55182_NEXT_ACTION: &[u8] = b"next-action";
+    pub const CVE_2025_55182_RSC_ACTION_ID: &[u8] = b"rsc-action-id";
+    
+    // ─────────────────────────────────────────────────────────────────────────────
     // CVE-2021-44228 (Log4Shell / Log4j JNDI)
     // Sources indicate reliable anchors include raw `${jndi:` and common URI schemes.
     // ─────────────────────────────────────────────────────────────────────────────
