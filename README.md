@@ -77,7 +77,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | shift         | shift the bytes of a file by a given position to the left or right                 |
 | xor_these     | bitwise XOR two files of the same length together, output to xor.out               |
 | rng           | generate files of a given byte length from system entropy source                   |
-| attest        | BLAKE2 system attestation for MacOS, Linux, and OpenBSD                            |
+| attest        | BLAKE2 system attestation for MacOS, Linux, FreeBSD, and OpenBSD                    |
 | diff          | compare two files for differences, color highlighting and option for colorless     |
 
 ## Installing
@@ -388,7 +388,7 @@ giant-spellbook hash recursive /tmp/project/
 
 ```
 
-We can make an attestation of the system, currently with support for Linux, OpenBSD, and MacOS systems:
+We can make an attestation of the system, currently with support for Linux, FreeBSD, OpenBSD, and MacOS systems:
 
 ```
 giant-spellbook hash attest_mbr linux
@@ -422,6 +422,8 @@ and can be helpful when doing tasks like confirming maintenance done for the ker
 
 The firmware is read recursively from the `/lib/firmware` and `/usr/lib/firmware` locations on Linux, and from `/usr/standalone/firmware` and `/System/Library/CoreServices/Firmware Updates` on MacOS. OpenBSD will read firmware from `/etc/firmware`.
 OpenBSD kernel files are not included in the OpenBSD attestation because the used kernel file in OpenBSD changes with each boot.
+
+For the FreeBSD attestation we check firmware, kernel modules, and kernel in `/boot/kernel/` and `/boot/firmware`. The kernel is checked twice in the FreeBSD attestation because the kernel file is checked by itself, and picked up when recursively processing `/boot/kernel` which also measures all of the kernel modules.
 
 _Note that MacOS has some firmware that is protected and cannot be read, so we aren't able to reach all of the firmware on MacOS._
 
@@ -800,7 +802,7 @@ If the STDOUT or STDERR of with 'commander' "command" have binary, then an error
 
 ## Project promises
 
-This project will never use AI-slop. All code is reviewed, tested, implemented by a human that is academically trained in cryptography and information security. This repository and the crates.io repository is carefully managed and protected.
+This project will never use AI-slop. All code is reviewed, tested, implemented by a human that is academically trained in cryptography and information security. This repository and the crates.io repository are carefully managed and protected.
 
 This project will never break backwards compatibility in releases regarding the signature validation or decryption.
 
@@ -810,8 +812,8 @@ This project will be maintained as best as is reasonable.
 
 The `0.1.X` versions are not recommended but if only core functionality is desired, `0.1.9+` can be used. The `0.1.X` versions _do not_ get feature updates.
 
-The `0.2.X` versions _do not_ include network debugging features and do compile on OpenBSD. The `0.2.X` versions _do not_ get _network_ feature updates, but do get other feature updates.
+The `0.2.X` versions _do not_ include network debugging features and do compile on FreeBSD and OpenBSD. The `0.2.X` versions _do not_ get _network_ feature updates, but do get other feature updates.
 
-The `0.3.X` versions include RusTLS with aws-lc-rs crypto provider for network debugging features and _do not_ compile on OpenBSD. Alpine compiling has also started to fail and support for Alpine is currently dropped for this branch. GNU/Linux compiling still works but the CI build target for `0.3.X` is currently only MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the `0.3.X` branch.
+The `0.3.X` versions include RusTLS with aws-lc-rs crypto provider for network debugging features and _do not_ compile on *BSD. Alpine compiling has also started to fail and support for Alpine is currently dropped for this branch. GNU/Linux compiling still works but the CI build target for `0.3.X` is currently only MacOS (x86_64). The `0.3.X` versions get _all feature updates_, and live in the `0.3.X` branch.
 
-The `0.4.X` versions switch out aws-lc-rs in the network debugging with openssl to expand compile targets and legacy features for testing purposes. The `0.4.X` versions compile on MacOS, GNU/Linux, Alpine Linux, and OpenBSD. The `0.4.X` versions get all feature updates and are in the main branch.
+The `0.4.X` versions switch out aws-lc-rs in the network debugging with openssl to expand compile targets and legacy features for testing purposes. The `0.4.X` versions compile on MacOS, GNU/Linux, Alpine Linux, FreeBSD, and OpenBSD. The `0.4.X` versions get all feature updates and are in the main branch.
