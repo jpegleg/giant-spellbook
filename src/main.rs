@@ -909,7 +909,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         "hash" => {
           if args.len() != 4 {
-            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, openbsd, macos> \"\n}}", args[0]);
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, freebsd, openbsd, macos> \"\n}}", args[0]);
             process::exit(1);
           }
           let hash = &args[2];
@@ -925,12 +925,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                     let mbr = true;
                     let _ = hashfunctions::attest_macos(mbr);
                   },
+                  "freebsd" => {
+                    let mbr = true;
+                    let _ = hashfunctions::attest_freebsd(mbr);
+                  },
                   "openbsd" => {
                     let mbr = true;
                     let _ = hashfunctions::attest_openbsd(mbr);
                   },
                   _ => {
-                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest_mbr <linux, macos, openbsd>\"\n}}");
+                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest_mbr <linux, macos, freebsd, openbsd>\"\n}}");
                   }
               }
             },
@@ -944,12 +948,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                     let mbr = false;
                     let _ = hashfunctions::attest_macos(mbr);
                   },
+                  "freebsd" => {
+                    let mbr = false;
+                    let _ = hashfunctions::attest_freebsd(mbr);
+                  },
                   "openbsd" => {
                     let mbr = false;
                     let _ = hashfunctions::attest_openbsd(mbr);
                   },
                   _ => {
-                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest <linux, macos, openbsd>\"\n}}");
+                    eprintln!("{{\n  \"ERROR\": \"System attestation use: hash attest <linux, macos, freebsd, openbsd>\"\n}}");
                   }
               }
             },
@@ -986,7 +994,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             },
 
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, macos, openbsd> \"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} hash <all, recursive, recursive_no_date, sha512, sha256, sha3_256, sha3_384, shake256_10, shake256_32, blake3, blake2b512> <file_to_hash, or directory if using recursive modes> OR hash <attest, attest_mbr> <linux, macos, freebsd, openbsd> \"\n}}", args[0]);
               process::exit(1);
             }
           }
