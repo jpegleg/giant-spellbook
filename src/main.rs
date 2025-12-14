@@ -7,7 +7,7 @@ use std::path::Path;
 use std::io::{self, Write, Read};
 use sha3::{Shake256, digest::{Update, ExtendableOutput}};
 use chrono::{TimeZone, NaiveDateTime, DateTime, Utc};
-use users::{get_user_by_uid, get_group_by_gid};
+use uzers::{get_user_by_uid, get_group_by_gid};
 use rpassword::read_password;
 use base64::prelude::*;
 use zeroize::Zeroize;
@@ -90,7 +90,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" | "--version" => {
-          println!("{{\"Version\": \"0.3.16\"}}");
+          println!("{{\"Version\": \"0.3.17\"}}");
           Ok(())
         },
 
