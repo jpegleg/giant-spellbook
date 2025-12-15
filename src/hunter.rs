@@ -118,6 +118,14 @@ impl Interesting {
 
         // --- Exploit patterns ---
         v.extend([
+            // react2shell vulnerable versions
+            ("vulnerable_software_react2shell_19_0_X", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_0_X)),
+            ("vulnerable_software_react2shell_19_1_X", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_1_X)),
+            ("vulnerable_software_react2shell_19_2_0", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_2_0)),
+            // react2shell exploit header patterns
+            ("exploiting_CVEs_react2shell_next_action_header", Pattern::Bytes(cve_bytes::CVE_2025_55182_NEXT_ACTION)),
+            ("exploiting_CVEs_react2shell_rsc_action_id_header", Pattern::Bytes(cve_bytes::CVE_2025_55182_RSC_ACTION_ID)),
+            
             // log4shell exploit patterns
             ("exploiting_CVEs_log4shell_jndi_use", Pattern::Bytes(cve_bytes::CVE_2021_44228_JNDI_PREFIX)),
             ("exploiting_CVEs_log4shell_jndi_ldap", Pattern::Bytes(cve_bytes::CVE_2021_44228_JNDI_LDAP)),
