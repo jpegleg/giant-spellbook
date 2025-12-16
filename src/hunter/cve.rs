@@ -4,8 +4,10 @@ pub mod cve_bytes {
     // CVE-2025-55182 (React2Shell patterns)
     // Vulnerable version matches.
     // ─────────────────────────────────────────────────────────────────────────────
-    pub const CVE_2025_55182_VERSION19_0_X: &[u8] = b"react-server-dom-webpack@19.0";
-    pub const CVE_2025_55182_VERSION19_1_X: &[u8] = b"react-server-dom-webpack@19.1";
+    // the 19.0 match can have false positives since 19.0.1 has the patch
+    pub const CVE_2025_55182_VERSION19_0: &[u8] = b"react-server-dom-webpack@19.0";
+    pub const CVE_2025_55182_VERSION19_1_0: &[u8] = b"react-server-dom-webpack@19.1.0";
+    pub const CVE_2025_55182_VERSION19_1_1: &[u8] = b"react-server-dom-webpack@19.1.1";
     pub const CVE_2025_55182_VERSION19_2_0: &[u8] = b"react-server-dom-webpack@19.2.0";
     // Potential exploit patterns - header string matches.
     pub const CVE_2025_55182_NEXT_ACTION: &[u8] = b"next-action";
