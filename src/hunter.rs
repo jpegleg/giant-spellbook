@@ -119,8 +119,9 @@ impl Interesting {
         // --- Exploit patterns ---
         v.extend([
             // react2shell vulnerable versions
-            ("vulnerable_software_react2shell_19_0_X", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_0_X)),
-            ("vulnerable_software_react2shell_19_1_X", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_1_X)),
+            ("vulnerable_software_react2shell_19_0", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_0)),
+            ("vulnerable_software_react2shell_19_1_0", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_1_0)),
+            ("vulnerable_software_react2shell_19_1_1", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_1_1)),
             ("vulnerable_software_react2shell_19_2_0", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_2_0)),
             // react2shell exploit header patterns
             ("exploiting_CVEs_react2shell_next_action_header", Pattern::Bytes(cve_bytes::CVE_2025_55182_NEXT_ACTION)),
