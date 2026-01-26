@@ -12,7 +12,7 @@ pub fn write_and_replace(path: &str, bytes: &[u8]) -> io::Result<()> {
     f.write_all(bytes)?;
     f.sync_all()?;
 
-    match fs::rename(&tmp_name, &p) {
+    match fs::rename(&tmp_name, p) {
         Ok(()) => Ok(()),
         Err(_) => {
             let _ = fs::remove_file(&tmp_name);
