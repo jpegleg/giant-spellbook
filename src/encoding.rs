@@ -64,7 +64,7 @@ fn base58_decode<R: Read, W: Write>(input: &mut R, output: &mut W) -> io::Result
 
 pub fn hexon(file_path: &str, out_path: &str) -> io::Result<()> {
     let file_path = Path::new(file_path);
-    let file = File::open(&file_path)?;
+    let file = File::open(file_path)?;
     let outfile = File::create(out_path)?;
     let mut output_writer = BufWriter::new(outfile);
     let mut input_reader = BufReader::new(file);
@@ -84,7 +84,7 @@ pub fn hexon(file_path: &str, out_path: &str) -> io::Result<()> {
 
 pub fn hexoff(file_path: &str, out_path: &str) -> io::Result<()> {
     let file_path = Path::new(file_path);
-    let file = File::open(&file_path)?;
+    let file = File::open(file_path)?;
     let outfile = File::create(out_path)?;
     let mut output_writer = BufWriter::new(outfile);
     let mut input_reader = BufReader::new(file);
