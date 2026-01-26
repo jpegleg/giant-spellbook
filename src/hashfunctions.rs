@@ -21,9 +21,9 @@ use utilities::firmware_hex;
 const BLOCK: usize = 512;
 
 pub fn file_all(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other(format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other(format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   let mut hasher = Shake256::default();
@@ -69,9 +69,9 @@ pub fn argon2id(input: &[u8], salt: &[u8]) {
 }
 
 pub fn sha256(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other(format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other(format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -84,9 +84,9 @@ pub fn sha256(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn sha512(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other(format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other(format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -99,9 +99,9 @@ pub fn sha512(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn sha3_384(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other(format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other(format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -114,9 +114,9 @@ pub fn sha3_384(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn sha3_256(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other(format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other(format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -129,9 +129,9 @@ pub fn sha3_256(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn blake2b512(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other(format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other(format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -144,9 +144,9 @@ pub fn blake2b512(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn blake3(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other(format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other(format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -159,9 +159,9 @@ pub fn blake3(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn shake256_10(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other(format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other(format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   let mut hasher = Shake256::default();
@@ -176,9 +176,9 @@ pub fn shake256_10(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn shake256_32(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other(format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other(format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   let mut hasher = Shake256::default();
@@ -212,38 +212,38 @@ pub fn attest_macos(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut profile_data = Vec::new();
   let mut machine_data = Vec::new();
 
-  let mut kernel_file = File::open("/System/Library/Kernels/kernel").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /System/Library/Kernels/kernel: {e}")))?;
-  kernel_file.read_to_end(&mut kernel_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /System/Library/Kernels/kernel: {e}")))?;
+  let mut kernel_file = File::open("/System/Library/Kernels/kernel").map_err(|e| io::Error::other(format!("Failed to open the input file /System/Library/Kernels/kernel: {e}")))?;
+  kernel_file.read_to_end(&mut kernel_data).map_err(|e| io::Error::other(format!("Failed to read /System/Library/Kernels/kernel: {e}")))?;
   let mut kernel_hasher = Blake2b512::new();
   Update::update(&mut kernel_hasher, &kernel_data);
   let kernel_chk = kernel_hasher.finalize();
 
-  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/passwd: {e}")))?;
-  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/passwd: {e}")))?;
+  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/passwd: {e}")))?;
+  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::other(format!("Failed to read /etc/passwd: {e}")))?;
   let mut passwd_hasher = Blake2b512::new();
   Update::update(&mut passwd_hasher, &passwd_data);
   let passwd_chk = passwd_hasher.finalize();
 
-  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/hosts: {e}")))?;
-  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/hosts: {e}")))?;
+  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/hosts: {e}")))?;
+  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::other(format!("Failed to read /etc/hosts: {e}")))?;
   let mut hosts_hasher = Blake2b512::new();
   Update::update(&mut hosts_hasher, &hosts_data);
   let hosts_chk = hosts_hasher.finalize();
 
-  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
-  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/resolv.conf: {e}")))?;
+  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
+  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::other(format!("Failed to read /etc/resolv.conf: {e}")))?;
   let mut resolv_hasher = Blake2b512::new();
   Update::update(&mut resolv_hasher, &resolv_data);
   let resolv_chk = resolv_hasher.finalize();
 
-  let mut profile_file = File::open("/etc/profile").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/profile: {e}")))?;
-  profile_file.read_to_end(&mut profile_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/profile: {e}")))?;
+  let mut profile_file = File::open("/etc/profile").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/profile: {e}")))?;
+  profile_file.read_to_end(&mut profile_data).map_err(|e| io::Error::other(format!("Failed to read /etc/profile: {e}")))?;
   let mut profile_hasher = Blake2b512::new();
   Update::update(&mut profile_hasher, &profile_data);
   let profile_chk = profile_hasher.finalize();
 
-  let mut machine_file = File::open("/Library/Preferences/SystemConfiguration/preferences.plist").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /Library/Preferences/SystemConfiguration/preferences.plist: {e}")))?;
-  machine_file.read_to_end(&mut machine_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /Library/Preferences/SystemConfiguration/preferences.plist: {e}")))?;
+  let mut machine_file = File::open("/Library/Preferences/SystemConfiguration/preferences.plist").map_err(|e| io::Error::other(format!("Failed to open the input file /Library/Preferences/SystemConfiguration/preferences.plist: {e}")))?;
+  machine_file.read_to_end(&mut machine_data).map_err(|e| io::Error::other(format!("Failed to read /Library/Preferences/SystemConfiguration/preferences.plist: {e}")))?;
 
   let mut machine_hasher = Blake2b512::new();
   Update::update(&mut machine_hasher, &machine_data);
@@ -303,32 +303,32 @@ pub fn attest_freebsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut machine_data = Vec::new();
   let mut kernel_data = Vec::new();
 
-  let mut kernel_file = File::open("/boot/kernel/kernel").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("failed to open the input file /boot/kernel/kernel: {e}")))?;
-  kernel_file.read_to_end(&mut kernel_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /boot/kernel/kernel: {e}")))?;
+  let mut kernel_file = File::open("/boot/kernel/kernel").map_err(|e| io::Error::other(format!("failed to open the input file /boot/kernel/kernel: {e}")))?;
+  kernel_file.read_to_end(&mut kernel_data).map_err(|e| io::Error::other(format!("Failed to read /boot/kernel/kernel: {e}")))?;
   let mut kernel_hasher = Blake2b512::new();
   Update::update(&mut kernel_hasher, &kernel_data);
   let kernel_chk = kernel_hasher.finalize();
 
-  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/passwd: {e}")))?;
-  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/passwd: {e}")))?;
+  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/passwd: {e}")))?;
+  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::other(format!("Failed to read /etc/passwd: {e}")))?;
   let mut passwd_hasher = Blake2b512::new();
   Update::update(&mut passwd_hasher, &passwd_data);
   let passwd_chk = passwd_hasher.finalize();
 
-  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/hosts: {e}")))?;
-  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/hosts: {e}")))?;
+  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/hosts: {e}")))?;
+  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::other(format!("Failed to read /etc/hosts: {e}")))?;
   let mut hosts_hasher = Blake2b512::new();
   Update::update(&mut hosts_hasher, &hosts_data);
   let hosts_chk = hosts_hasher.finalize();
 
-  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
-  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/resolv.conf: {e}")))?;
+  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
+  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::other(format!("Failed to read /etc/resolv.conf: {e}")))?;
   let mut resolv_hasher = Blake2b512::new();
   Update::update(&mut resolv_hasher, &resolv_data);
   let resolv_chk = resolv_hasher.finalize();
 
-  let mut machine_file = File::open("/etc/rc.conf").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/rc.conf: {e}")))?;
-  machine_file.read_to_end(&mut machine_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/rc.conf: {e}")))?;
+  let mut machine_file = File::open("/etc/rc.conf").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/rc.conf: {e}")))?;
+  machine_file.read_to_end(&mut machine_data).map_err(|e| io::Error::other(format!("Failed to read /etc/rc.conf: {e}")))?;
 
   let mut machine_hasher = Blake2b512::new();
   Update::update(&mut machine_hasher, &machine_data);
@@ -349,8 +349,8 @@ pub fn attest_freebsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
 
   let mut system_name = Vec::new();
 
-  let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /etc/hostname: {e}")))?;
-  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /etc/hostname: {e}")))?;
+  let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::other(format!("Failed to open /etc/hostname: {e}")))?;
+  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::other(format!("Failed to read from /etc/hostname: {e}")))?;
 
   let name_str = String::from_utf8_lossy(&system_name);
 
@@ -387,32 +387,32 @@ pub fn attest_openbsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut profile_data = Vec::new();
   let mut machine_data = Vec::new();
 
-  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/passwd: {e}")))?;
-  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/passwd: {e}")))?;
+  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/passwd: {e}")))?;
+  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::other(format!("Failed to read /etc/passwd: {e}")))?;
   let mut passwd_hasher = Blake2b512::new();
   Update::update(&mut passwd_hasher, &passwd_data);
   let passwd_chk = passwd_hasher.finalize();
 
-  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/hosts: {e}")))?;
-  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/hosts: {e}")))?;
+  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/hosts: {e}")))?;
+  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::other(format!("Failed to read /etc/hosts: {e}")))?;
   let mut hosts_hasher = Blake2b512::new();
   Update::update(&mut hosts_hasher, &hosts_data);
   let hosts_chk = hosts_hasher.finalize();
 
-  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
-  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/resolv.conf: {e}")))?;
+  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
+  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::other(format!("Failed to read /etc/resolv.conf: {e}")))?;
   let mut resolv_hasher = Blake2b512::new();
   Update::update(&mut resolv_hasher, &resolv_data);
   let resolv_chk = resolv_hasher.finalize();
 
-  let mut profile_file = File::open("/etc/ksh.kshrc").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/ksh.kshrc: {e}")))?;
-  profile_file.read_to_end(&mut profile_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/ksh.kshrc: {e}")))?;
+  let mut profile_file = File::open("/etc/ksh.kshrc").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/ksh.kshrc: {e}")))?;
+  profile_file.read_to_end(&mut profile_data).map_err(|e| io::Error::other(format!("Failed to read /etc/ksh.kshrc: {e}")))?;
   let mut profile_hasher = Blake2b512::new();
   Update::update(&mut profile_hasher, &profile_data);
   let profile_chk = profile_hasher.finalize();
 
-  let mut machine_file = File::open("/etc/rc.conf").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/rc.conf: {e}")))?;
-  machine_file.read_to_end(&mut machine_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/rc.conf: {e}")))?;
+  let mut machine_file = File::open("/etc/rc.conf").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/rc.conf: {e}")))?;
+  machine_file.read_to_end(&mut machine_data).map_err(|e| io::Error::other(format!("Failed to read /etc/rc.conf: {e}")))?;
 
   let mut machine_hasher = Blake2b512::new();
   Update::update(&mut machine_hasher, &machine_data);
@@ -433,8 +433,8 @@ pub fn attest_openbsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
 
   let mut system_name = Vec::new();
 
-  let mut hostname = File::open("/etc/myname").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /etc/myname: {e}")))?;
-  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /etc/myname: {e}")))?;
+  let mut hostname = File::open("/etc/myname").map_err(|e| io::Error::other(format!("Failed to open /etc/myname: {e}")))?;
+  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::other(format!("Failed to read from /etc/myname: {e}")))?;
 
   let name_str = String::from_utf8_lossy(&system_name);
 
@@ -504,38 +504,38 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   let mut system_name = Vec::new();
 
   let kern_path = kernel_image_path()?.display().to_string();
-  let mut kernel_file = File::open(kern_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file for the kernel: {e}")))?;
-  kernel_file.read_to_end(&mut kernel_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read kernel file: {e}")))?;
+  let mut kernel_file = File::open(kern_path).map_err(|e| io::Error::other(format!("Failed to open the input file for the kernel: {e}")))?;
+  kernel_file.read_to_end(&mut kernel_data).map_err(|e| io::Error::other(format!("Failed to read kernel file: {e}")))?;
   let mut kernel_hasher = Blake2b512::new();
   Update::update(&mut kernel_hasher, &kernel_data);
   let kernel_chk = kernel_hasher.finalize();
 
-  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/passwd: {e}")))?;
-  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/passwd: {e}")))?;
+  let mut password_file = File::open("/etc/passwd").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/passwd: {e}")))?;
+  password_file.read_to_end(&mut passwd_data).map_err(|e| io::Error::other(format!("Failed to read /etc/passwd: {e}")))?;
   let mut passwd_hasher = Blake2b512::new();
   Update::update(&mut passwd_hasher, &passwd_data);
   let passwd_chk = passwd_hasher.finalize();
 
-  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/hosts: {e}")))?;
-  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/hosts: {e}")))?;
+  let mut hosts_file = File::open("/etc/hosts").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/hosts: {e}")))?;
+  hosts_file.read_to_end(&mut hosts_data).map_err(|e| io::Error::other(format!("Failed to read /etc/hosts: {e}")))?;
   let mut hosts_hasher = Blake2b512::new();
   Update::update(&mut hosts_hasher, &hosts_data);
   let hosts_chk = hosts_hasher.finalize();
 
-  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
-  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/resolv.conf: {e}")))?;
+  let mut resolv_file = File::open("/etc/resolv.conf").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/resolv.conf: {e}")))?;
+  resolv_file.read_to_end(&mut resolv_data).map_err(|e| io::Error::other(format!("Failed to read /etc/resolv.conf: {e}")))?;
   let mut resolv_hasher = Blake2b512::new();
   Update::update(&mut resolv_hasher, &resolv_data);
   let resolv_chk = resolv_hasher.finalize();
 
-  let mut profile_file = File::open("/etc/profile").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/profile: {e}")))?;
-  profile_file.read_to_end(&mut profile_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/profile: {e}")))?;
+  let mut profile_file = File::open("/etc/profile").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/profile: {e}")))?;
+  profile_file.read_to_end(&mut profile_data).map_err(|e| io::Error::other(format!("Failed to read /etc/profile: {e}")))?;
   let mut profile_hasher = Blake2b512::new();
   Update::update(&mut profile_hasher, &profile_data);
   let profile_chk = profile_hasher.finalize();
 
-  let mut disk_file = File::open("/etc/fstab").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file /etc/fstab: {e}")))?;
-  disk_file.read_to_end(&mut disk_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /etc/fstab: {e}")))?;
+  let mut disk_file = File::open("/etc/fstab").map_err(|e| io::Error::other(format!("Failed to open the input file /etc/fstab: {e}")))?;
+  disk_file.read_to_end(&mut disk_data).map_err(|e| io::Error::other(format!("Failed to read /etc/fstab: {e}")))?;
   let mut disk_hasher = Blake2b512::new();
   Update::update(&mut disk_hasher, &disk_data);
   let disk_chk = disk_hasher.finalize();
@@ -553,11 +553,11 @@ pub fn attest_linux(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Update::update(&mut hasher, &data);
   let blake2b512 = hasher.finalize();
 
-  let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /etc/hostname: {e}")))?;
-  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /etc/hostname: {e}")))?;
+  let mut hostname = File::open("/etc/hostname").map_err(|e| io::Error::other(format!("Failed to open /etc/hostname: {e}")))?;
+  hostname.read_to_end(&mut system_name).map_err(|e| io::Error::other(format!("Failed to read from /etc/hostname: {e}")))?;
 
-  let mut sysname = File::open("/proc/version").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open /proc/version: {e}")))?;
-  sysname.read_to_end(&mut system_name).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read from /proc/version: {e}")))?;
+  let mut sysname = File::open("/proc/version").map_err(|e| io::Error::other(format!("Failed to open /proc/version: {e}")))?;
+  sysname.read_to_end(&mut system_name).map_err(|e| io::Error::other(format!("Failed to read from /proc/version: {e}")))?;
 
   let name_str = String::from_utf8_lossy(&system_name);
 
