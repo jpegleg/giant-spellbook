@@ -89,7 +89,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" | "--version" => {
-          println!("{{\"Version\": \"0.2.22\"}}");
+          println!("{{\"Version\": \"0.2.23\"}}");
           Ok(())
         },
 
@@ -107,23 +107,23 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let mut json_started = false;
           // STDERR on prompt so that output stays valid JSON, useful for redirects etc
           eprintln!("Enter key password then press enter (will not be displayed):");
-          std::io::stdout().flush().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to flush stdout: {}", e)))?;
-          let password = read_password().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read password: {}", e)))?;
+          std::io::stdout().flush().map_err(|e| io::Error::other( format!("Failed to flush stdout: {}", e)))?;
+          let password = read_password().map_err(|e| io::Error::other( format!("Failed to read password: {}", e)))?;
           let keymaterial = derive_key(password.as_bytes(), 32);
           let kbytes = decrypt_key(key_path, &keymaterial)
-              .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to decrypt key: {}", e)))?;
+              .map_err(|e| io::Error::other( format!("Failed to decrypt key: {}", e)))?;
           let file_path = Path::new(file_path);
           let metadata = try_print_json!(
-              file_path.metadata().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file metadata: {}", e))),
+              file_path.metadata().map_err(|e| io::Error::other( format!("Failed to read file metadata: {}", e))),
               json_started
           );
           let mut file = try_print_json!(
-              File::open(&file_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open file {}: {}", file_path.display(), e))),
+              File::open(file_path).map_err(|e| io::Error::other( format!("Failed to open file {}: {}", file_path.display(), e))),
               json_started
           );
           let mut bytes = Vec::new();
           try_print_json!(
-              file.read_to_end(&mut bytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file {}: {}", file_path.display(), e))),
+              file.read_to_end(&mut bytes).map_err(|e| io::Error::other( format!("Failed to read file {}: {}", file_path.display(), e))),
               json_started
           );
           let num_bytes = bytes.len();
@@ -156,22 +156,22 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           println!("  \"Total as bits\": \"{}\",", num_bits);
           println!("  \"Byte distribution\": \"{}\",", byte_distribution);
           let created: DateTime<Utc> = try_print_json!(
-              metadata.created().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get created timestamp.")).map(DateTime::from),
+              metadata.created().map_err(|_| io::Error::other( "Failed to get created timestamp.")).map(DateTime::from),
               json_started
           );
           let modified: DateTime<Utc> = try_print_json!(
-              metadata.modified().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get modified timestamp.")).map(DateTime::from),
+              metadata.modified().map_err(|_| io::Error::other( "Failed to get modified timestamp.")).map(DateTime::from),
               json_started
           );
           let access: DateTime<Utc> = try_print_json!(
-              metadata.accessed().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get accessed timestamp.")).map(DateTime::from),
+              metadata.accessed().map_err(|_| io::Error::other( "Failed to get accessed timestamp.")).map(DateTime::from),
               json_started
           );
           let changed: DateTime<Utc> = {
               let ctime = metadata.ctime();
               let ctimesec = metadata.ctime_nsec() as u32;
               let naive_datetime = try_print_json!(
-                  NaiveDateTime::from_timestamp_opt(ctime, ctimesec).ok_or(io::Error::new(io::ErrorKind::Other, "Invalid changed timestamp")),
+                  NaiveDateTime::from_timestamp_opt(ctime, ctimesec).ok_or(io::Error::other( "Invalid changed timestamp")),
                   json_started
               );
               TimeZone::from_utc_datetime(&Utc, &naive_datetime)
@@ -203,16 +203,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let keypath = Path::new(&key_path);
           let pubpath = Path::new(&pub_path);
           let kmetadata = try_print_json!(
-              keypath.metadata().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file metadata for key: {}", e))),
+              keypath.metadata().map_err(|e| io::Error::other( format!("Failed to read file metadata for key: {}", e))),
               json_started
           );
           let mut kpubf = try_print_json!(
-              File::open(pubpath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the public key: {}", e))),
+              File::open(pubpath).map_err(|e| io::Error::other( format!("Failed to open the public key: {}", e))),
               json_started
           );
           let mut pubbytes = Vec::new();
           try_print_json!(
-              kpubf.read_to_end(&mut pubbytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read the public key: {}", e))),
+              kpubf.read_to_end(&mut pubbytes).map_err(|e| io::Error::other( format!("Failed to read the public key: {}", e))),
               json_started
           );
           let keys: Keypair = Keypair::loadit(pubbytes, kbytes);
@@ -220,11 +220,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let sig = keys.sign(msg);
           let spath = Path::new(sig_path);
           let mut sigoutput = try_print_json!(
-              File::create(spath).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to create signature file {}: {}", sig_path, e))),
+              File::create(spath).map_err(|e| io::Error::other( format!("Failed to create signature file {}: {}", sig_path, e))),
               json_started
           );
           try_print_json!(
-              sigoutput.write_all(&sig).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to write signature: {}", e))),
+              sigoutput.write_all(&sig).map_err(|e| io::Error::other( format!("Failed to write signature: {}", e))),
               json_started
           );
           println!("  \"Dilithium signature file\": \"{}\",", sig_path);
@@ -232,22 +232,22 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let kinode = kmetadata.ino();
           println!("  \"Key Inode\": \"{}\",", &kinode);
           let kcreated: DateTime<Utc> = try_print_json!(
-              kmetadata.created().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get key created timestamp.")).map(DateTime::from),
+              kmetadata.created().map_err(|_| io::Error::other( "Failed to get key created timestamp.")).map(DateTime::from),
               json_started
           );
           let kmodified: DateTime<Utc> = try_print_json!(
-              kmetadata.modified().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get key modified timestamp.")).map(DateTime::from),
+              kmetadata.modified().map_err(|_| io::Error::other( "Failed to get key modified timestamp.")).map(DateTime::from),
               json_started
           );
           let kaccess: DateTime<Utc> = try_print_json!(
-              kmetadata.accessed().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get key accessed timestamp.")).map(DateTime::from),
+              kmetadata.accessed().map_err(|_| io::Error::other( "Failed to get key accessed timestamp.")).map(DateTime::from),
               json_started
           );
           let kchanged: DateTime<Utc> = {
               let ctime = kmetadata.ctime();
               let ctimesec = kmetadata.ctime_nsec() as u32;
               let naive_datetime = try_print_json!(
-                  chrono::NaiveDateTime::from_timestamp_opt(ctime, ctimesec).ok_or(io::Error::new(io::ErrorKind::Other, "Invalid key changed timestamp")),
+                  chrono::NaiveDateTime::from_timestamp_opt(ctime, ctimesec).ok_or(io::Error::other( "Invalid key changed timestamp")),
                   json_started
               );
               TimeZone::from_utc_datetime(&Utc, &naive_datetime)
@@ -287,16 +287,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let mut bytes = Vec::new();
           let mut kbytes = Vec::new();
           let mut sbytes = Vec::new();
-          let file = File::open(&file_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open file {}: {}", file_path, e)));
-          let pub_key = File::open(&pub_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the key: {}", e)));
-          let sig = File::open(&sig_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the signature file: {}", e)));
+          let file = File::open(file_path).map_err(|e| io::Error::other( format!("Failed to open file {}: {}", file_path, e)));
+          let pub_key = File::open(pub_path).map_err(|e| io::Error::other( format!("Failed to open the key: {}", e)));
+          let sig = File::open(sig_path).map_err(|e| io::Error::other( format!("Failed to open the signature file: {}", e)));
 
-          let _ = pub_key?.read_to_end(&mut kbytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read the key: {}", e)));
-          let _ = sig?.read_to_end(&mut sbytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read the signature file: {}", e)));
-          let _ = file?.read_to_end(&mut bytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read the file: {}", e)));
+          let _ = pub_key?.read_to_end(&mut kbytes).map_err(|e| io::Error::other( format!("Failed to read the key: {}", e)));
+          let _ = sig?.read_to_end(&mut sbytes).map_err(|e| io::Error::other( format!("Failed to read the signature file: {}", e)));
+          let _ = file?.read_to_end(&mut bytes).map_err(|e| io::Error::other( format!("Failed to read the file: {}", e)));
 
           let msg = &bytes;
-          let sig_verify = verify(&sbytes, &msg, &kbytes);
+          let sig_verify = verify(&sbytes, msg, &kbytes);
           let statusig = sig_verify.is_ok();
           println!("{{\"Verification Result\": \"{}\"}}", statusig);
           Ok(())
@@ -347,9 +347,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let bpassword = password.as_bytes();
               let mut key = enchantress::a2(bpassword, MAGIC);
               enchantress::encrypt_file(input_file, output_file, &key)?;
-              let mut out_file = File::open(output_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the output file {output_file}: {e}")))?;
+              let mut out_file = File::open(output_file).map_err(|e| io::Error::other( format!("Failed to open the output file {output_file}: {e}")))?;
               let mut output_file_data = Vec::new();
-              out_file.read_to_end(&mut output_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {output_file}: {e}")))?;
+              out_file.read_to_end(&mut output_file_data).map_err(|e| io::Error::other( format!("Failed to read {output_file}: {e}")))?;
               let validate = enchantress::ciphertext_hash(&key, &output_file_data, 64);
               let validate_str = BASE64_STANDARD.encode(&validate);
               println!("{{\"Validation string\": \"{validate_str}\"}}");
@@ -363,9 +363,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let bpassword = password.as_bytes();
               let mut key = enchantress::a2(bpassword, MAGIC);
               enchantress::aead_encrypt_file(input_file, output_file, &key)?;
-              let mut out_file = File::open(output_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the output file {output_file}: {e}")))?;
+              let mut out_file = File::open(output_file).map_err(|e| io::Error::other( format!("Failed to open the output file {output_file}: {e}")))?;
               let mut output_file_data = Vec::new();
-              out_file.read_to_end(&mut output_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {output_file}: {e}")))?;
+              out_file.read_to_end(&mut output_file_data).map_err(|e| io::Error::other( format!("Failed to read {output_file}: {e}")))?;
               let validate = enchantress::ciphertext_hash(&key, &output_file_data, 64);
               let validate_str = BASE64_STANDARD.encode(&validate);
               println!("{{\"Validation string\": \"{validate_str}\"}}");
@@ -379,9 +379,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let bpassword = password.as_bytes();
               let mut key = a3(bpassword, TUR);
               enchanter::encrypt_file(input_file, output_file, &key)?;
-              let mut out_file = File::open(output_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the output file {output_file}: {e}")))?;
+              let mut out_file = File::open(output_file).map_err(|e| io::Error::other( format!("Failed to open the output file {output_file}: {e}")))?;
               let mut output_file_data = Vec::new();
-              out_file.read_to_end(&mut output_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {output_file}: {e}")))?;
+              out_file.read_to_end(&mut output_file_data).map_err(|e| io::Error::other( format!("Failed to read {output_file}: {e}")))?;
               let validate = enchanter::ciphertext_hash(&key, &output_file_data, 64);
               let validate_str = BASE64_STANDARD.encode(&validate);
               println!("{{\"Validation string\": \"{validate_str}\"}}");
@@ -419,14 +419,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let password = read_password()?;
               let bpassword = password.as_bytes();
               let mut key = enchantress::a2(bpassword, MAGIC);
-              let mut in_file = File::open(input_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input_file}: {e}")))?;
+              let mut in_file = File::open(input_file).map_err(|e| io::Error::other( format!("Failed to open the input file {input_file}: {e}")))?;
               let mut input_file_data = Vec::new();
-              in_file.read_to_end(&mut input_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input_file}: {e}")))?;
+              in_file.read_to_end(&mut input_file_data).map_err(|e| io::Error::other( format!("Failed to read {input_file}: {e}")))?;
               let validate = enchantress::ciphertext_hash(&key, &input_file_data, 64);
               let validate_str = BASE64_STANDARD.encode(&validate);
               let checkme = &validate_str;
-              if enchantress::checks(checkme, &known_hash) == true {
-                enchantress::decrypt_file(input_file, output_file, &key).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Decryption failed: {e}")))?;
+              if enchantress::checks(checkme, &known_hash) {
+                enchantress::decrypt_file(input_file, output_file, &key).map_err(|e| io::Error::other( format!("Decryption failed: {e}")))?;
                 println!("{{\"Result\": \"file decrypted\"}}");
               } else {
                 println!("  \"Result\": \"Refusing to decrypt.\"\n}}");
@@ -447,14 +447,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let password = read_password()?;
               let bpassword = password.as_bytes();
               let mut key = enchantress::a2(bpassword, MAGIC);
-              let mut in_file = File::open(input_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input_file}: {e}")))?;
+              let mut in_file = File::open(input_file).map_err(|e| io::Error::other( format!("Failed to open the input file {input_file}: {e}")))?;
               let mut input_file_data = Vec::new();
-              in_file.read_to_end(&mut input_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input_file}: {e}")))?;
+              in_file.read_to_end(&mut input_file_data).map_err(|e| io::Error::other( format!("Failed to read {input_file}: {e}")))?;
               let validate = enchantress::ciphertext_hash(&key, &input_file_data, 64);
               let validate_str = BASE64_STANDARD.encode(&validate);
               let checkme = &validate_str;
-              if enchantress::checks(checkme, &known_hash) == true {
-                enchantress::aead_decrypt_file(input_file, output_file, &key).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Decryption failed: {e}")))?;
+              if enchantress::checks(checkme, &known_hash) {
+                enchantress::aead_decrypt_file(input_file, output_file, &key).map_err(|e| io::Error::other( format!("Decryption failed: {e}")))?;
                 println!("{{\"Result\": \"file decrypted\"}}");
               } else {
                 println!("  \"Result\": \"Refusing to decrypt.\"\n}}");
@@ -475,14 +475,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let password = read_password()?;
               let bpassword = password.as_bytes();
               let mut key = a3(bpassword, TUR);
-              let mut in_file = File::open(input_file).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input_file}: {e}")))?;
+              let mut in_file = File::open(input_file).map_err(|e| io::Error::other( format!("Failed to open the input file {input_file}: {e}")))?;
               let mut input_file_data = Vec::new();
-              in_file.read_to_end(&mut input_file_data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input_file}: {e}")))?;
+              in_file.read_to_end(&mut input_file_data).map_err(|e| io::Error::other( format!("Failed to read {input_file}: {e}")))?;
               let validate = enchanter::ciphertext_hash(&key, &input_file_data, 64);
               let validate_str = BASE64_STANDARD.encode(&validate);
               let checkme = &validate_str;
-              if enchanter::checks(checkme, &known_hash) == true {
-                enchanter::decrypt_file(input_file, output_file, &key).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Decryption failed: {e}")))?;
+              if enchanter::checks(checkme, &known_hash) {
+                enchanter::decrypt_file(input_file, output_file, &key).map_err(|e| io::Error::other( format!("Decryption failed: {e}")))?;
                 println!("{{\"Result\": \"file decrypted\"}}");
               } else {
                 println!("  \"Result\": \"Refusing to decrypt.\"\n}}");
@@ -835,7 +835,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let _ = bithack::splitter(file_path, position);
           Ok(())
         },
-        
+
         "diff_no_color" => {
           if args.len() != 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} diff_no_color  <file_1> <file_2>\"\n}}", args[0]);
@@ -847,7 +847,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let _ = diff::colorless_file_diff(file_1, file_2);
           Ok(())
         },
-        
+
         "diff" => {
           if args.len() != 4 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} diff  <file_1> <file_2>\"\n}}", args[0]);
@@ -859,7 +859,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let _ = diff::file_diff(file_1, file_2);
           Ok(())
         },
-        
+
         "shift" => {
           if args.len() != 5 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} shift <left right> <byte count> <file>\"\n}}", args[0]);
@@ -869,7 +869,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let shiftcount = &args[3];
           let file = &args[4];
 
-          let _ = bithack::shift(file, direction, shiftcount);
+          bithack::shift(file, direction, shiftcount);
           Ok(())
         },
 
@@ -1000,7 +1000,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           }
           Ok(())
         },
-        
+
         "metadata" => {
           if args.len() != 3 {
             eprintln!("{{\n  \"ERROR\": \"Usage: metadata <target_file>\"}}");
@@ -1009,16 +1009,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           let mut json_started = false;
           let file_path = Path::new(&args[2]);
           let metadata = try_print_json!(
-            file_path.metadata().map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file metadata: {}", e))),
+            file_path.metadata().map_err(|e| io::Error::other( format!("Failed to read file metadata: {}", e))),
             json_started
           );
           let mut file = try_print_json!(
-            File::open(&file_path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open file {}: {}", file_path.display(), e))),
+            File::open(file_path).map_err(|e| io::Error::other( format!("Failed to open file {}: {}", file_path.display(), e))),
             json_started
           );
           let mut bytes = Vec::new();
           try_print_json!(
-            file.read_to_end(&mut bytes).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read file {}: {}", file_path.display(), e))),
+            file.read_to_end(&mut bytes).map_err(|e| io::Error::other( format!("Failed to read file {}: {}", file_path.display(), e))),
             json_started
           );
           let num_bytes = bytes.len();
@@ -1051,22 +1051,22 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           println!("  \"Total as bits\": \"{}\",", num_bits);
           println!("  \"Byte distribution\": \"{}\",", byte_distribution);
           let created: DateTime<Utc> = try_print_json!(
-            metadata.created().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get created timestamp.")).map(DateTime::from),
+            metadata.created().map_err(|_| io::Error::other( "Failed to get created timestamp.")).map(DateTime::from),
             json_started
           );
           let modified: DateTime<Utc> = try_print_json!(
-            metadata.modified().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get modified timestamp.")).map(DateTime::from),
+            metadata.modified().map_err(|_| io::Error::other( "Failed to get modified timestamp.")).map(DateTime::from),
             json_started
           );
           let access: DateTime<Utc> = try_print_json!(
-            metadata.accessed().map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to get accessed timestamp.")).map(DateTime::from),
+            metadata.accessed().map_err(|_| io::Error::other( "Failed to get accessed timestamp.")).map(DateTime::from),
             json_started
           );
           let changed: DateTime<Utc> = {
             let ctime = metadata.ctime();
             let ctimesec = metadata.ctime_nsec() as u32;
             let naive_datetime = try_print_json!(
-              NaiveDateTime::from_timestamp_opt(ctime, ctimesec).ok_or(io::Error::new(io::ErrorKind::Other, "Invalid changed timestamp")),
+              NaiveDateTime::from_timestamp_opt(ctime, ctimesec).ok_or(io::Error::other( "Invalid changed timestamp")),
               json_started
             );
             TimeZone::from_utc_datetime(&Utc, &naive_datetime)
