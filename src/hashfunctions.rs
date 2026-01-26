@@ -452,7 +452,7 @@ pub fn attest_openbsd(mode: bool) -> Result<(), Box<dyn std::error::Error>> {
   Ok(())
 }
 
-fn parse_boot_image<'a>(cmdline: &'a str) -> Option<&'a str> {
+fn parse_boot_image(cmdline: &str) -> Option<&str> {
     for tok in cmdline.split_whitespace() {
         if let Some(rest) = tok.strip_prefix("BOOT_IMAGE=") {
             return Some(rest.trim_matches('"'));
