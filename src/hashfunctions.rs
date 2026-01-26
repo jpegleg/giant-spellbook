@@ -12,9 +12,9 @@ extern crate sha2;
 extern crate sha3;
 
 pub fn file_all(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other( format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other( format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   let mut hasher = Shake256::default();
@@ -60,9 +60,9 @@ pub fn argon2id(input: &[u8], salt: &[u8]) {
 }
 
 pub fn sha256(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other( format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other( format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -75,9 +75,9 @@ pub fn sha256(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn sha512(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other( format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other( format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -90,9 +90,9 @@ pub fn sha512(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn sha3_384(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other( format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other( format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -105,9 +105,9 @@ pub fn sha3_384(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn sha3_256(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other( format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other( format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -120,9 +120,9 @@ pub fn sha3_256(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn blake2b512(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other( format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other( format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -135,9 +135,9 @@ pub fn blake2b512(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn blake3(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other( format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other( format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   println!("  \"Time\": \"{chronox}\",");
@@ -150,9 +150,9 @@ pub fn blake3(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn shake256_10(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other( format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other( format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   let mut hasher = Shake256::default();
@@ -167,9 +167,9 @@ pub fn shake256_10(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn shake256_32(input: &String) -> Result<(), Box<dyn std::error::Error>> {
-  let mut file = File::open(&input).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open the input file {input}: {e}")))?;
+  let mut file = File::open(input).map_err(|e| io::Error::other( format!("Failed to open the input file {input}: {e}")))?;
   let mut data = Vec::new();
-  file.read_to_end(&mut data).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read {input}: {e}")))?;
+  file.read_to_end(&mut data).map_err(|e| io::Error::other( format!("Failed to read {input}: {e}")))?;
   println!("{{\n  \"File\": \"{input}\",");
   let chronox: String = Utc::now().to_string();
   let mut hasher = Shake256::default();
