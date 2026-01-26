@@ -81,7 +81,7 @@ impl<'a> Write for RecordingIo<'a> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let n = self.inner.write(buf)?;
         if n > 0 {
-            let enco = hex::encode(&buf);
+            let enco = hex::encode(buf);
             let displ = enco.trim_end_matches('0');
             self.events.push(Event::new(
                 Side::Client,
@@ -127,14 +127,14 @@ pub fn extract_auth_debug(target_arg: &str, roots_path: &str, client_auth_path: 
 /// Use a RusTLS client to debug a TLS connection.
 /// Capture timing information, payloads, certificates, key exchange, cipher details, and more.
 fn run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>> {
-    let (host, port) = parse_host_port(&target_arg)?;
+    let (host, port) = parse_host_port(target_arg)?;
     let addr_str = format!("{host}:{port}");
     let sock_addr = addr_str
         .to_socket_addrs()?
         .next()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
+        .ok_or_else(|| io::Error::other("Failed to resolve host"))?;
 
-    let root_store = load_roots(&roots_path)?;
+    let root_store = load_roots(roots_path)?;
     let builder = ClientConfig::builder().with_root_certificates(root_store);
     let config = builder.with_no_client_auth();
     let config = Arc::new(config);
@@ -215,7 +215,7 @@ fn run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>> {
             events.push(Event::new(Side::Info, format!("Server sent {} certificate(s)", chain.len())));
             let fname = artifact_filename("server-certs", &host, "pem");
             let pem_path = PathBuf::from(&fname);
-            save_cert_chain_as_pem(&pem_path, &chain)?;
+            save_cert_chain_as_pem(&pem_path, chain)?;
             cert_pem_path = Some(pem_path.clone());
             events.push(Event::new(Side::Info, format!("Saved server cert chain bundle: ./{}", pem_path.display())));
 
@@ -285,17 +285,17 @@ fn run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>> {
 
 /// Just like 'run' but with mTLS.
 fn auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) -> Result<(), Box<dyn Error>> {
-    let (host, port) = parse_host_port(&target_arg)?;
+    let (host, port) = parse_host_port(target_arg)?;
     let addr_str = format!("{host}:{port}");
     let sock_addr = addr_str
         .to_socket_addrs()?
         .next()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
+        .ok_or_else(|| io::Error::other("Failed to resolve host"))?;
 
-    let root_store = load_roots(&roots_path)?;
+    let root_store = load_roots(roots_path)?;
     let builder = ClientConfig::builder().with_root_certificates(root_store);
     let config = {
-        let (certs, key) = load_client_auth(&client_auth_path)?;
+        let (certs, key) = load_client_auth(client_auth_path)?;
         builder.with_client_auth_cert(certs, key)?
     };
     let config = Arc::new(config);
@@ -377,7 +377,7 @@ fn auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) -> Resul
             events.push(Event::new(Side::Info, format!("Server sent {} certificate(s)", chain.len())));
             let fname = artifact_filename("server-certs", &host, "pem");
             let pem_path = PathBuf::from(&fname);
-            save_cert_chain_as_pem(&pem_path, &chain)?;
+            save_cert_chain_as_pem(&pem_path, chain)?;
             cert_pem_path = Some(pem_path.clone());
             events.push(Event::new(Side::Info, format!("Saved server cert chain bundle: ./{}", pem_path.display())));
 
@@ -447,14 +447,14 @@ fn auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) -> Resul
 
 /// Like run but also extract secrets from protected memory.
 fn extract_run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>> {
-    let (host, port) = parse_host_port(&target_arg)?;
+    let (host, port) = parse_host_port(target_arg)?;
     let addr_str = format!("{host}:{port}");
     let sock_addr = addr_str
         .to_socket_addrs()?
         .next()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
+        .ok_or_else(|| io::Error::other("Failed to resolve host"))?;
 
-    let root_store = load_roots(&roots_path)?;
+    let root_store = load_roots(roots_path)?;
     let mut base = ClientConfig::builder().with_root_certificates(root_store)
                                           .with_no_client_auth();
     base.enable_secret_extraction = true;
@@ -538,7 +538,7 @@ fn extract_run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>>
             events.push(Event::new(Side::Info, format!("Server sent {} certificate(s)", chain.len())));
             let fname = artifact_filename("server-certs", &host, "pem");
             let pem_path = PathBuf::from(&fname);
-            save_cert_chain_as_pem(&pem_path, &chain)?;
+            save_cert_chain_as_pem(&pem_path, chain)?;
             cert_pem_path = Some(pem_path.clone());
             events.push(Event::new(Side::Info, format!("Saved server cert chain bundle: ./{}", pem_path.display())));
 
@@ -613,17 +613,17 @@ fn extract_run(target_arg: &str, roots_path: &str) -> Result<(), Box<dyn Error>>
 
 /// Like extract_run but for mTLS.
 fn extract_auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) -> Result<(), Box<dyn Error>> {
-    let (host, port) = parse_host_port(&target_arg)?;
+    let (host, port) = parse_host_port(target_arg)?;
     let addr_str = format!("{host}:{port}");
     let sock_addr = addr_str
         .to_socket_addrs()?
         .next()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Failed to resolve host"))?;
+        .ok_or_else(|| io::Error::other("Failed to resolve host"))?;
 
-    let root_store = load_roots(&roots_path)?;
+    let root_store = load_roots(roots_path)?;
     let base = ClientConfig::builder().with_root_certificates(root_store);
     let mut base = {
-        let (certs, key) = load_client_auth(&client_auth_path)?;
+        let (certs, key) = load_client_auth(client_auth_path)?;
         base.with_client_auth_cert(certs, key)?
     };
 
@@ -708,7 +708,7 @@ fn extract_auth_run(target_arg: &str, roots_path: &str, client_auth_path: &str) 
             events.push(Event::new(Side::Info, format!("Server sent {} certificate(s)", chain.len())));
             let fname = artifact_filename("server-certs", &host, "pem");
             let pem_path = PathBuf::from(&fname);
-            save_cert_chain_as_pem(&pem_path, &chain)?;
+            save_cert_chain_as_pem(&pem_path, chain)?;
             cert_pem_path = Some(pem_path.clone());
             events.push(Event::new(Side::Info, format!("Saved server cert chain bundle: ./{}", pem_path.display())));
 
@@ -868,7 +868,6 @@ fn load_client_auth<P: AsRef<Path>>(
     let mut rd = BufReader::new(File::open(pem_path.as_ref())?);
 
     let certs: Vec<CertificateDer<'static>> = rustls_pemfile::certs(&mut rd)
-        .map(|res| res.map(CertificateDer::from))
         .collect::<Result<_, _>>()?;
 
     if certs.is_empty() {
