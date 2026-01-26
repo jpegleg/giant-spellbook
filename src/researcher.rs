@@ -275,5 +275,5 @@ fn is_macho_magic_prefix(buf: &[u8]) -> bool {
         [0xCA, 0xFE, 0xBA, 0xBF],
         [0xBF, 0xBA, 0xFE, 0xCA],
     ];
-    MAGICS.contains(head)
+    MAGICS.contains(&head)
 }
