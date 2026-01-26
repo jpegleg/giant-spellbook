@@ -569,7 +569,7 @@ fn detect_pe(d: &[u8]) -> (bool, Option<u16>, bool, Option<u16>, &'static str) {
     if &d[e_lfanew..e_lfanew+4] != b"PE\0\0" { return (false, None, false, None, ""); }
 
     let coff = e_lfanew + 4;
-    let machine = u16::from_le_bytes([d[coff + 0], d[coff + 1]]);
+    let machine = u16::from_le_bytes([d[coff], d[coff + 1]]);
     let size_of_optional_header = u16::from_le_bytes([d[e_lfanew + 0x14], d[e_lfanew + 0x15]]) as usize;
     let characteristics = u16::from_le_bytes([d[e_lfanew + 0x16], d[e_lfanew + 0x17]]);
     let is_dll = (characteristics & IMAGE_FILE_DLL) != 0;
@@ -854,7 +854,7 @@ fn find_musl_versions_strict_and_loose(d: &[u8]) -> Vec<String> {
 
     for &key in &keys {
         let mut pos = 0usize;
-        while let Some(idx) = memmem_from(d, key.as_ref(), pos) {
+        while let Some(idx) = memmem_from(d, key, pos) {
             let start = idx + key.len();
             let end = (start + 64).min(d.len());
             let slice = &d[start..end];
