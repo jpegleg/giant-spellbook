@@ -97,8 +97,7 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
             .unwrap_or_else(|_| String::from(""));
 
         let printme2 = printme1
-            .replace('\n', " ")
-            .replace('\t', " ")
+            .replace(['\n', '\t'], " ")
             .replace("  ", " ");
 
         print!(" {}|{} ", &clr_wgr, RESET);
@@ -113,7 +112,7 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
         let jumper = read_password()?;
 
         match jumper.parse::<String>() {
-            Ok(val) if val == "binary".to_string() => {
+            Ok(val) if val == "binary" => {
                 let out: String = dis_slice
                   .iter()
                   .map(|b| format!("[ {:08b} ]", b))
@@ -121,9 +120,9 @@ pub fn annotated_dump(path: &str) -> io::Result<()> {
                   .join(" ");
                 println!("{}\n", out);
             },
-            Ok(val) if val == "base64".to_string() => {
+            Ok(val) if val == "base64" => {
                 let out: String = base64::engine::general_purpose::STANDARD_NO_PAD
-                  .encode(&dis_slice);
+                  .encode(dis_slice);
                 println!("{}\n", out);
             },
 
@@ -216,7 +215,7 @@ fn build_hex_area_styled(
         }
     }
     let vis = visible_len(&s);
-    if vis < target_w { 
+    if vis < target_w {
         s.push_str(&" ".repeat(target_w - vis));
     }
     s
@@ -276,5 +275,5 @@ fn is_macho_magic_prefix(buf: &[u8]) -> bool {
         [0xCA, 0xFE, 0xBA, 0xBF],
         [0xBF, 0xBA, 0xFE, 0xCA],
     ];
-    MAGICS.iter().any(|m| *m == head)
+    MAGICS.contains(&head)
 }
