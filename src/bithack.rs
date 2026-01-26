@@ -33,11 +33,11 @@ pub fn flatten(path: &str) -> Result<(), Box<dyn Error>> {
     let file_path = Path::new(path);
     let tmp_path = file_path.with_extension("tmp");
     let mut contents = String::new();
-    File::open(&file_path)?.read_to_string(&mut contents)?;
+    File::open(file_path)?.read_to_string(&mut contents)?;
     let cleaned: String = contents.chars().filter(|c| !c.is_whitespace()).collect();
     let mut tmp_file = File::create(&tmp_path)?;
     tmp_file.write_all(cleaned.as_bytes())?;
-    fs::rename(&tmp_path, &file_path)?;
+    fs::rename(&tmp_path, file_path)?;
     Ok(())
 }
 
@@ -234,7 +234,7 @@ pub fn flip_bit_in_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> 
     let original_path = Path::new(path);
     let temp_path = original_path.with_extension("tmp");
 
-    let mut input = File::open(&original_path)?;
+    let mut input = File::open(original_path)?;
     let mut output = File::create(&temp_path)?;
 
     io::copy(&mut std::io::Write::by_ref(&mut std::io::Read::by_ref(&mut input)).take(byte_index), &mut output)?;
@@ -252,13 +252,13 @@ pub fn flip_bit_in_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> 
     output.flush()?;
     output.sync_all()?;
 
-    match fs::rename(&temp_path, &original_path) {
+    match fs::rename(&temp_path, original_path) {
         Ok(()) => {}
         Err(e) => {
             if original_path.exists() {
-                fs::remove_file(&original_path)?;
+                fs::remove_file(original_path)?;
             }
-            fs::rename(&temp_path, &original_path).map_err(|e2| {
+            fs::rename(&temp_path, original_path).map_err(|e2| {
                 format!("Failed to replace original file: {e}; fallback error: {e2}")
             })?;
         }
@@ -270,7 +270,7 @@ pub fn flip_bit_in_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> 
 pub fn split_file(path: &str, bit_pos: u64) -> Result<(), Box<dyn Error>> {
     let input_path = Path::new(path);
 
-    let mut input = File::open(&input_path)?;
+    let mut input = File::open(input_path)?;
     let mut data = Vec::new();
     input.read_to_end(&mut data)?;
 
