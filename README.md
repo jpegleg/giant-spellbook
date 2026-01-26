@@ -523,9 +523,9 @@ The log and server certificates are saved to files with each run.
 
 The timeout for read and write for the 'tls_debug' is set to 20 seconds. The client is RusTLS, and so old and weak protocols are not supported in the 'tls_debug' client.
 
-RusTLS is very correct, but that also makes it less useful for further probing of misconfigured or legacy endpoints. Another function and library is likely to get added to expand debugging.
+RusTLS is very correct, but that also makes it less useful for further probing of misconfigured or legacy endpoints, which may require other techniques to debug further.
 
-If the last argument to 'tls_debug' is 'no_auth' regular TLS will be used. If that argument is 'auth', then an additional argument of a path to a PEM bundle for client auth and mTLS is used. The mTLS with RusTLS is perhaps overly picky, again, so there will likely be another function and library added to expand mTLS testing as well.
+If the last argument to 'tls_debug' is 'no_auth' regular TLS will be used. If that argument is 'auth', then an additional argument of a path to a PEM bundle for client auth and mTLS is used.
 
 There is also 'extract_no_auth' and 'extract_auth' for 'tls_debug', which prints the TLS secrets from the debug session (currently secret keys and IVs) and expose them in the log.
 
