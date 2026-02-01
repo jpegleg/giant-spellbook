@@ -1047,7 +1047,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           println!("  \"Inode\": \"{}\",", &inode);
           println!("  \"Total as bytes\": \"{}\",", &num_bytes);
           println!("  \"Total as kilobytes\": \"{}\",", &num_bytes / 1024);
-          println!("  \"Total as megabytes\": \"{}\",", &num_bytes / (1024 * 1024));
+          println!("  \"Total as megabytes\": \"{}\",", num_bytes / (1024 * 1024));
           println!("  \"Total as bits\": \"{}\",", num_bits);
           println!("  \"Byte distribution\": \"{}\",", byte_distribution);
           let created: DateTime<Utc> = try_print_json!(
