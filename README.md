@@ -70,6 +70,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | parse         | parse PEM and DER x509 certificates inside files                                   |
 | disassemble   | disassemble machine code to assembly text file                                     |
 | hunter        | search a file for IoCs and potentially interesting bytes and strings               |
+| llm_hunter    | search for common LLM file patterns and measure entropy "shapes"                   |
 | byte_range    | print hex or hex and ascii of a file from a byte position range                    |
 | commander     | run a command for each line in a file, supplying the line as STDIN to command      |
 | researcher    | interactive disassembly and hexdump of a file with colored byte highlighting       |
@@ -631,6 +632,8 @@ There are many more patterns to check for, but this function has a good start an
 
 Go binaries commonly match a number of patterns like in the example with `kubectl`. While this isn't malicious exactly, Go just commonly has large binaries that include some of these patterns within.
 While many cases are normal, don't let that get your guard down. The byte offset is provided so that the occurrence of the pattern can be more closely researched if desired.
+
+While 'llm_hunter' is made for gguf files, it is also a useful analysis for some kinds of large data files, providing byte positions (offsets) for various possibly interesting patterns commonly found in LLMs.
 
 To review a byte position in a file as hex and ascii:
 
