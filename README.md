@@ -70,6 +70,7 @@ The digital signatures are post-quantum-cryptography Dilithium5-AES. The secret 
 | parse         | parse PEM and DER x509 certificates inside files                                   |
 | disassemble   | disassemble machine code to assembly text file                                     |
 | hunter        | search a file for IoCs and potentially interesting bytes and strings               |
+| llm_hunter    | search for common LLM file patterns and measure entropy "shapes"                   |
 | byte_range    | print hex or hex and ascii of a file from a byte position range                    |
 | commander     | run a command for each line in a file, supplying the line as STDIN to command      |
 | researcher    | interactive disassembly and hexdump of a file with colored byte highlighting       |
@@ -122,7 +123,7 @@ Run with no arguments to print all of the options:
 ```
 giant-spellbook
 {
-  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff, diff_no_color> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
+  "ERROR": "Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, llm_hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff, diff_no_color> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands."
 }
 
 ```
@@ -594,6 +595,67 @@ There are many more patterns to check for, but this function has a good start an
 
 Go binaries commonly match a number of patterns like in the example with `kubectl`. While this isn't malicious exactly, Go just commonly has large binaries that include some of these patterns within.
 While many cases are normal, don't let that get your guard down. The byte offset is provided so that the occurrence of the pattern can be more closely researched if desired.
+
+There is 'llm_hunter' which is designed to look for gguf files and other common patterns in LLM files.
+
+```
+{
+  "ok": true,
+  "file_name": "some_file",
+  "created_at_utc": "2026-04-07T02:31:05Z",
+  "byte_count": 788048,
+  "scanned_byte_count": 788048,
+  "is_probably_text": false,
+  "entropy_sample": 1.602038,
+  "signatures": [],
+  "detected_specs": [],
+  "detected_models": [],
+  "matched_patterns": [],
+  "detected_data_structures": [],
+  "quantization": [],
+  "dataset_size": [],
+  "parameter_data": [],
+  "shapes": [
+    {
+      "kind": "entropy_transition",
+      "offset": 16384,
+      "length": 16384,
+      "description": "entropy changed by 2.992 between adjacent windows",
+      "source": "deep entropy scan",
+      "details": {
+        "current_entropy": "5.841055",
+        "delta": "2.991641",
+        "previous_entropy": "2.849414"
+      }
+    },
+    {
+      "kind": "entropy_transition",
+      "offset": 786432,
+      "length": 1616,
+      "description": "entropy changed by 3.222 between adjacent windows",
+      "source": "deep entropy scan",
+      "details": {
+        "current_entropy": "1.722589",
+        "delta": "3.222235",
+        "previous_entropy": "4.944823"
+      }
+    }
+  ],
+  "metadata": {
+    "configured_deep_entropy_window_bytes": "16384",
+    "configured_deep_scan_chunk_bytes": "1048576",
+    "configured_deep_scan_overlap_bytes": "16384",
+    "pretty_json": "true",
+    "scan_strategy": "deep_stream"
+  },
+  "warnings": []
+}
+```
+
+The 'llm_hunter' can have large outputs, use caution.
+
+While 'llm_hunter' is made for gguf files and known LLM data files, it is also a useful analysis for some kinds of large data files, providing byte positions (offsets) for various possibly interesting patterns commonly found in LLMs.
+
 
 To review a byte position in a file as hex and ascii:
 
