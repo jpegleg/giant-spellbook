@@ -15,6 +15,7 @@ use zeroize::Zeroize;
 use enchantress::*;
 use enchanter::*;
 use wormsign::*;
+use llm_hunter::*;
 
 mod encoding;
 mod parsers;
@@ -81,7 +82,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff, diff_no_color> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+      eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, llm_hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff, diff_no_color> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
       process::exit(1);
     }
 
@@ -89,7 +90,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" | "--version" => {
-          println!("{{\"Version\": \"0.2.24\"}}");
+          println!("{{\"Version\": \"0.2.25\"}}");
           Ok(())
         },
 
@@ -671,6 +672,59 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
           Ok(())
         },
 
+        "llm_hunter" => {
+          if args.len() != 5 {
+            eprintln!("{{\n  \"ERROR\": \"Usage: {} llm_hunter <deep, quick> <compact, pretty> <target_file>\"\n}}", args[0]);
+            process::exit(1);
+          }
+          let scan_type = &args[2];
+          let json_style = &args[3];
+          let file_path = &args[4];
+
+          match scan_type.as_str() {
+            "deep" => {
+              match json_style.as_str() {
+                  "compact" => {
+                      let json = analyze_file_json_deep(file_path);
+                      println!("{json}");
+                      Ok(())
+                  },
+                  "pretty" => {
+                      let json = analyze_file_json_deep_pretty(file_path);
+                      println!("{json}");
+                      Ok(())
+                  },
+                  _ => {
+                     eprintln!("{{\n  \"ERROR\": \"Usage: {} llm_hunter <deep, quick> <compact, pretty> <target_file>\"\n}}", args[0]);
+                     process::exit(1);
+                  }
+               }
+            },
+            "quick" => {
+              match json_style.as_str() {
+                  "compact" => {
+                      let json = analyze_file_json(file_path);
+                      println!("{json}");
+                      Ok(())
+                  },
+                  "pretty" => {
+                      let json = analyze_file_json_pretty(file_path);
+                      println!("{json}");
+                      Ok(())
+                  },
+                  _ => {
+                     eprintln!("{{\n  \"ERROR\": \"Usage: {} llm_hunter <deep, quick> <compact, pretty> <target_file>\"\n}}", args[0]);
+                     process::exit(1);
+                  }
+               }
+            },
+            _ => {
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} llm_hunter <deep, quick> <compact, pretty> <target_file>\"\n}}", args[0]);
+              process::exit(1);
+            }
+          }
+        },
+
         "hunter" => {
           if args.len() != 3 {
             eprintln!("{{\n  \"ERROR\": \"Usage: {} hunter <target_file>\"\n}}", args[0]);
@@ -1101,7 +1155,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
 
         _ => {
-          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff, diff_no_color> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
+          eprintln!("{{\n  \"ERROR\": \"Usage: <encrypt, decrypt, encode, decode, generate, sign, verify, analyze, brute, parse, disassemble, seek, hunter, llm_hunter, commander, researcher, reverse_bytes, byte_range, bitflip, single_bitflip, split_file, shift, flatten, metadata, hash, derive_key, xor_these, diff, diff_no_color> <subcommands>  Try giant-spellbook <option> to print help for each option subcommands.\"\n}}");
           process::exit(1)
        }
     }
