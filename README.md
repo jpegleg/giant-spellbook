@@ -638,6 +638,7 @@ While many cases are normal, don't let that get your guard down. The byte offset
 There is 'llm_hunter' which is designed to look for gguf files and other common patterns in LLM files.
 
 ```
+giant-spellbook llm_hunter deep pretty some_file
 {
   "ok": true,
   "file_name": "some_file",
@@ -691,9 +692,9 @@ There is 'llm_hunter' which is designed to look for gguf files and other common 
 }
 ```
 
-The 'llm_hunter' can have large outputs, use caution.
+The 'llm_hunter' can have large outputs with "deep" mode, use caution.
 
-While 'llm_hunter' is made for gguf files and known LLM data files, it is also a useful analysis for some kinds of large data files, providing byte positions (offsets) for various possibly interesting patterns commonly found in LLMs.
+While 'llm_hunter' is made for gguf files and known LLM data files, it is also a useful analysis for some kinds of large data files, providing byte positions (offsets) for various possibly interesting patterns commonly found in LLMs and entropy changes.
 
 
 To review a byte position in a file as hex and ascii:
