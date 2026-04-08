@@ -20,7 +20,7 @@ bs58 = { version="0.5.1", features=["check"] }
 base32 = "0.5.1"
 hex = "0.4.3"
 zeroize = "1.8.2"
-blake3 = "1.8.3"
+blake3 = "1.8.4"
 blake2 = "0.10.6"
 sha3 = "0.10.8"
 sha2 = "0.10.9"
@@ -31,15 +31,15 @@ argon2 = "0.5.3"
 enchantress = "0.1.11"
 enchanter = "0.1.3"
 wormsign = "0.1.13"
-x509-parser = "0.18.0"
+x509-parser = "0.18.1"
 der-parser = "10.0.0"
 capstone = "0.13.0"
 rustls-pemfile = "2.2.0"
-chrono = { version = "0.4.43", default-features = false, features = ["clock", "std"] }
-time = "0.3.46"
-zerocopy = "0.8.34"
+chrono = { version = "0.4.44", default-features = false, features = ["clock", "std"] }
+time = "0.3.47"
+zerocopy = "0.8.48"
 urlencoding = "2.1.3"
-openssl-sys = { version = "0.9.111", features = ["vendored"] }
-rustls = { version = "0.23.36", features = ["tls12", "std"], default-features = false }
+openssl-sys = { version = "0.9.112", features = ["vendored"] }
+rustls = { version = "0.23.37", features = ["tls12", "std"], default-features = false }
 rustls-openssl = "0.3.0"
 llm_hunter = "0.3.3"
