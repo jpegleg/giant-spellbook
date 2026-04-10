@@ -640,7 +640,7 @@ giant-spellbook llm_hunter deep pretty some_file
 {
   "ok": true,
   "file_name": "some_file",
-  "created_at_utc": "2026-04-07T02:31:05Z",
+  "reported_created_utc": "2026-04-07T02:31:05Z",
   "byte_count": 788048,
   "scanned_byte_count": 788048,
   "is_probably_text": false,
