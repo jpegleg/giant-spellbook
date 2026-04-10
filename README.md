@@ -655,7 +655,7 @@ giant-spellbook llm_hunter deep pretty some_file
 
 The 'llm_hunter' can have large outputs with "deep" mode, use caution.
 
-While 'llm_hunter' is made for gguf files and known LLM data files, it is also a useful analysis for some kinds of large data files, providing byte positions (offsets) for various possibly interesting patterns commonly found in LLMs, and entropy changes.
+While 'llm_hunter' is made for gguf files and known LLM data files, it is also a useful analysis for some kinds of large data files, providing byte positions (offsets) for various possibly interesting patterns commonly found in LLMs, and for entropy changes.
 
 To review a byte position in a file as hex and ascii:
 
