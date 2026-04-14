@@ -90,7 +90,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match first_layer.as_str() {
         "-v" | "--version" => {
-          println!("{{\"Version\": \"0.2.25\"}}");
+          println!("{{\"Version\": \"0.2.26\"}}");
           Ok(())
         },
 
