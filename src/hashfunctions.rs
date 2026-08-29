@@ -55,7 +55,7 @@ pub fn file_all(input: &String) -> Result<(), Box<dyn std::error::Error>> {
 pub fn argon2id(input: &[u8], salt: &[u8]) {
   let mut adata = [0u8; 32];
   let _ = Argon2::default().hash_password_into(input, salt, &mut adata);
-  println!("{{ \"Argon2id\": \"{:?}\"", adata);
+  println!("{{ \"Argon2id\": \"{:?}\" }}", adata);
   adata.zeroize();
 }
 
