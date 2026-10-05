@@ -577,7 +577,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
               let _ = encoding::rfc4648hex_decode_file(input_file);
             },
             _ => {
-              eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex base32_crockford base32_rf4648 base32_rf4648hex base32_z> <file_to_decode> OR <url_decode> <string>\"\n}}", args[0]);
+              eprintln!("{{\n  \"ERROR\": \"Usage: {} decode <base64 base58 hex base32_crockford base32_rfc4648 base32_rfc4648hex base32_z> <file_to_decode> OR <url_decode> <string>\"\n}}", args[0]);
               process::exit(1);
             }
           }
