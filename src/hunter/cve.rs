@@ -12,7 +12,7 @@ pub mod cve_bytes {
     // Potential exploit patterns - header string matches.
     pub const CVE_2025_55182_NEXT_ACTION: &[u8] = b"next-action";
     pub const CVE_2025_55182_RSC_ACTION_ID: &[u8] = b"rsc-action-id";
-    
+
     // ─────────────────────────────────────────────────────────────────────────────
     // CVE-2021-44228 (Log4Shell / Log4j JNDI)
     // Sources indicate reliable anchors include raw `${jndi:` and common URI schemes.
@@ -129,4 +129,8 @@ pub mod cve_bytes {
     // ─────────────────────────────────────────────────────────────────────────────
     pub const CVE_2018_13379_FGT_LANG:     &[u8] = b"/remote/fgt_lang?lang=";
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // CVE-2026-35273 (PeopleSoft SSRF)
+    // ─────────────────────────────────────────────────────────────────────────────
+    pub const CVE_2026_35273_SSRF_RCE:     &[u8] = b"PSIGW/HttpListeningConnector";
  }
