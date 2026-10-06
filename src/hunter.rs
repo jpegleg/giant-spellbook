@@ -115,6 +115,9 @@ impl Interesting {
 
             // Fortinet FortiOS path traversal
             ("exploiting_CVEs_fortinet_traversal_fgt_lang", Pattern::Bytes(cve_bytes::CVE_2018_13379_FGT_LANG)),
+
+            // PeopleSoft PeopleTool SSRF RCE
+            ("exploiting_CVEs_peoplesoft_ssrf_rce", Pattern::Bytes(cve_bytes::CVE_2026_35273)),
         ]);
 
         // --- Binary: file format / packers (often used to pack malware) ---
