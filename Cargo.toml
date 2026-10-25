@@ -1,6 +1,6 @@
 [package]
 name = "giant-spellbook"
-version = "0.1.21"
+version = "0.1.22"
 edition = "2024"
 authors = ["Keegan Bowen <carefuldata@protonmail.com>"]
 license = "MIT"
@@ -18,7 +18,7 @@ maintenance = { status = "actively-developed" }
 base64 = "0.22.1"
 bs58 = { version="0.5.1", features=["check"] }
 hex = "0.4.3"
-zeroize = "1.9.0"
+zeroize = "1.9.1"
 blake3 = "1.8.7"
 blake2 = "0.10.6"
 sha3 = "0.10.9"
