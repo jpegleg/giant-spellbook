@@ -26,6 +26,10 @@ impl Interesting {
         let mut v: Vec<(&'static str, Pattern)> = Vec::new();
         // --- Exploit patterns ---
         v.extend([
+            // php2shell and node2shell exploit clients generic patterns
+            ("exploiting_CVEs_php2shell_generic_php_session", Pattern::Bytes(cve_bytes::PHP_SESSION_STRING)),
+            ("exploiting_CVEs_node2shell_generic_brotli_header", Pattern::Bytes(cve_bytes::BROTLI_HEADER_STRING)),
+        
             // react2shell vulnerable versions
             ("vulnerable_software_react2shell_19_0", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_0)),
             ("vulnerable_software_react2shell_19_1_0", Pattern::Bytes(cve_bytes::CVE_2025_55182_VERSION19_1_0)),
