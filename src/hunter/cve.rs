@@ -1,6 +1,19 @@
 #[allow(dead_code)]
 pub mod cve_bytes {
     // ─────────────────────────────────────────────────────────────────────────────
+    // CVE-2026-109618, CVE-2026-109619 (PHP2Shell patterns)
+    // generic matching for "PHPSESSID" since it is almost always in exploit code
+    // with the advantage of also matching logs that contain PHPSESSID values
+    // ─────────────────────────────────────────────────────────────────────────────
+    pub const PHP_SESSION_STRING: &[u8] = b"PHPSESSID";
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // CVE-2026-111497 (node2Shell patterns)
+    // generic brotli header pattern since it is commonly in exploit code
+    // ─────────────────────────────────────────────────────────────────────────────
+    pub const BROTLI_HEADER_STRING: &[u8] = b"Content-Encoding: br";
+        
+    // ─────────────────────────────────────────────────────────────────────────────
     // CVE-2025-55182 (React2Shell patterns)
     // Vulnerable version matches.
     // ─────────────────────────────────────────────────────────────────────────────
